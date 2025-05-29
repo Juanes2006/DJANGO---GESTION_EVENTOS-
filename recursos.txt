@@ -1,7 +1,9 @@
-python manage.py makemigrations
-python manage.py migrate
-
-python manage.py runserver
-
-
-#1 REALIZAR LOS TEMPLATES DE EVENTOS
+asgiref==3.8.1
+colorama==0.4.6
+Django==5.2.1
+mysqlclient==2.2.7
+pillow==11.2.1
+qrcode==8.2
+segno==1.6.6
+sqlparse==0.5.3
+tzdata==2025.2
