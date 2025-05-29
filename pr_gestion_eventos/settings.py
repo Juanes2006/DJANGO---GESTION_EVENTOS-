@@ -276,3 +276,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'juanestebanmarulandalopez407@gmail.com'         # Reemplaza por tu correo real
 EMAIL_HOST_PASSWORD = 'tnxy tzxx zgxf etqc'    # Pon aquí la contraseña de aplicación que creaste
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Usar el mismo correo como remitente por defecto
+
+
+DEBUG = False
+ALLOWED_HOSTS = ['Juanes17066.pythonanywhere.com']
