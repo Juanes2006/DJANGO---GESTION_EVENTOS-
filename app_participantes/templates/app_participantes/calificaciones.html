@@ -1,0 +1,41 @@
+{% extends "app_main/base.html" %} {% block title %}Mis Calificaciones{% endblock %} {% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">📊 Mis Calificaciones</h1>
+
+    {% if calificaciones %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID Criterio</th>
+                    <th>Calificación</th>
+                    {# Descomenta si deseas mostrar observaciones #} {#
+                    <th>Observaciones</th> #}
+                </tr>
+            </thead>
+            <tbody>
+                {% for cal in calificaciones %}
+                <tr>
+                    <td>{{ cal.cal_criterio_fk }}</td>
+                    <td>{{ cal.cal_valor }}</td>
+                    {#
+                    <td>{{ cal.observacion|default:"Sin observaciones" }}</td> #}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <h4 class="mt-4">🏅 Puntaje Total: <strong>{{ puntaje_total }}</strong></h4>
+    {% else %}
+    <div class="alert alert-warning text-center">
+        <i class="fas fa-info-circle"></i> No tienes calificaciones registradas.
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{% url 'nombre_de_la_vista' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al inicio
+        </a>
+    </div>
+</div>
+{% endblock %}

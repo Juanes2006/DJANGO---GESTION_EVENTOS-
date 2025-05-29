@@ -1,0 +1,39 @@
+{% extends 'app_main/base.html' %} {% block eventos_url %} {% url 'qr:consulta_qr' %} {% endblock %} {% block eventos_text %} Mi Código QR {% endblock %} {% block content %}
+<div class="container mt-5">
+    <h2>Nombre del Evento: {{ evento.eve_nombre }}</h2>
+    <p>{{ evento.eve_descripcion }}</p>
+
+    <p><strong>Registrado como:</strong> {{ registration_type }}</p>
+    <p><strong>Documento:</strong> {{ user_document }}</p>
+    <hr> {% if qr_image %}
+    <h3>Tu Código QR</h3>
+    <img src="data:image/png;base64,{{ qr_image }}" alt="Código QR" class="img-fluid" style="max-width:300px;">
+    <br><br>
+    <div class="d-flex gap-3">
+        <a href="{% url 'qr:descargar_qr' evento.eve_id user_id %}" class="btn btn-success">
+                Descargar QR
+            </a>
+
+        <form action="{% url 'registros:cancelar_inscripcion' evento.eve_id user_id %}" method="POST" onsubmit="return confirm('¿Seguro que deseas cancelar la inscripción?');">
+            {% csrf_token %} {% if form %} {{ form.as_p }} {% endif %}
+            <button type="submit" class="btn btn-danger">Cancelar Inscripción</button>
+        </form>
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center">
+        ❌ No tienes acceso a un código QR porque tu inscripción aún no ha sido aceptada.
+    </div>
+    {% endif %}
+
+    <br> {% if evento.archivo_programacion %}
+    <a href="{% url 'eventos:descargar_programacion' evento.eve_id %}" class="btn btn-success">
+            📄 Descargar Archivo de Programación
+        </a> {% else %}
+    <p>No hay archivo de programación disponible.</p>
+    {% endif %}
+</div>
+{% endblock %} {% block nav_links %}
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'qr:consulta_qr' %}">Consultar otro QR</a>
+</li>
+{% endblock %}

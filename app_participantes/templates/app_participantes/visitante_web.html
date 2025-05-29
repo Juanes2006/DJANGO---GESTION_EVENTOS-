@@ -1,0 +1,34 @@
+{% extends 'app_main/base.html' %} {% block nav_links %}
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'main:lista_eventos' %}">Ver Eventos</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'main:buscar_eventos' %}">Buscar Eventos</a>
+</li>
+{% endblock %} {% block eventos_url %}{% url 'visitante' %}{% endblock %} {% block eventos_text %}Visitante Web{% endblock %} {% block content %}
+<div class="text-center my-4">
+    <h1 class="mb-3">Bienvenido, visitante</h1>
+    <p class="lead">Aquí podrás ver y buscar los eventos disponibles.</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-5 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="card-title mb-3">📅 Ver Eventos</h3>
+                <p class="card-text">Explora la lista completa de eventos disponibles.</p>
+                <a href="{% url 'main:lista_eventos' %}" class="btn btn-primary">Ver Eventos</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="card-title mb-3">🔍 Buscar Eventos</h3>
+                <p class="card-text">Encuentra eventos específicos usando filtros avanzados.</p>
+                <a href="{% url 'main:buscar_eventos' %}" class="btn btn-success">Buscar Eventos</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

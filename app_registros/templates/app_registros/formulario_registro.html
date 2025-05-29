@@ -1,0 +1,156 @@
+{% extends 'app_main/base.html' %} {% block content %}
+<h2 class="mb-4">Inscripción al evento: {{ evento.nombre }}</h2>
+
+{% if messages %} {% for message in messages %}
+<div class="alert alert-{{ message.tags }}">{{ message }}</div>
+{% endfor %} {% endif %}
+
+<p>Bienvenido. Por favor, selecciona el tipo de inscripción y completa tus datos.</p>
+
+<form method="post" enctype="multipart/form-data" class="needs-validation" novalidate onsubmit="return validarFormulario();">
+    {% csrf_token %}
+
+    <!-- Selección del tipo de inscripción -->
+    <div class="mb-3">
+        <label for="tipo_inscripcion" class="form-label">Elige tu modalidad:</label>
+        <select name="tipo_inscripcion" id="tipo_inscripcion" class="form-select" required onchange="mostrarFormulario()">
+            <option value="">-- Selecciona una opción --</option>
+            {% if evento.inscripciones_asistentes_abiertas %}
+            <option value="Asistente">Asistente (Pago requerido si el evento lo exige)</option>
+            {% endif %}
+            {% if evento.inscripciones_participantes_abiertas %}
+            <option value="Participante">Participante (Se generará automáticamente tu Orden de Registro)</option>
+            {% endif %}
+        </select>
+        <div class="invalid-feedback">Por favor, selecciona un tipo de inscripción.</div>
+    </div>
+
+    <!-- Campos comunes -->
+    <fieldset class="border rounded p-3 mb-3">
+        <legend class="float-none w-auto px-2">Datos Personales</legend>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="user_id" class="form-label">Identificación (ID):</label>
+                <input type="number" name="user_id" id="user_id" class="form-control" placeholder="Ingresa tu documento" required>
+                <div class="invalid-feedback">Este campo es obligatorio.</div>
+            </div>
+            <div class="col-md-6">
+                <label for="nombre" class="form-label">Nombre completo:</label>
+                <input type="text" name="nombre" id="nombre" class="form-control" placeholder="Ingresa tu nombre" required>
+                <div class="invalid-feedback">Este campo es obligatorio.</div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="correo" class="form-label">Correo electrónico:</label>
+                <input type="email" name="correo" id="correo" class="form-control" placeholder="ejemplo@dominio.com" required>
+                <div class="invalid-feedback">Ingresa un correo válido.</div>
+            </div>
+            <div class="col-md-6">
+                <label for="telefono" class="form-label">Teléfono de contacto:</label>
+                <input type="number" name="telefono" id="telefono" class="form-control" placeholder="Ingresa tu teléfono" required>
+                <div class="invalid-feedback">Este campo es obligatorio.</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <!-- Sección para Asistente -->
+    {% if evento.inscripciones_asistentes_abiertas %}
+    <fieldset id="form_asistente" class="border rounded p-3 mb-3" style="display: none;">
+        <legend class="float-none w-auto px-2">Registro como Asistente</legend>
+        {% if evento.cobro|lower == 'sí' or evento.cobro|lower == 'si' %}
+        <div class="mb-3">
+            <label for="soporte_pago" class="form-label">Adjuntar soporte de pago:</label>
+            <input type="file" name="soporte_pago" id="soporte_pago" class="form-control" required>
+            <small class="text-muted">Sube el comprobante de pago en formato PDF o imagen.</small>
+        </div>
+        {% else %}
+        <p>El evento no requiere soporte de pago.</p>
+        {% endif %}
+    </fieldset>
+    {% else %}
+    <div class="alert alert-warning">⚠️ Las inscripciones para asistentes están cerradas.</div>
+    {% endif %}
+
+    <!-- Sección para Participante -->
+    {% if evento.inscripciones_participantes_abiertas %}
+    <fieldset id="form_participante" class="border rounded p-3 mb-3" style="display: none;">
+        <legend class="float-none w-auto px-2">Registro como Participante</legend>
+        <div class="mb-3">
+            <label for="documentos" class="form-label">Adjuntar documentos:</label>
+            <input type="file" name="documentos" id="documentos" class="form-control" required>
+            <small class="text-muted">Sube los documentos requeridos en formato PDF o imagen.</small>
+        </div>
+        <div class="mb-3">
+            <label for="or" class="form-label">Orden de Registro (OR):</label>
+            <input type="text" name="or" id="or" class="form-control" placeholder="Generado automáticamente" readonly>
+            <small class="text-muted">Se generará automáticamente invirtiendo el número de documento.</small>
+        </div>
+    </fieldset>
+    {% else %}
+    <div class="alert alert-warning">⚠️ Las inscripciones para participantes están cerradas.</div>
+    {% endif %} {% if evento.inscripciones_asistentes_abiertas or evento.inscripciones_participantes_abiertas %}
+    <button type="submit" class="btn btn-primary">Enviar inscripción</button> {% else %}
+    <div class="alert alert-info mt-3">
+        🚫 Actualmente no hay inscripciones disponibles para este evento.
+    </div>
+    {% endif %}
+</form>
+
+<!-- JavaScript -->
+<script>
+    function mostrarFormulario() {
+        var tipo = document.getElementById("tipo_inscripcion").value;
+        var formAsistente = document.getElementById("form_asistente");
+        var formParticipante = document.getElementById("form_participante");
+
+        if (formAsistente) {
+            formAsistente.style.display = (tipo === "Asistente") ? "block" : "none";
+        }
+        if (formParticipante) {
+            formParticipante.style.display = (tipo === "Participante") ? "block" : "none";
+        }
+    }
+
+    document.getElementById("user_id").addEventListener("input", function() {
+        var tipo = document.getElementById("tipo_inscripcion").value;
+        if (tipo === "Participante") {
+            var userId = this.value;
+            var orValue = userId.split('').reverse().join('');
+            var orField = document.getElementById("or");
+            if (orField) {
+                orField.value = orValue;
+            }
+        }
+    });
+
+    function validarFormulario() {
+        var tipo = document.getElementById("tipo_inscripcion").value;
+
+        if (tipo === "Asistente") {
+            var pago = document.getElementById("soporte_pago");
+            if (pago && pago.offsetParent !== null && pago.files.length === 0) {
+                alert("Debes adjuntar el soporte de pago.");
+                pago.focus();
+                return false;
+            }
+        }
+
+        if (tipo === "Participante") {
+            var docs = document.getElementById("documentos");
+            if (docs && docs.offsetParent !== null && docs.files.length === 0) {
+                alert("Debes adjuntar los documentos requeridos.");
+                docs.focus();
+                return false;
+            }
+        }
+
+        return true; // permitir envío
+    }
+</script>
+
+
+
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'app_main/base.html' %} {% block eventos_url %} {% url 'admin:ventana' %} {% endblock %} {% block content %}
+<div class="container my-4">
+    <h2 class="mb-4">Participantes Calificados - {{ evento.eve_nombre }}</h2>
+    {% if participantes %}
+    <div class="list-group">
+        {% for participante in participantes %}
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ participante.par_nombre }}</span>
+            <a href="{% url 'admin_evento:ver_calificaciones_participante' evento_id=evento.eve_id participante_id=participante.par_id %}" class="btn btn-primary btn-sm">
+              Ver Calificaciones
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle"></i> No hay participantes calificados en este evento.
+    </div>
+    {% endif %}
+</div>
+
+<div class="text-center mt-4">
+    <a href="{% url 'admin_evento:ventana' %}" class="btn btn-primary">Volver al Panel de Administrador</a>
+</div>
+{% endblock %}

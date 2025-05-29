@@ -1,0 +1,28 @@
+{% extends "app_main/base.html" %} {% block eventos_url %} {% url 'evaluadores:tabla_posiciones' %} {% endblock %} {% block eventos_text %} Tabla de Posiciones {% endblock %} {% block content %}
+<div class="container mt-4">
+    <h1>Tabla de Posiciones</h1>
+
+    <table class="table table-bordered table-striped mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>Posición</th>
+                <th>Participante</th>
+                <th>Puntaje Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for posicion, participante in posiciones %}
+            <tr>
+                <td>{{ posicion }}</td>
+                <td>{{ participante.nombre }}</td>
+                <td>{{ participante.puntaje_total }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">No hay participantes calificados todavía.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

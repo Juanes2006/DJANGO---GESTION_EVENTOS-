@@ -1,0 +1,46 @@
+{% extends 'app_main/base.html' %} {% block eventos_url %} {% url 'admin:ventana' %} {% endblock %} {% block eventos_text %} Administrador_Evento {% endblock %} {% block content %}
+<div class="container my-5">
+    <div class="card shadow-sm rounded-4">
+        <div class="card-header bg-primary text-white text-center">
+            <h3 class="mb-0">➕ Agregar Evaluador</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-6">
+                    <label for="eva_id" class="form-label">ID Evaluador</label>
+                    <input type="text" class="form-control" id="eva_id" name="eva_id" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="eva_nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="eva_nombre" name="eva_nombre" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="eva_correo" class="form-label">Correo</label>
+                    <input type="email" class="form-control" id="eva_correo" name="eva_correo" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="eva_telefono" class="form-label">Teléfono</label>
+                    <input type="text" class="form-control" id="eva_telefono" name="eva_telefono" required>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label for="eventos" class="form-label"><strong>Asignar Eventos</strong></label>
+                    <select multiple class="form-control" id="eventos" name="eventos">
+                        {% for evento in eventos %}
+                        <option value="{{ evento.eve_id }}">{{ evento.eve_nombre }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-text text-muted">
+                        Mantén presionado <strong>Ctrl</strong> (Windows) o <strong>Cmd</strong> (Mac) para seleccionar varios eventos.
+                    </small>
+                </div>
+                <div class="col-12 text-center mt-4">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-person-plus"></i> Agregar Evaluador
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
