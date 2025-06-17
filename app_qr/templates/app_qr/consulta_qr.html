@@ -1,25 +1,57 @@
 {% extends 'app_main/base.html' %} {% block eventos_url %}{% url 'main:lista_eventos' %}{% endblock %} {% block eventos_text %}Código QR{% endblock %} {% block content %}
-<div class="container mt-5">
-    <h2>Consultar tu Código QR</h2>
-    {% if messages %} {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %} {% endif %}
-    <form method="POST">
+<div class="container my-5">
+    <h2 class="mb-4 text-center display-5 fw-bold" style="color: #0d6efd;">🔍 Consultar tu Código QR</h2>
+
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" class="needs-validation shadow p-4 rounded-4 border" novalidate>
         {% csrf_token %}
         <div class="mb-3">
-            <label for="event_id" class="form-label">Selecciona el Evento</label>
+            <label for="event_id" class="form-label fw-semibold">Selecciona el Evento</label>
             <select name="event_id" id="event_id" class="form-select" required>
-                <option value="">-- Selecciona un Evento --</option>
+                <option value="" disabled selected>-- Selecciona un Evento --</option>
                 {% for event in events %}
-                    <option value="{{ event.eve_id }}">{{ event.eve_nombre }}</option>
+                <option value="{{ event.eve_id }}">{{ event.eve_nombre }}</option>
                 {% endfor %}
             </select>
+            <div class="invalid-feedback">
+                Por favor selecciona un evento.
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="user_id" class="form-label">Tu Documento / ID</label>
-            <input type="text" class="form-control" name="user_id" id="user_id" required>
+        <div class="mb-4">
+            <label for="user_id" class="form-label fw-semibold">Tu Documento / ID</label>
+            <input type="text" class="form-control" name="user_id" id="user_id" required autocomplete="off" placeholder="Ej: 123456789">
+            <div class="invalid-feedback">
+                Por favor ingresa tu documento o ID.
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Consultar QR</button>
+        <button type="submit" class="btn btn-primary px-5 fw-semibold shadow-sm">Consultar QR</button>
     </form>
 </div>
+
+<script>
+    // Bootstrap form validation (optional)
+    (() => {
+        'use strict'
+        const forms = document.querySelectorAll('.needs-validation')
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+</script>
 {% endblock %}

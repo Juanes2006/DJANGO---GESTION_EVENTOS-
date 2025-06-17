@@ -10,7 +10,7 @@ from app_eventos.models import Evento
 from app_super_admin.models import Area, Categoria
 from app_participantes.models import Participantes, ParticipantesEventos
 from app_registros.models import Asistentes, AsistentesEventos
-from app_evaluadores.models import Criterio, Instrumento, Calificacion, Evaluador
+from app_evaluadores.models import Criterio, Instrumento, Calificacion, Evaluador, EvaluadorEventos
 
 import qrcode
 from io import BytesIO
@@ -32,6 +32,7 @@ def ventana(request):
     """Vista principal del administrador de eventos"""
     eventos = Evento.objects.all()
     return render(request, 'app_admin/administrador_evento.html', {'eventos': eventos})
+###################################
 
 def gestionar_inscripciones(request, eve_id):
     """Gestionar inscripciones de participantes"""
@@ -81,6 +82,34 @@ def gestionar_inscripcion_asis(request, eve_id):
         'evento': evento,
         'asistentes': asistentes
     })
+    
+    
+    
+def gestionar_evaluadores(request, evento_id):
+    evento = get_object_or_404(Evento, pk=evento_id)
+
+    evaluadores_eventos = EvaluadorEventos.objects.filter(
+        eva_eve_evento_fk=evento_id
+    ).select_related('eva_eve_evaluador_fk')
+
+    evaluadores = []
+    for ee in evaluadores_eventos:
+        evaluadores.append({
+            'eva_id': ee.eva_eve_evaluador_fk.eva_id,
+            'eva_nombre': ee.eva_eve_evaluador_fk.eva_nombre,
+            'eva_correo': ee.eva_eve_evaluador_fk.eva_correo,
+            'eva_telefono': ee.eva_eve_evaluador_fk.eva_telefono,
+            'eva_estado': ee.eva_estado,  # Aquí sí está el campo
+            'eva_eve_clave': getattr(ee, 'eva_eve_clave', None)
+        })
+
+    return render(request, "app_admin/gestionar_evaluadores.html", {
+        'evento': evento,
+        'evaluadores': evaluadores
+    })
+
+
+##############################################
 
 def generar_qr_contenido(contenido, nombre_archivo='qr.png'):
     img = qrcode.make(contenido)
@@ -89,16 +118,16 @@ def generar_qr_contenido(contenido, nombre_archivo='qr.png'):
     buffer.seek(0)
     return ContentFile(buffer.read(), name=nombre_archivo)
 
-
 def actualizar_estado(request):
-    """Actualizar estado de participantes o asistentes"""
+    """Actualizar estado de participantes, evaluadores o asistentes"""
     par_id = request.POST.get('par_id')
     asi_id = request.POST.get('asi_id')
+    eva_id = request.POST.get('eva_id')
     evento_id = request.POST.get('evento_id')
     nuevo_estado = request.POST.get('estado')
 
     # Validar datos
-    if not evento_id or not (par_id or asi_id):
+    if not evento_id or not (par_id or asi_id or eva_id):
         messages.error(request, "Error: Faltan datos para actualizar el estado.")
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
@@ -116,7 +145,6 @@ def actualizar_estado(request):
             clave_evento = getattr(participante_evento, 'par_eve_clave', None) or "No asignada"
             participante = get_object_or_404(Participantes, pk=par_id)
 
-            # Suponiendo que el modelo Participantes tiene el campo "par_email"
             correo_participante = participante.par_correo
             asunto = f"Estado actualizado para el evento #{evento_id}"
             mensaje_correo = f"Hola {participante.par_nombre},\n\nSu estado ha sido actualizado a: {nuevo_estado}."
@@ -144,16 +172,71 @@ def actualizar_estado(request):
                     fail_silently=False,
                 )
 
-            messages.success(request, "Estado actualizado y correo enviado correctamente.")
-
-
+            messages.success(request, "Estado del participante actualizado y correo enviado correctamente.")
             return redirect('main:lista_eventos')
 
         except ParticipantesEventos.DoesNotExist:
             messages.error(request, "No se encontró la inscripción del participante.")
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+        except Exception as e:
+            messages.error(request, f"Error al actualizar el estado del participante: {str(e)}")
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    # CASO EVALUADOR
+    elif eva_id:
+        try:
+            evaluador_evento = EvaluadorEventos.objects.get(
+                eva_eve_evaluador_fk=eva_id,
+                eva_eve_evento_fk=evento_id
+            )
+                         
+            evaluador_evento.eva_estado = nuevo_estado
+            print(f"Nuevo estado recibido: {nuevo_estado}")
+
+            evaluador_evento.save()
+
+            clave_evento = getattr(evaluador_evento, 'eva_eve_clave', None) or "No asignada"
+            evaluador = get_object_or_404(Evaluador, pk=eva_id)
+
+            correo_evaluador = evaluador.eva_correo
+            asunto = f"Estado actualizado para el evento #{evento_id}"
+            mensaje_correo = f"Hola {evaluador.eva_nombre},\n\nSu estado como evaluador ha sido actualizado a: {nuevo_estado}."
+
+            if nuevo_estado == "ACEPTADO":
+                mensaje_correo += f"\n\nSu clave de acceso como evaluador es: {clave_evento}\nAdjuntamos su código QR de acceso."
+                
+                qr_contenido = f"Evaluador: {evaluador.eva_nombre}\nClave: {clave_evento}\nEvento ID: {evento_id}"
+                qr_img = generar_qr_contenido(qr_contenido)
+               
+                email = EmailMessage(
+                    asunto,
+                    mensaje_correo,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [correo_evaluador],
+                )
+                email.attach('qr_evaluador.png', qr_img.read(), 'image/png')
+                email.send(fail_silently=False)
+            else:
+                send_mail(
+                    asunto,
+                    mensaje_correo,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [correo_evaluador],
+                    fail_silently=False,
+                )
+
+            messages.success(request, "Estado del evaluador actualizado y correo enviado correctamente.")
+            return redirect('main:lista_eventos')
+         
+        except EvaluadorEventos.DoesNotExist:
+            messages.error(request, "No se encontró la inscripción del evaluador.")
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+        except Exception as e:
+            messages.error(request, f"Error al actualizar el estado del evaluador: {str(e)}")
+            return redirect(request.META.get('HTTP_REFERER', '/'))
 
     # CASO ASISTENTE
-    if asi_id:
+    elif asi_id:
         try:
             asistente_evento = AsistentesEventos.objects.get(
                 asi_eve_asistente_fk=asi_id,
@@ -164,27 +247,49 @@ def actualizar_estado(request):
             asistente_evento.save()
 
             asistente = get_object_or_404(Asistentes, pk=asi_id)
-            ### parte para enviar correos
+            
             correo_asistente = asistente.asi_correo
             asunto = f"Estado actualizado para el evento #{evento_id}"
-            mensaje_correo = f"Hola {asistente.asi_nombre}\n\nSu estado ha sido actualizado a: {nuevo_estado}."
+            mensaje_correo = f"Hola {asistente.asi_nombre},\n\nSu estado como asistente ha sido actualizado a: {nuevo_estado}."
+            
+            # Solo enviar QR si es ACEPTADO, similar a participantes y evaluadores
+            if nuevo_estado == "ACEPTADO":
+                mensaje_correo += f"\n\nAdjuntamos su código QR de acceso al evento."
+                qr_contenido = f"Asistente: {asistente.asi_nombre}\nEvento ID: {evento_id}\nEstado: {nuevo_estado}"
+                qr_img = generar_qr_contenido(qr_contenido)
 
-            email = EmailMessage(
-                asunto,
-                mensaje_correo,
-                settings.DEFAULT_FROM_EMAIL,
-                [correo_participante],
-            )
-            email.attach('qr_participante.png', qr_img.read(), 'image/png')
-            email.send(fail_silently=False)  # ✅ Aquí sí va
+                email = EmailMessage(
+                    asunto,
+                    mensaje_correo,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [correo_asistente],
+                )
+                email.attach('qr_asistente.png', qr_img.read(), 'image/png')
+                email.send(fail_silently=False)
+            else:
+                send_mail(
+                    asunto,
+                    mensaje_correo,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [correo_asistente],
+                    fail_silently=False,
+                )
 
-
+            messages.success(request, "Estado del asistente actualizado y correo enviado correctamente.")
             return redirect('main:lista_eventos')
 
         except AsistentesEventos.DoesNotExist:
             messages.error(request, "No se encontró la inscripción del asistente.")
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+        except Exception as e:
+            messages.error(request, f"Error al actualizar el estado del asistente: {str(e)}")
+            return redirect(request.META.get('HTTP_REFERER', '/'))
 
-    return redirect(request.META.get('HTTP_REFERER', '/'))
+    # Si no es ninguno de los casos anteriores
+    else:
+        messages.error(request, "Error: No se especificó el tipo de usuario a actualizar.")
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
 
 
 def ver_estadisticas(request):
@@ -219,6 +324,9 @@ def toggle_inscripcion(request, evento_id, tipo):
         evento.inscripciones_participantes_abiertas = not evento.inscripciones_participantes_abiertas
     elif tipo == "asistentes":
         evento.inscripciones_asistentes_abiertas = not evento.inscripciones_asistentes_abiertas
+        
+    elif tipo == "evaluadores":
+        evento.inscripciones_evaluadores_abiertas = not evento.inscripciones_evaluadores_abiertas
     else:
         messages.error(request, "Tipo de inscripción no válido.")
         return redirect(request.META.get('HTTP_REFERER', '/'))
@@ -433,86 +541,8 @@ def ver_calificaciones_participante(request, evento_id, participante_id):
         'calificaciones': calificaciones
     })
 
-def agregar_evaluador(request):
-    """Agregar nuevo evaluador"""
-    if request.method == 'POST':
-        eva_id = request.POST.get('eva_id')
-        eva_nombre = request.POST.get('eva_nombre')
-        eva_correo = request.POST.get('eva_correo')
-        eva_telefono = request.POST.get('eva_telefono')
-        eventos_ids = request.POST.getlist('eventos')
 
-        if eva_id and eva_nombre and eva_correo and eva_telefono:
-            with transaction.atomic():
-                nuevo_evaluador = Evaluador(
-                    eva_id=eva_id,
-                    eva_nombre=eva_nombre,
-                    eva_correo=eva_correo,
-                    eva_telefono=eva_telefono
-                )
-                nuevo_evaluador.save()
 
-                # Asignar eventos seleccionados
-                eventos = Evento.objects.filter(eve_id__in=eventos_ids)
-                nuevo_evaluador.eventos.set(eventos)
-
-            messages.success(request, 'Evaluador agregado correctamente')
-            return redirect('admin_evento:agregar_evaluador')
-        else:
-            messages.error(request, 'Faltan datos')
-
-    eventos = Evento.objects.all()
-    return render(request, 'app_admin/registrar_evaluador.html', {'eventos': eventos})
-
-def editar_evaluador(request, eva_id):
-    """Editar evaluador existente"""
-    evaluador = get_object_or_404(Evaluador, eva_id=eva_id)
-    eventos = Evento.objects.all()
-
-    if request.method == 'POST':
-        # Actualizar datos personales
-        evaluador.eva_nombre = request.POST.get('eva_nombre')
-        evaluador.eva_correo = request.POST.get('eva_correo')
-        evaluador.eva_telefono = request.POST.get('eva_telefono')
-
-        # Actualizar eventos asignados
-        eventos_seleccionados = request.POST.getlist('eventos')
-        eventos_objetos = Evento.objects.filter(eve_id__in=eventos_seleccionados)
-        evaluador.eventos.set(eventos_objetos)
-
-        evaluador.save()
-        messages.success(request, 'Evaluador actualizado correctamente.')
-        return redirect('administrador_evento')
-
-    return render(request, 'app_admin/editar_evaluador.html', {
-        'evaluador': evaluador,
-        'eventos': eventos
-    })
-
-@csrf_protect
-
-def eliminar_evaluador(request, eva_id):
-    """Eliminar evaluador"""
-    evaluador = get_object_or_404(Evaluador, eva_id=eva_id)
-
-    # Quitar eventos si tienes relación muchos-a-muchos
-    evaluador.eventos.clear()
-    evaluador.delete()
-
-    messages.success(request, 'Evaluador eliminado correctamente.')
-    return redirect('admin_evento:ventana')
-
-def gestionar_evaluadores(request, evento_id):
-    evento = get_object_or_404(Evento, pk=evento_id)
-
-    evaluadores = Evaluador.objects.filter(eventos__eve_id=evento_id).values(
-        'eva_id', 'eva_nombre', 'eva_correo', 'eva_telefono'
-    )
-
-    return render(request, "app_admin/gestionar_evaluadores.html", {
-        'evento': evento,
-        'evaluadores': evaluadores
-    })
 
 
 def descargar_ranking(request, evento_id):

@@ -4,59 +4,73 @@
         <div class="card-header bg-dark text-white text-center">
             <h2 class="mb-0">Detalle del Evento</h2>
         </div>
-        <div class="card-body text-center">
-            <h3 class="text-primary">{{ evento.eve_nombre }}</h3>
-            {% if evento.imagen %}
-            <img src="{% static 'imagenes/'|add:evento.imagen %}" class="card-img-top rounded img-fluid" alt="Imagen del evento" style="object-fit: contain; max-width: 100%; max-height: 400px;"> {% else %}
-            <p>No hay imagen disponible para este evento.</p>
-            {% endif %}
-            <p class="text-muted">{{ evento.eve_descripcion }}</p>
-            <hr>
-            <p><strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}</p>
-            <p><strong>🏢 Lugar:</strong> {{ evento.eve_lugar }}</p>
-            <p><strong>📅 Fecha Inicio:</strong> {{ evento.eve_fecha_inicio }}</p>
-            <p><strong>📅 Fecha Fin:</strong> {{ evento.eve_fecha_fin }}</p>
-            <p><strong>📌 Estado:</strong>
-                <span class="badge {% if evento.eve_estado == 'ACTIVO' %}bg-success{% elif evento.eve_estado == 'INACTIVO' %}bg-warning{% else %}bg-secondary{% endif %}">
-                    {{ evento.eve_estado }}
-                </span>
-            </p>
+        <div class="card-body">
+            <div class="row g-4" style="min-height: 400px;">
+                <!-- Columna imagen -->
+                <div class="col-md-6 p-0" style="min-height: 400px; overflow: hidden;">
+                    {% if evento.imagen %}
+                    <img src="{% static 'imagenes/'|add:evento.imagen %}" alt="Imagen del evento" style="width: 100%; height: 100%; object-fit: cover; display: block;
+                                    border: 3px solid #444444; border-radius: 8px;"> {% else %}
+                    <p class="text-center mt-3">No hay imagen disponible para este evento.</p>
+                    {% endif %}
+                </div>
 
-            <h3>Administrador</h3>
-            <p>Nombre: {{ administrador.adm_nombre }}</p>
+                <!-- Columna contenido -->
+                <div class="col-md-6">
+                    <h3 class="text-primary">{{ evento.eve_nombre }}</h3>
+                    <p class="text-muted">{{ evento.eve_descripcion }}</p>
+                    <hr>
+                    <p><strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}</p>
+                    <p><strong>🏢 Lugar:</strong> {{ evento.eve_lugar }}</p>
+                    <p><strong>📅 Fecha Inicio:</strong> {{ evento.eve_fecha_inicio }}</p>
+                    <p><strong>📅 Fecha Fin:</strong> {{ evento.eve_fecha_fin }}</p>
+                    <p><strong>📌 Estado:</strong>
+                        <span class="badge 
+                            {% if evento.eve_estado == 'ACTIVO' %}bg-success
+                            {% elif evento.eve_estado == 'INACTIVO' %}bg-warning
+                            {% else %}bg-secondary{% endif %}">
+                            {{ evento.eve_estado }}
+                        </span>
+                    </p>
 
-            {% if evento.eve_estado == "CREADO" %}
-            <form action="{% url 'eventos:activar_evento' evento.eve_id %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-success mt-3">✅ Activar Evento</button>
-            </form>
-            <form action="{% url 'eventos:eliminar_evento' evento.eve_id %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-danger mt-3">❌ Eliminar Evento</button>
-            </form>
+                    <h4>Administrador</h4>
+                    <p>Nombre: {{ administrador.adm_nombre }}</p>
 
-            {% elif evento.eve_estado == "ACTIVO" %}
-            <form action="{% url 'eventos:desactivar_evento' evento.eve_id %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-warning mt-3">⏸ Desactivar Evento</button>
-            </form>
-            <form action="{% url 'eventos:eliminar_evento' evento.eve_id %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-danger mt-3">❌ Eliminar Evento</button>
-            </form>
+                    {% if evento.eve_estado == "CREADO" %}
+                    <form action="{% url 'eventos:activar_evento' evento.eve_id %}" method="post" class="mb-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success w-100">✅ Activar Evento</button>
+                    </form>
+                    <form action="{% url 'eventos:eliminar_evento' evento.eve_id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger w-100">❌ Eliminar Evento</button>
+                    </form>
+                    {% elif evento.eve_estado == "ACTIVO" %}
+                    <form action="{% url 'eventos:desactivar_evento' evento.eve_id %}" method="post" class="mb-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning w-100">⏸ Desactivar Evento</button>
+                    </form>
+                    <form action="{% url 'eventos:eliminar_evento' evento.eve_id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger w-100">❌ Eliminar Evento</button>
+                    </form>
+                    {% elif evento.eve_estado == "INACTIVO" or evento.eve_estado == "CANCELADO" %}
+                    <form action="{% url 'eventos:activar_evento' evento.eve_id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success w-100">✅ Activar Evento</button>
+                    </form>
+                    {% endif %}
 
-            {% elif evento.eve_estado == "INACTIVO" or evento.eve_estado == "CANCELADO" %}
-            <form action="{% url 'eventos:activar_evento' evento.eve_id %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-success mt-3">✅ Activar Evento</button>
-            </form>
-            {% endif %}
-
-
-            <div class="text-center mt-4">
-                <a href="{% url 'superadmin:eventos_superadmin' %}" class="btn btn-secondary">Volver</a>
+                    <div class="text-center mt-4">
+                        <a href="{% url 'superadmin:eventos_superadmin' %}" class="btn btn-secondary w-100">Volver</a>
+                    </div>
+                </div>
             </div>
+            <!-- /.row -->
         </div>
+        <!-- /.card-body -->
     </div>
+    <!-- /.card -->
 </div>
+<!-- /.container -->
 {% endblock %}

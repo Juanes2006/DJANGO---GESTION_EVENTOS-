@@ -1,136 +1,191 @@
 {% extends 'app_main/base.html' %} {% block content %}
-<h2 class="mb-4">Inscripción al evento: {{ evento.nombre }}</h2>
+<div class="container mt-4">
+    <h2 class="mb-4">Inscripción al evento: <strong>{{ evento.nombre }}</strong></h2>
 
-{% if messages %} {% for message in messages %}
-<div class="alert alert-{{ message.tags }}">{{ message }}</div>
-{% endfor %} {% endif %}
-
-<p>Bienvenido. Por favor, selecciona el tipo de inscripción y completa tus datos.</p>
-
-<form method="post" enctype="multipart/form-data" class="needs-validation" novalidate onsubmit="return validarFormulario();">
-    {% csrf_token %}
-
-    <!-- Selección del tipo de inscripción -->
-    <div class="mb-3">
-        <label for="tipo_inscripcion" class="form-label">Elige tu modalidad:</label>
-        <select name="tipo_inscripcion" id="tipo_inscripcion" class="form-select" required onchange="mostrarFormulario()">
-            <option value="">-- Selecciona una opción --</option>
-            {% if evento.inscripciones_asistentes_abiertas %}
-            <option value="Asistente">Asistente (Pago requerido si el evento lo exige)</option>
+    <div class="row">
+        <!-- Columna imagen -->
+        <div class="col-md-6 mb-4">
+            {% load static %} {% if evento.imagen %}
+            <img src="{% static 'imagenes/' %}{{ evento.imagen }}" alt="Imagen del evento" class="img-fluid rounded shadow-sm" style="max-height: 500px; object-fit: cover; width: 100%;"> {% else %}
+            <div class="alert alert-info text-center">
+                No hay imagen disponible para este evento.
+            </div>
             {% endif %}
-            {% if evento.inscripciones_participantes_abiertas %}
-            <option value="Participante">Participante (Se generará automáticamente tu Orden de Registro)</option>
-            {% endif %}
-        </select>
-        <div class="invalid-feedback">Por favor, selecciona un tipo de inscripción.</div>
+        </div>
+
+        <!-- Columna formulario -->
+        <div class="col-md-6">
+            {% if messages %} {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+            {% endfor %} {% endif %}
+
+            <p class="lead">Bienvenido, por favor selecciona tu modalidad de inscripción y completa los datos requeridos.</p>
+
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate onsubmit="return validarFormulario();">
+                {% csrf_token %}
+
+                <!-- Selección del tipo de inscripción -->
+                <div class="mb-4">
+                    <label for="tipo_inscripcion" class="form-label fw-semibold">Modalidad de inscripción</label>
+                    <select name="tipo_inscripcion" id="tipo_inscripcion" class="form-select" required onchange="mostrarFormulario()">
+                        <option value="" selected disabled>-- Selecciona una opción --</option>
+                        {% if evento.inscripciones_asistentes_abiertas %}
+                            <option value="Asistente">👥 Asistente (Pago requerido si el evento lo exige)</option>
+                        {% endif %}
+                        {% if evento.inscripciones_participantes_abiertas %}
+                            <option value="Participante">📝 Participante (Orden de Registro automática)</option>
+                        {% endif %}
+                        {% if evento.inscripciones_evaluadores_abiertas %}
+                            <option value="Evaluador">🔍 Evaluador (Orden de Registro automática)</option>
+                        {% endif %}
+                    </select>
+                    <div class="invalid-feedback">Por favor, selecciona un tipo de inscripción.</div>
+                </div>
+
+                <!-- Campos comunes -->
+                <fieldset class="border rounded p-4 mb-4 shadow-sm">
+                    <legend class="float-none w-auto px-2 fw-bold text-primary">Datos Personales</legend>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="user_id" class="form-label">Identificación (ID):</label>
+                            <input type="number" name="user_id" id="user_id" class="form-control" placeholder="Ingresa tu documento" required>
+                            <div class="invalid-feedback">Este campo es obligatorio.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nombre" class="form-label">Nombre completo:</label>
+                            <input type="text" name="nombre" id="nombre" class="form-control" placeholder="Ingresa tu nombre" required>
+                            <div class="invalid-feedback">Este campo es obligatorio.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="correo" class="form-label">Correo electrónico:</label>
+                            <input type="email" name="correo" id="correo" class="form-control" placeholder="ejemplo@dominio.com" required>
+                            <div class="invalid-feedback">Ingresa un correo válido.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="telefono" class="form-label">Teléfono de contacto:</label>
+                            <input type="tel" name="telefono" id="telefono" class="form-control" placeholder="Ingresa tu teléfono" required pattern="[0-9]{7,15}">
+                            <div class="invalid-feedback">Este campo es obligatorio y debe contener solo números.</div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Sección para Asistente -->
+                {% if evento.inscripciones_asistentes_abiertas %}
+                <fieldset id="form_asistente" class="border rounded p-4 mb-4 shadow-sm" style="display: none;">
+                    <legend class="float-none w-auto px-2 fw-bold text-success">👥 Registro como Asistente</legend>
+                    <p class="text-muted fst-italic mb-3">
+                        Los asistentes tienen acceso completo a todas las actividades del evento y deben realizar el pago si el evento lo requiere.
+                    </p>
+                    {% if evento.cobro|lower == 'sí' or evento.cobro|lower == 'si' %}
+                    <div class="mb-3">
+                        <label for="soporte_pago" class="form-label">Adjuntar soporte de pago <span class="text-danger">*</span>:</label>
+                        <input type="file" name="soporte_pago" id="soporte_pago" class="form-control" accept=".pdf,image/*" required>
+                        <small class="form-text text-muted">Sube el comprobante de pago en formato PDF o imagen.</small>
+                        <div class="invalid-feedback">Es necesario adjuntar el soporte de pago.</div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">Este evento no requiere soporte de pago para asistentes.</div>
+                    {% endif %}
+                </fieldset>
+                {% else %}
+                <div class="alert alert-warning">⚠️ Las inscripciones para asistentes están cerradas.</div>
+                {% endif %}
+
+                <!-- Sección para Participante -->
+                {% if evento.inscripciones_participantes_abiertas %}
+                <fieldset id="form_participante" class="border rounded p-4 mb-4 shadow-sm" style="display: none;">
+                    <legend class="float-none w-auto px-2 fw-bold text-info">📝 Registro como Participante</legend>
+                    <p class="text-muted fst-italic mb-3">
+                        Los participantes son evaluados en las actividades y su orden de registro se genera automáticamente.
+                    </p>
+                    <div class="mb-3">
+                        <label for="documentos_participante" class="form-label">Adjuntar documentos requeridos <span class="text-danger">*</span>:</label>
+                        <input type="file" name="documentos_participante" id="documentos_participante" class="form-control" accept=".pdf,image/*" required>
+                        <small class="form-text text-muted">Sube los documentos necesarios en formato PDF o imagen.</small>
+                        <div class="invalid-feedback">Debes adjuntar los documentos requeridos.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="or" class="form-label">Orden de Registro (OR):</label>
+                        <input type="text" name="or" id="or" class="form-control" placeholder="Generado automáticamente" readonly>
+                        <small class="form-text text-muted">Se genera automáticamente invirtiendo tu número de identificación.</small>
+                    </div>
+                </fieldset>
+                {% else %}
+                <div class="alert alert-warning">⚠️ Las inscripciones para participantes están cerradas.</div>
+                {% endif %}
+
+                <!-- Sección para Evaluadores -->
+                {% if evento.inscripciones_evaluadores_abiertas %}
+                <fieldset id="form_evaluador" class="border rounded p-4 mb-4 shadow-sm" style="display: none;">
+                    <legend class="float-none w-auto px-2 fw-bold text-warning">🔍 Registro como Evaluador</legend>
+                    <p class="text-muted fst-italic mb-3">
+                        Los evaluadores revisan y califican las actividades del evento. Se requiere adjuntar documentos que certifiquen tu experiencia.
+                    </p>
+                    <div class="mb-3">
+                        <label for="documentos_evaluador" class="form-label">Adjuntar documentos <span class="text-danger">*</span>:</label>
+                        <input type="file" name="documentos_evaluador" id="documentos_evaluador" class="form-control" accept=".pdf,image/*" required>
+                        <small class="form-text text-muted">Sube tus documentos en formato PDF o imagen.</small>
+                        <div class="invalid-feedback">Debes adjuntar los documentos requeridos.</div>
+                    </div>
+                </fieldset>
+                {% else %}
+                <div class="alert alert-warning">⚠️ Las inscripciones para evaluadores están cerradas.</div>
+                {% endif %} {% if evento.inscripciones_asistentes_abiertas or evento.inscripciones_participantes_abiertas or evento.inscripciones_evaluadores_abiertas %}
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">Enviar inscripción</button>
+                </div>
+                {% else %}
+                <div class="alert alert-info mt-3">
+                    🚫 Actualmente no hay inscripciones disponibles para este evento.
+                </div>
+                {% endif %}
+            </form>
+        </div>
     </div>
-
-    <!-- Campos comunes -->
-    <fieldset class="border rounded p-3 mb-3">
-        <legend class="float-none w-auto px-2">Datos Personales</legend>
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="user_id" class="form-label">Identificación (ID):</label>
-                <input type="number" name="user_id" id="user_id" class="form-control" placeholder="Ingresa tu documento" required>
-                <div class="invalid-feedback">Este campo es obligatorio.</div>
-            </div>
-            <div class="col-md-6">
-                <label for="nombre" class="form-label">Nombre completo:</label>
-                <input type="text" name="nombre" id="nombre" class="form-control" placeholder="Ingresa tu nombre" required>
-                <div class="invalid-feedback">Este campo es obligatorio.</div>
-            </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="correo" class="form-label">Correo electrónico:</label>
-                <input type="email" name="correo" id="correo" class="form-control" placeholder="ejemplo@dominio.com" required>
-                <div class="invalid-feedback">Ingresa un correo válido.</div>
-            </div>
-            <div class="col-md-6">
-                <label for="telefono" class="form-label">Teléfono de contacto:</label>
-                <input type="number" name="telefono" id="telefono" class="form-control" placeholder="Ingresa tu teléfono" required>
-                <div class="invalid-feedback">Este campo es obligatorio.</div>
-            </div>
-        </div>
-    </fieldset>
-
-    <!-- Sección para Asistente -->
-    {% if evento.inscripciones_asistentes_abiertas %}
-    <fieldset id="form_asistente" class="border rounded p-3 mb-3" style="display: none;">
-        <legend class="float-none w-auto px-2">Registro como Asistente</legend>
-        {% if evento.cobro|lower == 'sí' or evento.cobro|lower == 'si' %}
-        <div class="mb-3">
-            <label for="soporte_pago" class="form-label">Adjuntar soporte de pago:</label>
-            <input type="file" name="soporte_pago" id="soporte_pago" class="form-control" required>
-            <small class="text-muted">Sube el comprobante de pago en formato PDF o imagen.</small>
-        </div>
-        {% else %}
-        <p>El evento no requiere soporte de pago.</p>
-        {% endif %}
-    </fieldset>
-    {% else %}
-    <div class="alert alert-warning">⚠️ Las inscripciones para asistentes están cerradas.</div>
-    {% endif %}
-
-    <!-- Sección para Participante -->
-    {% if evento.inscripciones_participantes_abiertas %}
-    <fieldset id="form_participante" class="border rounded p-3 mb-3" style="display: none;">
-        <legend class="float-none w-auto px-2">Registro como Participante</legend>
-        <div class="mb-3">
-            <label for="documentos" class="form-label">Adjuntar documentos:</label>
-            <input type="file" name="documentos" id="documentos" class="form-control" required>
-            <small class="text-muted">Sube los documentos requeridos en formato PDF o imagen.</small>
-        </div>
-        <div class="mb-3">
-            <label for="or" class="form-label">Orden de Registro (OR):</label>
-            <input type="text" name="or" id="or" class="form-control" placeholder="Generado automáticamente" readonly>
-            <small class="text-muted">Se generará automáticamente invirtiendo el número de documento.</small>
-        </div>
-    </fieldset>
-    {% else %}
-    <div class="alert alert-warning">⚠️ Las inscripciones para participantes están cerradas.</div>
-    {% endif %} {% if evento.inscripciones_asistentes_abiertas or evento.inscripciones_participantes_abiertas %}
-    <button type="submit" class="btn btn-primary">Enviar inscripción</button> {% else %}
-    <div class="alert alert-info mt-3">
-        🚫 Actualmente no hay inscripciones disponibles para este evento.
-    </div>
-    {% endif %}
-</form>
+</div>
 
 <!-- JavaScript -->
 <script>
     function mostrarFormulario() {
-        var tipo = document.getElementById("tipo_inscripcion").value;
-        var formAsistente = document.getElementById("form_asistente");
-        var formParticipante = document.getElementById("form_participante");
+        const tipo = document.getElementById("tipo_inscripcion").value;
 
-        if (formAsistente) {
-            formAsistente.style.display = (tipo === "Asistente") ? "block" : "none";
-        }
-        if (formParticipante) {
-            formParticipante.style.display = (tipo === "Participante") ? "block" : "none";
-        }
+        const formEvaluador = document.getElementById("form_evaluador");
+        const formParticipante = document.getElementById("form_participante");
+        const formAsistente = document.getElementById("form_asistente");
+
+        if (formAsistente) formAsistente.style.display = (tipo === "Asistente") ? "block" : "none";
+        if (formParticipante) formParticipante.style.display = (tipo === "Participante") ? "block" : "none";
+        if (formEvaluador) formEvaluador.style.display = (tipo === "Evaluador") ? "block" : "none";
     }
 
+    // Generar Orden de Registro invirtiendo el número de identificación para participantes
     document.getElementById("user_id").addEventListener("input", function() {
-        var tipo = document.getElementById("tipo_inscripcion").value;
+        const tipo = document.getElementById("tipo_inscripcion").value;
         if (tipo === "Participante") {
-            var userId = this.value;
-            var orValue = userId.split('').reverse().join('');
-            var orField = document.getElementById("or");
+            const userId = this.value;
+            const orValue = userId.split('').reverse().join('');
+            const orField = document.getElementById("or");
             if (orField) {
                 orField.value = orValue;
             }
         }
     });
 
+    // Validación personalizada
     function validarFormulario() {
-        var tipo = document.getElementById("tipo_inscripcion").value;
+        const tipo = document.getElementById("tipo_inscripcion").value;
+
+        if (!tipo) {
+            alert("Por favor, selecciona un tipo de inscripción.");
+            return false;
+        }
 
         if (tipo === "Asistente") {
-            var pago = document.getElementById("soporte_pago");
+            const pago = document.getElementById("soporte_pago");
             if (pago && pago.offsetParent !== null && pago.files.length === 0) {
                 alert("Debes adjuntar el soporte de pago.");
                 pago.focus();
@@ -139,7 +194,16 @@
         }
 
         if (tipo === "Participante") {
-            var docs = document.getElementById("documentos");
+            const docs = document.getElementById("documentos_participante");
+            if (docs && docs.offsetParent !== null && docs.files.length === 0) {
+                alert("Debes adjuntar los documentos requeridos.");
+                docs.focus();
+                return false;
+            }
+        }
+
+        if (tipo === "Evaluador") {
+            const docs = document.getElementById("documentos_evaluador");
             if (docs && docs.offsetParent !== null && docs.files.length === 0) {
                 alert("Debes adjuntar los documentos requeridos.");
                 docs.focus();
@@ -149,8 +213,20 @@
 
         return true; // permitir envío
     }
+
+    // Bootstrap form validation
+    (function() {
+        'use strict'
+        const forms = document.querySelectorAll('.needs-validation')
+        Array.from(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })();
 </script>
-
-
-
 {% endblock %}

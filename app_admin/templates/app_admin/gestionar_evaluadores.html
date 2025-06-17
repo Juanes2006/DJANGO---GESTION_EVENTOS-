@@ -1,11 +1,4 @@
-{% extends 'app_main/base.html' %} {% block eventos_url %} {% url 'admin:ventana' %} {% endblock %} {% block eventos_text %} Administrador {% endblock %} {% block nav_links %}
-<div class="d-flex flex-column flex-md-row gap-2">
-    <a class="btn btn-outline-success" href="{% url 'admin_evento:agregar_evaluador' %}">
-        <i class="fas fa-plus"></i> Registrar Evaluador
-    </a>
-    </a>
-</div>
-{% endblock %} {% block content %}
+{% extends 'app_main/base.html' %} {% block eventos_url %}{% url 'admin:ventana' %}{% endblock %} {% block eventos_text %}Administrador{% endblock %} {% block nav_links %}{% endblock %} {% block content %}
 <div class="container mt-4">
     <h2 class="text-center mb-4">
         👥 Gestión de Evaluadores: <br> <strong>{{ evento.eve_nombre }}</strong>
@@ -20,8 +13,9 @@
                         <tr>
                             <th>🆔 ID</th>
                             <th>👤 Nombre</th>
-                            <th>📱 Telefono</th>
+                            <th>📱 Teléfono</th>
                             <th>📧 Correo</th>
+                            <th>📌 Estado</th>
                             <th>⚙️ Acciones</th>
                         </tr>
                     </thead>
@@ -32,18 +26,37 @@
                             <td>{{ evaluador.eva_nombre }}</td>
                             <td>{{ evaluador.eva_telefono }}</td>
                             <td>{{ evaluador.eva_correo }}</td>
+
+
+                            <td>
+                                {% if evaluador.eva_estado == 'PENDIENTE' %}
+                                <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% elif evaluador.eva_estado == 'ACEPTADO' %}
+                                <span class="badge bg-success">✅ Aceptado</span> {% elif evaluador.eva_estado == 'RECHAZADO' %}
+                                <span class="badge bg-danger">❌ Rechazado</span> {% else %}
+                                <span class="badge bg-secondary">🔍 {{ evaluador.eva_estado }}</span> {% endif %}
+                            </td>
+
+
                             <td class="text-center">
-                                <a href="{% url 'admin_evento:editar_evaluador' evaluador.eva_id %}" class="btn btn-sm btn-warning">
-                                    ✏️ Editar
-                                </a>
-                                <a href="{% url 'admin_evento:eliminar_evaluador' evaluador.eva_id %}" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro que quieres eliminar este evaluador?');">
-                                    🗑️ Eliminar
-                                </a>
+                                <form action="{% url 'admin_evento:actualizar_estado' %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="eva_id" value="{{ evaluador.eva_id }}">
+                                    <input type="hidden" name="evento_id" value="{{ evento.eve_id }}">
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                                        <button type="submit" name="estado" value="ACEPTADO" class="btn btn-success btn-sm">
+                                                ✅ Aceptar
+                                            </button>
+                                        <button type="submit" name="estado" value="RECHAZADO" class="btn btn-danger btn-sm">
+                                                ❌ Rechazar
+</button>
+                                        </button>
+                                    </div>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %} {% else %}
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
+                            <td colspan="6" class="text-center text-muted py-4">
                                 🚀 No hay evaluadores asignados a este evento aún.
                             </td>
                         </tr>
@@ -53,5 +66,21 @@
             </div>
         </div>
     </div>
+
+    <!-- Toggle de inscripciones corregido -->
+    <div class="text-center">
+        <form method="post" action="{% url 'admin_evento:toggle_inscripcion' tipo='evaluadores' evento_id=evento.eve_id %}">
+            {% csrf_token %} {% if evento.inscripciones_evaluadores_abiertas %}
+            <button class="btn btn-warning btn-lg">
+                    🔒 Cerrar inscripciones de evaluadores
+                </button> {% else %}
+            <button class="btn btn-success btn-lg">
+                    🔓 Abrir inscripciones de evaluadores
+                </button> {% endif %}
+        </form>
+    </div>
 </div>
+
+<!-- Script para debug - temporal -->
+
 {% endblock %}

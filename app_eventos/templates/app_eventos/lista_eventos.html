@@ -1,55 +1,139 @@
-{% extends 'app_main/base.html' %} {% load static %} {% block eventos_url %} {% url 'main:visitante' %} {% endblock %} {% block eventos_text %} Visitante Web {% endblock %} {% block content %}
-<div class="container mt-4">
-    <h2 class="text-center mb-4">{{ titulo|default:"Lista de Eventos" }}</h2>
-    <div class="row">
-    </div>
-    <div class="row">
+{% extends 'app_main/base.html' %} {% load static %} {% block eventos_url %} {% url 'main:visitante' %} {% endblock %} {% block eventos_text %} Visitante Web {% endblock %} {% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'main:buscar_eventos' %}">Buscar Eventos</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'qr:consulta_qr' %}">Consultar Boletas</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'evaluadores:seleccionar_evento' %}">Evaluador</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'participantes:mi_info' %}">Consultar Información P</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'evaluadores:mi_info' %}">Consultar Información E</a></li>
+{% endblock %} {% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-5 fw-bold text-primary">{{ titulo|default:"Lista de Eventos" }}</h2>
+    <div class="row g-4">
         {% if eventos %} {% for evento in eventos %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 event-card rounded">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm rounded-5 event-card position-relative overflow-hidden">
                 {% if evento.imagen %}
-                <img src="{% static 'imagenes/' %}{{ evento.imagen }}" class="card-img-top rounded" alt="Imagen del evento" style="height: 200px; width: 100%; object-fit: fill;"> {% endif %}
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">{{ evento.eve_nombre }}</h5>
-                    <p class="card-text flex-grow-1">
-                        {{ evento.eve_descripcion }}<br>
+                <img src="{% static 'imagenes/' %}{{ evento.imagen }}" alt="Imagen del evento" class="card-img-top rounded-top" style="height: 220px; object-fit: cover; transition: transform 0.4s ease;"> {% else %}
+                <div class="no-image-placeholder rounded-top d-flex align-items-center justify-content-center text-secondary fs-4" style="height: 220px; background:#f8f9fa;">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                {% endif %}
+                <div class="card-body d-flex flex-column p-4">
+                    <h5 class="card-title fw-semibold text-truncate" title="{{ evento.eve_nombre }}">{{ evento.eve_nombre }}</h5>
+                    <p class="card-text flex-grow-1 text-muted small" style="line-height: 1.4;">
+                        {{ evento.eve_descripcion|truncatewords:25 }}<br>
                         <strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}<br>
-                        <strong>📅 Fecha Inicio:</strong> {{ evento.eve_fecha_inicio }}<br>
-                        <strong>🏁 Fecha Fin:</strong> {{ evento.eve_fecha_fin }}<br>
+                        <strong>📅 Inicio:</strong> {{ evento.eve_fecha_inicio }}<br>
+                        <strong>🏁 Fin:</strong> {{ evento.eve_fecha_fin }}<br>
                         <strong>🔹 Estado:</strong>
-                        <span class="badge
-                                    {% if evento.eve_estado == 'ACTIVO' %} bg-success
-                                    {% elif evento.eve_estado == 'CREADO' %} bg-warning
-                                    {% else %} bg-success
-                                    {% endif %}">
-                                    {{ evento.eve_estado }}
-                                </span>
+                        <span class="badge 
+                                {% if evento.eve_estado == 'ACTIVO' %} bg-success
+                                {% elif evento.eve_estado == 'CREADO' %} bg-warning text-dark
+                                {% else %} bg-secondary
+                                {% endif %} py-1 px-3 fw-semibold rounded-pill shadow-sm">
+                                {{ evento.eve_estado }}
+                            </span>
                     </p>
-                    <div class="text-center mt-auto">
-                        <a href="{% url 'main:evento_detalle' evento.eve_id %}" class="btn btn-primary">
-                                    Ver Detalle
-                                </a>
-                        <a href="{% url 'registros:registrarme_evento' evento.eve_id %}" class="btn btn-primary">
-                                    Registrarme
-                                </a>
+                    <div class="mt-auto d-flex justify-content-center gap-3">
+                        <a href="{% url 'main:evento_detalle' evento.eve_id %}" class="btn btn-outline-primary btn-sm px-4 fw-semibold shadow-sm rounded-pill transition-shadow">
+                            <i class="fas fa-eye me-1"></i> Ver Detalle
+                        </a>
+                        <a href="{% url 'registros:registrarme_evento' evento.eve_id %}" class="btn btn-primary btn-sm px-4 fw-semibold shadow-sm rounded-pill transition-shadow">
+                            <i class="fas fa-user-plus me-1"></i> Registrarme
+                        </a>
                     </div>
+                </div>
+
+                <!-- Ribbon Estado -->
+                <div class="ribbon
+                        {% if evento.eve_estado == 'ACTIVO' %} ribbon-green
+                        {% elif evento.eve_estado == 'CREADO' %} ribbon-yellow
+                        {% else %} ribbon-gray
+                        {% endif %}">
+                    {{ evento.eve_estado }}
                 </div>
             </div>
         </div>
         {% endfor %} {% else %}
-        <div class="col-12">
-            <p class="no-events">No hay eventos disponibles en este momento.</p>
+        <div class="col-12 text-center py-5">
+            <i class="fas fa-info-circle fs-3 text-muted mb-3"></i>
+            <p class="fs-5 text-muted">No hay eventos disponibles en este momento.</p>
         </div>
         {% endif %}
     </div>
 </div>
-{% endblock %} {% block nav_links %}
-<li class="nav-item"><a class="nav-link" href="{% url 'main:buscar_eventos' %}">Buscar Eventos</a></li>
-<li class="nav-item"><a class="nav-link" href="{% url 'qr:consulta_qr' %}">Consultar Boletas</a></li>
-<li class="nav-item">
-    <a class="nav-link" href="{% url 'evaluadores:seleccionar_evento' %}">Evaluador</a>
-</li>
-<li class="nav-item">
-    <a class="nav-link" href="{% url 'participantes:mi_info' %}">Consultar Informacion</a>
-</li>
+
+<style>
+    .event-card {
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+        cursor: pointer;
+        background: #fff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+    
+    .event-card:hover {
+        transform: translateY(-10px) scale(1.03);
+        box-shadow: 0 12px 25px rgba(0, 123, 255, 0.25), 0 6px 12px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+    }
+    
+    .event-card img.card-img-top {
+        border-top-left-radius: 1.25rem;
+        border-top-right-radius: 1.25rem;
+        transition: transform 0.4s ease;
+    }
+    
+    .event-card:hover img.card-img-top {
+        transform: scale(1.08);
+        filter: brightness(0.9);
+    }
+    
+    .text-truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .no-image-placeholder i {
+        font-size: 3rem;
+        opacity: 0.2;
+    }
+    
+    .btn.transition-shadow:hover {
+        box-shadow: 0 8px 20px rgba(13, 110, 253, 0.6);
+        transition: box-shadow 0.3s ease;
+    }
+    /* Ribbon estilos */
+    
+    .ribbon {
+        position: absolute;
+        top: 12px;
+        right: -30px;
+        width: 140px;
+        text-align: center;
+        line-height: 28px;
+        color: white;
+        font-weight: 700;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        transform: rotate(45deg);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        user-select: none;
+        pointer-events: none;
+        z-index: 15;
+    }
+    
+    .ribbon-green {
+        background: #198754;
+    }
+    
+    .ribbon-yellow {
+        background: #ffc107;
+        color: #212529;
+    }
+    
+    .ribbon-gray {
+        background: #6c757d;
+    }
+</style>
 {% endblock %}

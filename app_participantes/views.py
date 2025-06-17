@@ -8,7 +8,7 @@ from app_participantes.models import Participantes, ParticipantesEventos
 from app_evaluadores.models import Criterio, Instrumento, Calificacion, Evaluador
 
 
-from .utils import save_file  # Asegúrate de que el archivo utils.py existe y contiene la función save_file
+from .utils import save_file  
 
 def verificar_participante(request):
     if request.method == 'POST':
@@ -23,7 +23,7 @@ def verificar_participante(request):
             messages.error(request, "No se encontró un participante con este ID.")
             return redirect('participantes:verificar_participante')
 
-        return redirect('participantes:modificar_participante', user_id=par_id, evento_id=1)  # Necesitas ajustar evento_id si aplica
+        return redirect('participantes:modificar_participante', user_id=par_id, evento_id=1)  
 
     return render(request, 'app_participantes/verificar_participante.html')
 
@@ -73,6 +73,7 @@ def mi_info(request):
 
     if request.method == 'POST':
         par_id = request.POST.get('par_id')
+        print("PART encontrado:", participante)
         if par_id:
             participante = Participantes.objects.filter(par_id=par_id).first()
             if participante:

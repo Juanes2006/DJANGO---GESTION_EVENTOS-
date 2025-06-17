@@ -3,15 +3,27 @@ from django.db.models import Sum, F, Q
 from django.contrib import messages
 from django.urls import reverse
 from django.http import HttpResponseRedirect
+from django.conf import settings
+import os
 
+from .utils import save_file
 
 from app_eventos.models import Evento
 from app_participantes.models import Participantes, ParticipantesEventos
-from app_evaluadores.models import Criterio, Instrumento, Calificacion, Evaluador
+from app_evaluadores.models import Criterio, Instrumento, Calificacion, Evaluador, EvaluadorEventos, InformacionTecnica
 
 
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from django.core.mail import send_mail
+
+
+def enviar_correo(destinatario, asunto, mensaje):
+    email_desde = settings.EMAIL_HOST_USER
+    destinatarios = [destinatario]
+    send_mail(asunto, mensaje, email_desde, destinatarios, fail_silently=False)
+
+
 
 # --- Panel evaluador ---
 def panel_evaluador(request, eva_id, evento_id):
@@ -106,7 +118,7 @@ def gestionar_criterios(request, evento_id):
                 criterio.delete()
                 messages.success(request, 'Criterio eliminado exitosamente.')
 
-        return redirect(reverse('admin:gestionar_criterios_admin', args=[evento_id]))
+        return redirect(reverse('admin_evento:gestionar_criterios_admin', args=[evento_id]))
 
     total_peso = criterios.aggregate(total=Sum('cri_peso'))['total'] or 0
 
@@ -117,6 +129,7 @@ def gestionar_criterios(request, evento_id):
         'total_peso': round(total_peso, 2),
         'evento': evento
     })
+
 
 
 # --- Cargar instrumento ---
@@ -148,6 +161,38 @@ def cargar_instrumento(request, evento_id):
         'instrumento': instrumento,
         'evento_id': evento_id
     })
+
+@require_http_methods(["GET", "POST"])
+def cargar_informacion_tecnica(request, evento_id):
+    evento = get_object_or_404(Evento, pk=evento_id)
+    info_tecnica = InformacionTecnica.objects.filter(inf_evento_fk=evento).first()
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        descripcion = request.POST.get('descripcion')
+
+        if info_tecnica:
+            info_tecnica.inf_nombre = nombre
+            info_tecnica.inf_descripcion = descripcion
+            info_tecnica.save()
+            messages.success(request, 'Información técnica actualizada exitosamente.')
+        else:
+            InformacionTecnica.objects.create(
+                inf_nombre=nombre,
+                inf_descripcion=descripcion,
+                inf_evento_fk=evento
+            )
+            messages.success(request, 'Información técnica cargada exitosamente.')
+
+        return redirect(reverse('evaluadores:cargar_informacion_tecnica', args=[evento_id]))
+
+    return render(request, 'app_evaluadores/cargar_informacion.html', {
+        'informacion_tecnica': info_tecnica,
+        'evento_id': evento_id
+    })
+
+
+
 
 
 # --- Lista participantes ---
@@ -302,3 +347,198 @@ def ver_calificaciones_participante(request, evento_id, participante_id):
     }
 
     return render(request, 'app_evaluadores/calificaciones_participante.html', context)
+
+
+
+######################## NUEVAS
+
+
+def verificar_evaluador(request):
+    if request.method == 'POST':
+        eva_id = request.POST.get('eva_id')
+        if not eva_id:
+            messages.warning(request, "Por favor, ingresa tu ID de evaluador.")
+            return redirect('evaluadores:verificar_evaluador')
+
+        try:
+            evaluador = Evaluador.objects.get(pk=eva_id)
+        except Evaluador.DoesNotExist:
+            messages.error(request, "No se encontró un evaluador con este ID.")
+            return redirect('evaluadores:verificar_evaluador')
+
+        return redirect('evaluadores:modificar_evaluador', user_id=eva_id, evento_id=1)
+
+    return render(request, 'app_evaluadores/verificar_evaluador.html')
+
+
+
+
+def modificar_evaluador(request, user_id, evento_id):
+    # Obtener evaluador por su ID
+    evaluador = get_object_or_404(Evaluador, pk=user_id)
+    
+    # Obtener la asignación evaluador-evento (evaluadoreventos)
+    asignacion = EvaluadorEventos.objects.filter(
+        eva_eve_evaluador_fk=user_id,
+        eva_eve_evento_fk=evento_id
+    ).first()
+    
+    if not asignacion:
+        messages.error(request, "No se encontró la asignación para este evaluador en el evento.")
+        return redirect('evaluadores:mi_info')  # O la URL que corresponda
+    
+    if request.method == 'POST':
+        # Actualiza campos del evaluador (ajusta según tus campos)
+        evaluador.nombre = request.POST.get('nombre')
+        evaluador.correo = request.POST.get('correo')
+        evaluador.telefono = request.POST.get('telefono')
+        
+        # Si manejas archivos (por ejemplo documentos)
+        file = request.FILES.get('documento')
+        if file:
+            filename = save_file(file, settings.UPLOAD_FOLDER_PAGOS, settings.ALLOWED_EXTENSIONS_PAGOS)
+            if filename:
+                evaluador.par_eve_documentos = filename
+            else:
+                messages.warning(request, "Extensión no permitida o error al guardar el archivo")
+        evaluador.save()
+        asignacion.save()
+        
+        messages.success(request, "Información del evaluador actualizada correctamente.")
+        return redirect('evaluadores:mi_info')  # O donde quieras redirigir
+    
+    context = {
+        'evaluador': evaluador,
+        'asignacion': asignacion,
+        'evento_nombre': asignacion.eva_eve_evento_fk.eve_nombre,
+    }
+    return render(request, 'app_evaluadores/modificar_evaluador.html', context)
+
+
+
+def mi_info(request):
+    eventos = Evento.objects.all().prefetch_related('criterios')
+    
+    evaluador = None
+    eventos_asignados = []
+    
+    if request.method == 'POST':
+        eva_id = request.POST.get('eva_id')
+        print("ID Evaluador:", eva_id)
+        
+        if eva_id:
+            evaluador = Evaluador.objects.filter(eva_id=eva_id).first()
+            print("Evaluador encontrado:", evaluador)
+            
+            if evaluador:
+                # MÉTODO ALTERNATIVO: Consulta directa desde EvaluadorEvento
+                
+                asignaciones = EvaluadorEventos.objects.filter(
+                    eva_eve_evaluador_fk=eva_id,
+                    eva_eve_evento_fk__eve_estado="ACTIVO"
+                ).select_related('eva_eve_evento_fk')
+                
+                print(f"Asignaciones encontradas: {asignaciones.count()}")
+                
+                for asignacion in asignaciones:
+                    eve_id = asignacion.eva_eve_evento_fk.eve_id
+                    
+                    print(f"Evento: {asignacion.eva_eve_evento_fk.eve_nombre}")
+                    print(f"Estado: {asignacion.eva_estado}")
+                    print(f"Documento: '{asignacion.eva_eve_documentos}'")
+                    print("---")
+                    
+                    # Aquí puedes agregar el resto de la lógica de puntajes, etc.
+                    # Por ahora solo lo básico para probar
+                    
+                    eventos_asignados.append({
+                        'evento': {
+                            'eve_id': eve_id,
+                            'eve_nombre': asignacion.eva_eve_evento_fk.eve_nombre,
+                            'eve_fecha_inicio': asignacion.eva_eve_evento_fk.eve_fecha_inicio,
+                            'eve_ciudad': asignacion.eva_eve_evento_fk.eve_ciudad,
+                        },
+                        'eva_estado': asignacion.eva_estado,
+                        'eva_eve_documentos': asignacion.eva_eve_documentos,
+                        'puntaje_total': 0,  # Temporal
+                        'promedio': 0,       # Temporal
+                        'posicion': None,    # Temporal
+                        'instrumento': None, # Temporal
+                        'criterios': [],     # Temporal
+                    })
+            else:
+                messages.error(request, "No se encontró información para el ID del evaluador.")
+    
+    return render(request, "app_evaluadores/eva_informacion.html", {
+        'titulo': "Mis Eventos Asignados",
+        'evaluador': evaluador,
+        'eventos_asignados': eventos_asignados,
+    })
+
+
+def cancelar_inscripcion(request, evento_id, user_id):
+    evento = get_object_or_404(Evento, pk=evento_id)
+    correo = None
+
+    try:
+        evaluador_evento = EvaluadorEventos.objects.get(
+            eva_eve_evaluador_fk__eva_id=user_id,
+            eva_eve_evento_fk=evento
+        )
+        ruta_documento = evaluador_evento.eva_eve_documentos
+
+        # Eliminar documento si existe
+        if ruta_documento:
+            ruta_documento_path = os.path.join(settings.MEDIA_ROOT, 'uploads', ruta_documento)
+            if os.path.exists(ruta_documento_path):
+                os.remove(ruta_documento_path)
+
+        correo = evaluador_evento.eva_eve_evaluador_fk.eva_correo
+
+        # Eliminar el evaluador si no tiene más asignaciones
+        evaluador = evaluador_evento.eva_eve_evaluador_fk
+        evaluador_evento.delete()
+
+        if not evaluador.eventos.exists():  # Sin más relaciones
+            evaluador.delete()
+
+        messages.success(request, "Asignación cancelada y evaluador eliminado exitosamente.")
+
+        # Enviar correo de confirmación
+        if correo:
+            asunto = f"Cancelación de asignación en el evento {evento.eve_nombre}"
+            mensaje = f"Hola,\n\nTu asignación como evaluador en el evento '{evento.eve_nombre}' ha sido cancelada correctamente."
+            enviar_correo(correo, asunto, mensaje)
+
+    except EvaluadorEventos.DoesNotExist:
+        messages.error(request, "No estás asignado a este evento como evaluador.")
+
+    return redirect('qr:consulta_qr')
+
+
+
+
+
+def gestionar_inscripciones(request, eve_id):
+    """Gestionar inscripciones de participantes"""
+    evento = get_object_or_404(Evento, pk=eve_id)
+    
+    # Query similar to the Flask SQLAlchemy join
+    participantes_eventos = ParticipantesEventos.objects.filter(
+        par_eve_evento_fk=eve_id
+    ).select_related('par_eve_participante_fk')
+    
+    participantes = []
+    for pe in participantes_eventos:
+        participantes.append({
+            'par_id': pe.par_eve_participante_fk.par_id,
+            'par_nombre': pe.par_eve_participante_fk.par_nombre,
+            'par_correo': pe.par_eve_participante_fk.par_correo,
+            'par_estado': pe.par_estado,
+            'par_eve_documentos': pe.par_eve_documentos
+        })
+    
+    return render(request, "app_evaluadores/ver_participantes.html", {
+        'evento': evento,
+        'participantes': participantes
+    })

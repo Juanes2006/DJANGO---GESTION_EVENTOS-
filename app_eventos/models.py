@@ -18,6 +18,8 @@ class Evento(models.Model):
     archivo_programacion = models.CharField(max_length=255, null=True, blank=True)
     inscripciones_participantes_abiertas = models.BooleanField(default=True)
     inscripciones_asistentes_abiertas = models.BooleanField(default=True)
+    inscripciones_evaluadores_abiertas = models.BooleanField(default=True)
+
     categorias = models.ManyToManyField(Categoria, through='EventoCategoria', related_name='eventos')
 
 

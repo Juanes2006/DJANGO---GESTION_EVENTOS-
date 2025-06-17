@@ -1,63 +1,101 @@
-{% extends 'app_main/base.html' %} {% block eventos_url %} {% url 'admin:ventana' %} {% endblock %} {% block eventos_text %} Administrar Eventos {% endblock %} {% block content %}
-<h2>Editar Evento</h2>
+{% extends 'app_main/base.html' %} {% block eventos_url %}{% url 'admin:ventana' %}{% endblock %} {% block eventos_text %}Administrar Eventos{% endblock %} {% block content %}
+<div class="container my-5" style="max-width: 720px;">
+    <div class="card shadow-lg rounded-4 border-success border-3">
+        <div class="card-body p-5">
+            <h2 class="text-center mb-5 display-5 fw-bold text-success">Editar Evento</h2>
 
-{% if evento and evento.eve_id %}
-<form method="POST" action="{% url 'eventos:editar_evento' evento.eve_id %}" enctype="multipart/form-data">
-    {% else %}
-    <p>Error: No se encontró el evento para editar.</p>
-    {% endif %} {% csrf_token %}
+            {% if evento and evento.eve_id %}
+            <form method="POST" action="{% url 'eventos:editar_evento' evento.eve_id %}" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
 
-    <div class="mb-3">
-        <label for="nombre" class="form-label">Nombre</label>
-        <input type="text" class="form-control" name="nombre" id="nombre" value="{{ evento.eve_nombre }}" required>
+                <div class="mb-4">
+                    <label for="nombre" class="form-label fw-semibold">Nombre</label>
+                    <input type="text" class="form-control form-control-lg border-success shadow-sm" name="nombre" id="nombre" value="{{ evento.eve_nombre }}" required autocomplete="off">
+                    <div class="invalid-feedback">
+                        Por favor, ingresa el nombre del evento.
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="descripcion" class="form-label fw-semibold">Descripción</label>
+                    <textarea class="form-control form-control-lg border-success shadow-sm" name="descripcion" id="descripcion" rows="4" placeholder="Describe brevemente el evento">{{ evento.eve_descripcion }}</textarea>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="ciudad" class="form-label fw-semibold">Ciudad</label>
+                        <input type="text" class="form-control form-control-lg border-success shadow-sm" name="ciudad" id="ciudad" value="{{ evento.eve_ciudad }}" autocomplete="off" placeholder="Ej: Bogotá">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="lugar" class="form-label fw-semibold">Lugar</label>
+                        <input type="text" class="form-control form-control-lg border-success shadow-sm" name="lugar" id="lugar" value="{{ evento.eve_lugar }}" autocomplete="off" placeholder="Lugar del evento">
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="fecha_inicio" class="form-label fw-semibold">Fecha Inicio</label>
+                        <input type="date" class="form-control form-control-lg border-success shadow-sm" name="fecha_inicio" id="fecha_inicio" value="{{ evento.eve_fecha_inicio|date:'Y-m-d' }}" required>
+                        <div class="invalid-feedback">
+                            Por favor, selecciona la fecha de inicio.
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="fecha_fin" class="form-label fw-semibold">Fecha Fin</label>
+                        <input type="date" class="form-control form-control-lg border-success shadow-sm" name="fecha_fin" id="fecha_fin" value="{{ evento.eve_fecha_fin|date:'Y-m-d' }}">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="cobro" class="form-label fw-semibold">¿Cobro?</label>
+                    <select class="form-select form-select-lg border-success shadow-sm" name="cobro" id="cobro" required>
+                        <option value="" {% if not evento.eve_cobro %}selected{% endif %}>Selecciona una opción</option>
+                        <option value="si" {% if evento.eve_cobro == 'si' %}selected{% endif %}>Sí</option>
+                        <option value="no" {% if evento.eve_cobro == 'no' %}selected{% endif %}>No</option>
+                    </select>
+                    <div class="invalid-feedback">
+                        Selecciona si el evento tiene cobro.
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="imagen" class="form-label fw-semibold">Actualizar Imagen (opcional)</label>
+                    <input type="file" class="form-control form-control-lg border-success shadow-sm" name="imagen" id="imagen" accept="image/*"> {% if evento.imagen %}
+                    <small class="text-muted d-block mt-1">Imagen actual: <a href="{{ evento.imagen.url }}" target="_blank">Ver imagen</a></small> {% endif %}
+                </div>
+
+                <div class="mb-5">
+                    <label for="archivo_programacion" class="form-label fw-semibold">Actualizar Programación (PDF, opcional)</label>
+                    <input type="file" class="form-control form-control-lg border-success shadow-sm" name="archivo_programacion" id="archivo_programacion" accept=".pdf"> {% if evento.archivo_programacion %}
+                    <small class="text-muted d-block mt-1">Programación actual: <a href="{{ evento.archivo_programacion.url }}" target="_blank">Ver archivo</a></small> {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-center">
+                    <button type="submit" class="btn btn-success btn-lg px-5 fw-semibold shadow-sm">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <p class="text-danger text-center fs-5">Error: No se encontró el evento para editar.</p>
+            {% endif %}
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label for="descripcion" class="form-label">Descripción</label>
-        <textarea class="form-control" name="descripcion" id="descripcion">{{ evento.eve_descripcion }}</textarea>
-    </div>
-
-    <div class="mb-3">
-        <label for="ciudad" class="form-label">Ciudad</label>
-        <input type="text" class="form-control" name="ciudad" id="ciudad" value="{{ evento.eve_ciudad }}">
-    </div>
-
-    <div class="mb-3">
-        <label for="lugar" class="form-label">Lugar</label>
-        <input type="text" class="form-control" name="lugar" id="lugar" value="{{ evento.eve_lugar }}">
-    </div>
-
-    <div class="mb-3">
-        <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
-        <input type="date" class="form-control" name="fecha_inicio" id="fecha_inicio" value="{{ evento.eve_fecha_inicio|date:'Y-m-d' }}">
-    </div>
-
-    <div class="mb-3">
-        <label for="fecha_fin" class="form-label">Fecha Fin</label>
-        <input type="date" class="form-control" name="fecha_fin" id="fecha_fin" value="{{ evento.eve_fecha_fin|date:'Y-m-d' }}">
-    </div>
-
-    <div class="mb-3">
-        <label for="cobro" class="form-label">¿Cobro?</label>
-        <select class="form-control" name="cobro" id="cobro" required>
-            <option value="">Selecciona una opción</option>
-            <option value="si">Sí</option>
-            <option value="no">No</option>
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label for="imagen" class="form-label">Actualizar Imagen (opcional)</label>
-        <input type="file" class="form-control" name="imagen" id="imagen" accept="image/*"> {% if evento.imagen %}
-        <small class="text-muted">Imagen actual: {{ evento.imagen.url }}</small> {% endif %}
-    </div>
-
-    <div class="mb-3">
-        <label for="archivo_programacion" class="form-label">Actualizar Programación (PDF, opcional)</label>
-        <input type="file" class="form-control" name="archivo_programacion" id="archivo_programacion" accept=".pdf"> {% if evento.archivo_programacion %}
-        <small class="text-muted">Programación actual: {{ evento.archivo_programacion.url }}</small> {% endif %}
-    </div>
-
-    <button type="submit" class="btn btn-success">Guardar Cambios</button>
-</form>
+<script>
+    (() => {
+        'use strict'
+        const forms = document.querySelectorAll('.needs-validation')
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+</script>
 {% endblock %}

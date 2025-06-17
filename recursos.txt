@@ -7,3 +7,22 @@ qrcode==8.2
 segno==1.6.6
 sqlparse==0.5.3
 tzdata==2025.2
+
+
+
+MIGRACIONES
+
+$ python manage.py makemigrations
+$ python manage.py migrate  
+
+CREAR SUPERUSER
+
+$ python manage.py createsuperuser  
+
+CORRER SERVIDOR
+$ python manage.py runserver
+
+
+MIGRACION APPS 
+python manage.py makemigrations app_evaluadores
+python manage.py migrate

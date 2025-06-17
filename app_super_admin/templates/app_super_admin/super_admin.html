@@ -1,46 +1,132 @@
-{% extends 'app_main/base.html' %} {% load static %}{% block nav_links %}
+{% extends 'app_main/base.html' %} {% load static %} {% block nav_links %}
 <li class="nav-item"><a class="nav-link" href="{% url 'superadmin:agregar_area' %}">Agregar Area</a></li>
 <li class="nav-item"><a class="nav-link" href="{% url 'superadmin:agregar_categoria' %}">Agregar Categoria</a></li>
 {% endblock %} {% block eventos_url %} {% url 'superadmin:super_admin' %} {% endblock %} {% block eventos_text %} Super Admin {% endblock %} {% block content %}
 <div class="container mt-4">
     <div class="text-center">
-        <h2 class="text-center mb-4">Super Admin</h2>
+        <h2 class="text-center mb-4 fw-bold text-primary">Super Admin</h2>
         <p class="lead">Aquí podrás ver y Activar los eventos creados.</p>
     </div>
 
-    <div class="row">
+    <div class="row g-4">
         {% if eventos %} {% for evento in eventos %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 event-card">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm rounded-5 event-card position-relative overflow-hidden">
                 {% if evento.imagen %}
-                <img src="{% static 'imagenes/'|add:evento.imagen %}" class="card-img-top rounded" alt="Imagen del evento" style="height: 200px; width: 100%; object-fit: fill; background-color: #f0f0f0;"> {% endif %}
+                <img src="{% static 'imagenes/'|add:evento.imagen %}" class="card-img-top rounded-top" alt="Imagen del evento" style="height: 220px; width: 100%; object-fit: cover; transition: transform 0.4s ease;"> {% else %}
+                <div class="no-image-placeholder rounded-top d-flex align-items-center justify-content-center text-secondary fs-4" style="height: 220px; background:#f8f9fa;">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                {% endif %}
 
-                <div class=" card-body d-flex flex-column ">
-                    <h5 class="card-title ">{{ evento.eve_nombre }}</h5>
-                    <p class="card-text flex-grow-1 ">
-                        {{ evento.eve_descripcion }}<br>
+                <div class="card-body d-flex flex-column p-4">
+                    <h5 class="card-title fw-semibold text-truncate" title="{{ evento.eve_nombre }}">{{ evento.eve_nombre }}</h5>
+                    <p class="card-text flex-grow-1 text-muted small" style="line-height: 1.4;">
+                        {{ evento.eve_descripcion|truncatewords:25 }}<br>
                         <strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}<br>
                         <strong>📅 Fecha Inicio:</strong> {{ evento.eve_fecha_inicio }}<br>
                         <strong>🏁 Fecha Fin:</strong> {{ evento.eve_fecha_fin }}<br>
-
                         <strong>🔹 Estado:</strong>
-                        <span class="badge {% if evento.eve_estado == 'ACTIVO' %}bg-success{% elif evento.eve_estado == 'CREADO' %}bg-danger{% else %}bg-danger{% endif %} ">
-                                    {{ evento.eve_estado }}
-                                </span>
+                        <span class="badge 
+                                {% if evento.eve_estado == 'ACTIVO' %} bg-success
+                                {% elif evento.eve_estado == 'CREADO' %} bg-danger
+                                {% else %} bg-danger
+                                {% endif %} py-1 px-3 fw-semibold rounded-pill shadow-sm">
+                                {{ evento.eve_estado }}
+                            </span>
                     </p>
-                    <div class="text-center ">
-                        <a href="{% url 'superadmin:ver_evento_superadmin' evento.eve_id %} " class="btn btn-primary ">
-                                    Ver Detalle
-                                </a>
+                    <div class="mt-auto text-center">
+                        <a href="{% url 'superadmin:ver_evento_superadmin' evento.eve_id %}" class="btn btn-primary btn-sm px-4 fw-semibold shadow-sm rounded-pill transition-shadow">
+                            <i class="fas fa-eye me-1"></i> Ver Detalle
+                        </a>
                     </div>
+                </div>
+
+                <!-- Ribbon Estado -->
+                <div class="ribbon
+                        {% if evento.eve_estado == 'ACTIVO' %} ribbon-green
+                        {% elif evento.eve_estado == 'CREADO' %} ribbon-red
+                        {% else %} ribbon-red
+                        {% endif %}">
+                    {{ evento.eve_estado }}
                 </div>
             </div>
         </div>
         {% endfor %} {% else %}
-        <div class="col-12 ">
-            <p class="alert alert-warning ">No hay eventos disponibles en este momento.</p>
+        <div class="col-12">
+            <p class="alert alert-warning">No hay eventos disponibles en este momento.</p>
         </div>
         {% endif %}
     </div>
 </div>
+
+<style>
+    .event-card {
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+        cursor: pointer;
+        background: #fff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+    
+    .event-card:hover {
+        transform: translateY(-10px) scale(1.03);
+        box-shadow: 0 12px 25px rgba(0, 123, 255, 0.25), 0 6px 12px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+    }
+    
+    .event-card img.card-img-top {
+        border-top-left-radius: 1.25rem;
+        border-top-right-radius: 1.25rem;
+        transition: transform 0.4s ease;
+    }
+    
+    .event-card:hover img.card-img-top {
+        transform: scale(1.08);
+        filter: brightness(0.9);
+    }
+    
+    .text-truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .no-image-placeholder i {
+        font-size: 3rem;
+        opacity: 0.2;
+    }
+    
+    .btn.transition-shadow:hover {
+        box-shadow: 0 8px 20px rgba(13, 110, 253, 0.6);
+        transition: box-shadow 0.3s ease;
+    }
+    /* Ribbon estilos */
+    
+    .ribbon {
+        position: absolute;
+        top: 12px;
+        right: -30px;
+        width: 140px;
+        text-align: center;
+        line-height: 28px;
+        color: white;
+        font-weight: 700;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        transform: rotate(45deg);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        user-select: none;
+        pointer-events: none;
+        z-index: 15;
+    }
+    
+    .ribbon-green {
+        background: #198754;
+    }
+    
+    .ribbon-red {
+        background: #dc3545;
+    }
+</style>
 {% endblock %}

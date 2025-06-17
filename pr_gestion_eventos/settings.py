@@ -147,7 +147,7 @@ UPLOAD_FOLDER_PAGOS = os.path.join(BASE_DIR, 'static', 'uploads')
 UPLOAD_FOLDER_PROGRAMACION = os.path.join(BASE_DIR, 'static', 'programacion')
 
 # Extensiones permitidas
-ALLOWED_EXTENSIONS_IMAGENES = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS_IMAGENES = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 ALLOWED_EXTENSIONS_PAGOS = {'png', 'jpg', 'jpeg', 'pdf'}
 ALLOWED_EXTENSIONS_PROGRAMACION = {'pdf'}
 
@@ -211,9 +211,6 @@ def create_upload_folders():
     """Crear carpetas de upload si no existen"""
     folders = [
         UPLOAD_FOLDER_IMAGENES,
-        UPLOAD_FOLDER_PAGOS,
-        UPLOAD_FOLDER_PROGRAMACION,
-        
         os.path.join(BASE_DIR, 'static'),
     ]
     
@@ -278,5 +275,3 @@ EMAIL_HOST_PASSWORD = 'tnxy tzxx zgxf etqc'    # Pon aquí la contraseña de apl
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Usar el mismo correo como remitente por defecto
 
 
-DEBUG = False
-ALLOWED_HOSTS = ['Juanes17066.pythonanywhere.com']

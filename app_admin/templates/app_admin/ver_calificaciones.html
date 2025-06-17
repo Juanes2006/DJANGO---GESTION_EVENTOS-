@@ -6,7 +6,7 @@
         {% for participante in participantes %}
         <div class="list-group-item d-flex justify-content-between align-items-center">
             <span>{{ participante.par_nombre }}</span>
-            <a href="{% url 'admin_evento:ver_calificaciones_participante' evento_id=evento.eve_id participante_id=participante.par_id %}" class="btn btn-primary btn-sm">
+            <a href="{% url 'admin_evento:ver_calificaciones_participante' %}" class="btn btn-primary btn-sm">
               Ver Calificaciones
             </a>
         </div>

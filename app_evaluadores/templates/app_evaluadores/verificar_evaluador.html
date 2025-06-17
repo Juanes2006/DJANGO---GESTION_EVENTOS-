@@ -1,0 +1,20 @@
+ {% extends 'app_main/base.html' %} {% block eventos_url %}{% url 'consulta_qr' %}{% endblock %} {% block eventos_text %}Verificar Participante{% endblock %} {% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Verificar Identidad</h2>
+
+    {% if messages %} {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %} {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="eva_id" class="form-label">Ingrese su ID de Evaluador</label>
+            <input type="text" class="form-control" id="eva_id" name="eva_id" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Continuar</button>
+        <a href="{% url 'consulta_qr' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

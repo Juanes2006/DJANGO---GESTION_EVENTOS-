@@ -1,87 +1,107 @@
 {% extends 'app_main/base.html' %} {% block content %}
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-dark text-white text-center">
-            <h2 class="mb-0">Detalle del Evento</h2>
+<div class="container my-5" style="max-width: 900px;">
+    <div class="card shadow-lg rounded-4 border-primary border-3">
+        <div class="card-header bg-primary text-white text-center rounded-top-4">
+            <h2 class="mb-0 fw-bold">Detalle del Evento</h2>
         </div>
-        <div class="card-body text-center">
-            <h3 class="text-primary">{{ evento.eve_nombre }}</h3>
+        <div class="card-body text-center px-5 py-4">
+
+            <h3 class="text-primary fw-semibold mb-3">{{ evento.eve_nombre }}</h3>
 
             {% load static %} {% if evento.imagen %}
-            <img src="{% static 'imagenes/' %}{{ evento.imagen }}" class="card-img-top rounded" alt="Imagen del evento" style="height: 200px; width: 100%; object-fit: cover;"> {% else %}
-            <p>No hay imagen disponible para este evento.</p>
+            <img src="{% static 'imagenes/' %}{{ evento.imagen }}" alt="Imagen del evento" class="img-fluid rounded shadow-sm mb-4" style="max-height: 250px; width: 100%; object-fit: cover;"> {% else %}
+            <p class="text-muted fst-italic mb-4">No hay imagen disponible para este evento.</p>
             {% endif %}
 
+            <p class="lead text-secondary fst-italic mb-5">{{ evento.eve_descripcion }}</p>
 
-            <br><br>
-            <h6 class="text-muted">{{ evento.eve_descripcion }}</h6>
+            <hr class="my-4">
 
-            <hr>
+            <div class="row text-start mb-4">
+                <div class="col-md-6 mb-3">
+                    <p class="mb-1"><strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}</p>
+                    <p class="mb-1"><strong>🏢 Lugar:</strong> {{ evento.eve_lugar }}</p>
+                    <p class="mb-1"><strong>📅 Fecha Inicio:</strong> {{ evento.eve_fecha_inicio }}</p>
+                    <p class="mb-1"><strong>📅 Fecha Fin:</strong> {{ evento.eve_fecha_fin }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p class="mb-1"><strong>📌 Estado:</strong>
+                        <span class="badge {% if evento.eve_estado == 'Activo' %}bg-danger{% else %}bg-success{% endif %} fs-6">
+                            {{ evento.eve_estado }}
+                        </span>
+                    </p>
 
-            <p><strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}</p>
-            <p><strong>🏢 Lugar:</strong> {{ evento.eve_lugar }}</p>
-            <p><strong>📅 Fecha Inicio:</strong> {{ evento.eve_fecha_inicio }}</p>
-            <p><strong>📅 Fecha Fin:</strong> {{ evento.eve_fecha_fin }}</p>
-
-            <p><strong>📌 Estado:</strong>
-                <span class="badge {% if evento.eve_estado == 'Activo' %} bg-danger {% else %} bg-success {% endif %}">
-                    {{ evento.eve_estado }}
-                </span>
-            </p>
-
-            {% if evento.cobro %}
-            <p><strong>💲Cobro de Boleteria:</strong> <span class="badge bg-warning text-dark">{{ evento.cobro }}</span></p>
-            {% endif %} {% if evento.cupos %}
-            <p><strong>👥 Cupos Disponibles:</strong> <span class="badge bg-info text-dark">{{ evento.cupos }}</span></p>
-            {% endif %} {% if categorias %}
-            <hr>
-            <h4 class="mt-4">📌 Área y Categoría(s) del Evento</h4>
-            <table class="table table-bordered table-hover mt-2">
-                <thead class="table-dark">
-                    <tr>
-                        <th>🏢 Área</th>
-                        <th>📂 Categoría</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for categoria in categorias %}
-                    <tr>
-                        <td>{{ categoria.area.are_nombre }}</td>
-                        <td>{{ categoria.cat_nombre }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% endif %}{% load static %} {% if evento.archivo_programacion %}
-            <a href="{% static evento.archivo_programacion %}" target="_blank" class="btn btn-outline-success">📄 Ver Archivo de Programación</a> {% else %}
-            <p class="text-muted">No hay archivo de programación disponible.</p>
-            {% endif %}
-
-
-
-            <h4 class="mt-4">⭐ Características del Evento</h4>
-            <table class="table table-bordered table-hover mt-2">
-                <thead class="table-dark">
-                    <tr>
-                        <th>🔹 Parámetro</th>
-                        {% if evento.cobro %}
-                        <th>🔸 Valor</th>
-                        {% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for car in evento.caracteristicas.all %}
-                    <tr>
-                        <td>{{ car.car_parametro }}</td>
-                        <td>{{ car.car_valor }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <div class="text-center mt-4">
-                <a href="{% url 'main:lista_eventos' %}" class="btn btn-secondary">Volver</a>
+                    {% if evento.cobro %}
+                    <p class="mb-1"><strong>💲 Cobro de Boletería:</strong>
+                        <span class="badge bg-warning text-dark fs-6">{{ evento.cobro }}</span>
+                    </p>
+                    {% endif %} {% if evento.cupos %}
+                    <p class="mb-1"><strong>👥 Cupos Disponibles:</strong>
+                        <span class="badge bg-info text-dark fs-6">{{ evento.cupos }}</span>
+                    </p>
+                    {% endif %}
+                </div>
             </div>
+
+            {% if categorias %}
+            <hr class="my-4">
+            <h4 class="fw-semibold mb-3">📌 Área y Categoría(s) del Evento</h4>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle text-start">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>🏢 Área</th>
+                            <th>📂 Categoría</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for categoria in categorias %}
+                        <tr>
+                            <td>{{ categoria.area.are_nombre }}</td>
+                            <td>{{ categoria.cat_nombre }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %} {% if evento.archivo_programacion %}
+            <div class="my-4">
+                <a href="{% static evento.archivo_programacion %}" target="_blank" class="btn btn-outline-success btn-lg shadow-sm">
+                    📄 Ver Archivo de Programación
+                </a>
+            </div>
+            {% else %}
+            <p class="text-muted fst-italic">No hay archivo de programación disponible.</p>
+            {% endif %}
+
+            <h4 class="fw-semibold mt-5 mb-3">⭐ Características del Evento</h4>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle text-start">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>🔹 Parámetro</th>
+                            {% if evento.cobro %}
+                            <th>🔸 Valor</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for car in evento.caracteristicas.all %}
+                        <tr>
+                            <td>{{ car.car_parametro }}</td>
+                            <td>{{ car.car_valor }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="text-center mt-5">
+                <a href="{% url 'main:lista_eventos' %}" class="btn btn-secondary btn-lg px-4 shadow-sm">
+                    ← Volver
+                </a>
+            </div>
+
         </div>
     </div>
 </div>

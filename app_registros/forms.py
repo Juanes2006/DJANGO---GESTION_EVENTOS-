@@ -4,6 +4,7 @@ class RegistroEventoForm(forms.Form):
     TIPO_INSCRIPCION_CHOICES = [
         ('Asistente', 'Asistente'),
         ('Participante', 'Participante'),
+        ('Evaluador','Evaluador')
     ]
 
     tipo_inscripcion = forms.ChoiceField(choices=TIPO_INSCRIPCION_CHOICES)

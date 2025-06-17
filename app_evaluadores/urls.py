@@ -26,4 +26,19 @@ urlpatterns = [
     path('evaluador/evento/<int:evento_id>/calificaciones/', views.ver_calificaciones_evento, name='ver_calificaciones_evento'),
 
     path('evento/<int:evento_id>/calificaciones/participante/<int:participante_id>/', views.ver_calificaciones_participante, name='ver_calificaciones_participante'),
+    
+    ################# NUEVAS PARA CONSULTAR
+    
+    path('verificar/', views.verificar_evaluador, name='verificar_evaluador'),
+    path('modificar/<str:user_id>/<int:evento_id>/', views.modificar_evaluador, name='modificar_evaluador'),
+
+    path('mi_info/', views.mi_info, name='mi_info'),
+    
+    
+    path('cancelar_inscripcion/<int:evento_id>/<str:user_id>/', views.cancelar_inscripcion, name='cancelar_inscripcion'),
+    
+    
+    path('lista/<int:eve_id>/participantes/', views.gestionar_inscripciones, name='gestionar_inscripciones'),
+    path('evaluador/evento/<int:evento_id>/informacion_tecnica/', views.cargar_informacion_tecnica, name='cargar_informacion_tecnica'),
+
 ]

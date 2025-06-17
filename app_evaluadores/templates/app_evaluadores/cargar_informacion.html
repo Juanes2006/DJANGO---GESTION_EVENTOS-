@@ -1,0 +1,46 @@
+{% extends "app_main/base.html" %} {% load static %} {% block content %}
+<div class="container mt-5 mb-5" style="max-width: 700px;">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                <i class="fas fa-file-alt me-2"></i> Cargar / Editar Información Técnica
+            </h3>
+        </div>
+        <div class="card-body">
+            <!-- Mensajes de alerta -->
+            {% if messages %}
+            <div>
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="nombre" class="form-label fw-semibold">Nombre de la Información Técnica</label>
+                    <input type="text" id="nombre" name="nombre" class="form-control" placeholder="Ingrese el nombre del documento o información" value="{{ informacion_tecnica.inf_nombre|default_if_none:'' }}" required autofocus>
+                </div>
+
+                <div class="mb-4">
+                    <label for="descripcion" class="form-label fw-semibold">Descripción Detallada</label>
+                    <textarea id="descripcion" name="descripcion" rows="7" class="form-control" placeholder="Describa detalladamente la información técnica relevante" required>{{ informacion_tecnica.inf_descripcion|default_if_none:'' }}</textarea>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'evaluadores:seleccionar_evento' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Guardar Información
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

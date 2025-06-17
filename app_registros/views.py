@@ -7,6 +7,7 @@ from app_eventos.models import Evento
 from app_registros.models import AsistentesEventos
 from app_participantes.models import ParticipantesEventos, Participantes
 from app_registros.models import Asistentes
+from app_evaluadores.models import Evaluador, EvaluadorEventos
 from datetime import datetime
 from django.conf import settings
 
@@ -88,6 +89,41 @@ def registrarme_evento(request, evento_id):
                     par_eve_or=clave_par,
                     par_eve_clave=clave_par
                 )
+                
+                
+            elif tipo == 'Evaluador':
+                evaluador, evaluador_created = Evaluador.objects.get_or_create(
+                    eva_id=user_id,
+                    defaults={'eva_nombre': nombre, 'eva_correo': correo, 'eva_telefono': telefono}
+                )
+
+                documentos_filename = None
+                if documentos:
+                    documentos_filename = documentos.name
+                    documentos_path = os.path.join(settings.MEDIA_ROOT, 'static/uploads', documentos_filename)
+                    with open(documentos_path, 'wb+') as destination:
+                        for chunk in documentos.chunks():
+                            destination.write(chunk)
+
+                clave_eva = user_id[::-1]
+
+                # Usar get_or_create para evitar duplicados
+                evaluador_evento, evento_created = EvaluadorEventos.objects.get_or_create(
+                    eva_eve_evaluador_fk=evaluador,
+                    eva_eve_evento_fk=evento,
+                    defaults={
+                        'eva_eve_fecha_hora': datetime.utcnow(),
+                        'eva_eve_documentos': documentos_filename,
+                        'eva_eve_or': clave_eva,
+                        'eva_eve_clave': clave_eva,
+                        'eva_estado': 'PENDIENTE'
+                    }
+                )
+
+                if evento_created:  # ✅ Verificar si se creó el registro del evento
+                        messages.success(request, "¡Te has preinscrito exitosamente como Evaluador!")
+                else:
+                    messages.info(request, "Ya estás registrado como evaluador en este evento.")
 
             messages.success(request, f"¡Te has preinscrito exitosamente como {tipo}!")
 
@@ -138,7 +174,7 @@ def cancelar_inscripcion(request, evento_id, user_id):
             messages.success(request, "Inscripción cancelada y usuario eliminado exitosamente.")
         except ParticipantesEventos.DoesNotExist:
             messages.error(request, "No estás registrado en este evento.")
-            return redirect('consulta_qr')
+            return redirect('qr:consulta_qr')
 
     # Enviar correo de confirmación de cancelación
     if correo:
@@ -146,4 +182,4 @@ def cancelar_inscripcion(request, evento_id, user_id):
         mensaje = f"Hola,\n\nTu inscripción en el evento '{evento.eve_nombre}' ha sido cancelada correctamente."
         enviar_correo(correo, asunto, mensaje)
 
-    return redirect('consulta_qr')
+    return redirect('qr:consulta_qr')
