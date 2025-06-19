@@ -1,16 +1,20 @@
 from django import forms
 
-class RegistroEventoForm(forms.Form):
-    TIPO_INSCRIPCION_CHOICES = [
-        ('Asistente', 'Asistente'),
-        ('Participante', 'Participante'),
-        ('Evaluador','Evaluador')
-    ]
+TIPOS_INSCRIPCION = (
+    ('Asistente', 'Asistente'),
+    ('Participante', 'Participante'),
+    ('Evaluador', 'Evaluador'),
+)
 
-    tipo_inscripcion = forms.ChoiceField(choices=TIPO_INSCRIPCION_CHOICES)
-    user_id = forms.CharField(label='Documento de identidad')
-    nombre = forms.CharField(label='Nombre completo')
-    correo = forms.EmailField(label='Correo electrónico')
-    telefono = forms.CharField(label='Teléfono')
+class RegistroEventoForm(forms.Form):
+    tipo_inscripcion = forms.ChoiceField(choices=TIPOS_INSCRIPCION, required=True)
+    user_id = forms.IntegerField(required=True)
+    username = forms.CharField(max_length=150, required=True)
+    nombre = forms.CharField(max_length=150, required=True)
+    correo = forms.EmailField(required=True)
+    telefono = forms.CharField(max_length=20, required=True)
+
+    # Campos de archivos, opcionales según tipo_inscripcion
     soporte_pago = forms.FileField(required=False)
-    documentos = forms.FileField(required=False)
+    documentos_participante = forms.FileField(required=False)
+    documentos_evaluador = forms.FileField(required=False)

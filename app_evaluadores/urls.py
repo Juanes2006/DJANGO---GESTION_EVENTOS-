@@ -4,7 +4,11 @@ from . import views
 app_name = 'evaluadores'
 
 urlpatterns = [
-    path('evaluador/<str:eva_id>/evento/<int:evento_id>/panel/', views.panel_evaluador, name='panel_evaluador'),
+    path("mis_eventos/", views.seleccionar_evento_evaluador, name="seleccionar_evento"),
+
+    
+    path('evaluador/<int:eva_id>/evento/<int:evento_id>/panel/', views.panel_evaluador, name='panel_evaluador'),
+
 
 # urls.py
     path('evaluadores/seleccionar_evento/', views.seleccionar_evento, name='seleccionar_evento'),
@@ -13,13 +17,12 @@ urlpatterns = [
 
     path('evaluador/evento/<int:evento_id>/instrumento/', views.cargar_instrumento, name='cargar_instrumento'),
 
-    path('evaluador/<str:eva_id>/evento/<int:evento_id>/participantes/', views.lista_participantes, name='lista_participantes'),
+    path('evaluador/evento/<int:evento_id>/participantes/', views.lista_participantes, name='lista_participantes'),
 
     path('evaluador/<str:eva_id>/evento/<int:evento_id>/participante/<str:par_id>/calificar/', views.calificar_participante, name='calificar_participante'),
 
-    path('evaluador/<str:eva_id>/evento/<int:evento_id>/ranking/', views.ver_ranking, name='ver_ranking'),
+    path('evaluador/evento/<int:evento_id>/ranking/', views.ver_ranking, name='ver_ranking'),
 
-    path('login/', views.login_evaluador, name='login_evaluador'),
 
     path('logout/', views.logout_evaluador, name='logout_evaluador'),
 
@@ -35,7 +38,7 @@ urlpatterns = [
     path('mi_info/', views.mi_info, name='mi_info'),
     
     
-    path('cancelar_inscripcion/<int:evento_id>/<str:user_id>/', views.cancelar_inscripcion, name='cancelar_inscripcion'),
+    path('cancelar/<int:evento_id>/<int:user_id>/', views.cancelar_inscripcion, name='cancelar_inscripcion'),
     
     
     path('lista/<int:eve_id>/participantes/', views.gestionar_inscripciones, name='gestionar_inscripciones'),

@@ -1,17 +1,19 @@
 from django.db import models
 from app_eventos.models import Evento
 from app_participantes.models import Participantes
+from app_usuarios.models import Usuario
 
 class Evaluador(models.Model):
-    eva_id = models.CharField(primary_key=True, max_length=20)
-    eva_nombre = models.CharField(max_length=100)
-    eva_correo = models.CharField(max_length=100)
-    eva_telefono = models.CharField(max_length=45)
     eventos = models.ManyToManyField(Evento, through='EvaluadorEventos', related_name='evaluadores')
+    
+    ########### NUEVO CAMPO PARA RELACIONAR CON USUARIO ###########
+    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)
 
+    def _str_(self):
+        return f"Evaluador: {self.usuario.username}"
+    
 
-    def __str__(self):
-        return self.eva_nombre
+    
     
 
     
@@ -34,7 +36,7 @@ class EvaluadorEventos(models.Model):
         unique_together = ('eva_eve_evaluador_fk', 'eva_eve_evento_fk')
     
     def __str__(self):
-        return f"{self.eva_eve_evaluador_fk.eva_nombre} - {self.eva_eve_evento_fk} - {self.eva_estado}"
+        return f"{self.eva_eve_evaluador_fk.eva_nombre} - {self.eva_eve_evento_fk} - {self.eva_estado} - {self.eva_eve_documentos}"
 
 
 class Criterio(models.Model):

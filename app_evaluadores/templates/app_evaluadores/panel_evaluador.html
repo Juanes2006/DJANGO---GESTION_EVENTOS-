@@ -1,6 +1,6 @@
-{% extends 'app_main/base.html' %} {% block eventos_text %} Panel Evaluador {% endblock %} {% block nav_links %}
+{% extends 'app_main/base.html' %} {% block eventos_text %}<span class="fw-bold">Panel Evaluador</span> {% endblock %} {% block nav_links %}
 <div class="d-flex flex-column flex-md-row gap-2">
-    <a href="{% url 'evaluadores:seleccionar_evento'%}" class="btn btn-outline-primary d-flex align-items-center">
+    <a href="{% url 'evaluadores:seleccionar_evento' %}" class="btn btn-primary d-flex align-items-center">
         <i class="fas fa-arrow-left me-1"></i> Volver Atrás
     </a>
     <a href="{% url 'evaluadores:logout_evaluador' %}" class="btn btn-outline-danger d-flex align-items-center">
@@ -8,14 +8,15 @@
     </a>
 </div>
 {% endblock %} {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center mb-5 fw-bold" style="color: #0d6efd;">
-        🎯 Panel del Evaluador
-    </h2>
+<div class="container mt-4">
+    <div class="text-start mb-2">
+        <p>👋 Bienvenido, <strong>{{ request.user.username }}</strong></p>
+    </div>
 
-    <!-- Gestión de Instrumentos y Criterios -->
+    <h2 class="text-center mb-5 fw-bold" style="color: #0d6efd;">🎯 Panel del Evaluador</h2>
+
     <div class="row g-4">
-        {% comment %} Cards uniform height with flex and shadow {% endcomment %}
+        <!-- Gestionar Criterios -->
         <div class="col-md-4">
             <div class="card shadow-sm h-100 border-primary">
                 <div class="card-body d-flex flex-column">
@@ -32,6 +33,7 @@
             </div>
         </div>
 
+        <!-- Cargar Instrumento -->
         <div class="col-md-4">
             <div class="card shadow-sm h-100 border-success">
                 <div class="card-body d-flex flex-column">
@@ -48,6 +50,7 @@
             </div>
         </div>
 
+        <!-- Cargar Información Técnica -->
         <div class="col-md-4">
             <div class="card shadow-sm h-100 border-info">
                 <div class="card-body d-flex flex-column">
@@ -65,13 +68,13 @@
         </div>
     </div>
 
-    <!-- Participantes -->
     {% if participantes|length == 0 %}
     <div class="alert alert-warning mt-5 text-center fs-5">
         🚫 No hay participantes asignados a este evento.
     </div>
     {% else %}
     <div class="row g-4 mt-5">
+        <!-- Calificar Participantes -->
         <div class="col-md-6">
             <div class="card shadow-sm h-100 border-success">
                 <div class="card-body d-flex flex-column">
@@ -81,13 +84,14 @@
                     <p class="card-text flex-grow-1 text-secondary">
                         Gestiona y agrega calificaciones para este participante.
                     </p>
-                    <a href="{% url 'evaluadores:lista_participantes' evaluador.eva_id evento.eve_id %}" class="btn btn-success mt-auto align-self-start">
-                        Ver Participante <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
+                    <a href="{% url 'evaluadores:lista_participantes' evento.eve_id %}" class="btn btn-success mt-auto align-self-start">
+                            Ver Participante <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
                 </div>
             </div>
         </div>
 
+        <!-- Ver Ranking -->
         <div class="col-md-6">
             <div class="card shadow-sm h-100 border-warning">
                 <div class="card-body d-flex flex-column">
@@ -97,16 +101,16 @@
                     <p class="card-text flex-grow-1 text-secondary">
                         Consulta el ranking de los participantes basado en sus calificaciones.
                     </p>
-                    <a href="{% url 'evaluadores:ver_ranking' evaluador.eva_id evento.eve_id %}" class="btn btn-warning mt-auto align-self-start text-dark">
-                        Ver Ranking <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
+                    <a href="{% url 'evaluadores:ver_ranking' evento.eve_id %}" class="btn btn-warning mt-auto align-self-start text-dark">
+                            Ver Ranking <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
                 </div>
             </div>
         </div>
     </div>
     {% endif %}
 
-    <!-- Calificaciones -->
+    <!-- Ver Calificaciones -->
     <div class="row justify-content-center mt-5">
         <div class="col-md-6">
             <div class="card shadow-sm p-4 text-center border-info">
@@ -124,7 +128,6 @@
     </div>
 </div>
 
-<!-- FontAwesome CDN (si no lo tienes ya en base.html) -->
+<!-- FontAwesome CDN -->
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
 {% endblock %}

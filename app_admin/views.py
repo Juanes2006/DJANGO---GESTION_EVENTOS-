@@ -11,6 +11,7 @@ from app_super_admin.models import Area, Categoria
 from app_participantes.models import Participantes, ParticipantesEventos
 from app_registros.models import Asistentes, AsistentesEventos
 from app_evaluadores.models import Criterio, Instrumento, Calificacion, Evaluador, EvaluadorEventos
+from django.utils.timezone import now
 
 import qrcode
 from io import BytesIO
@@ -19,6 +20,7 @@ from django.core.mail import send_mail
 from django.core.files.base import ContentFile
 from django.conf import settings
 
+from app_usuarios.models import Usuario
 
 import csv
 import io
@@ -41,16 +43,21 @@ def gestionar_inscripciones(request, eve_id):
     # Query similar to the Flask SQLAlchemy join
     participantes_eventos = ParticipantesEventos.objects.filter(
         par_eve_evento_fk=eve_id
-    ).select_related('par_eve_participante_fk')
+    ).select_related('par_eve_participante_fk__usuario')
     
     participantes = []
     for pe in participantes_eventos:
+        asistente = pe.par_eve_participante_fk  # instancia de Asistentes
+        usuario = asistente.usuario
         participantes.append({
-            'par_id': pe.par_eve_participante_fk.par_id,
-            'par_nombre': pe.par_eve_participante_fk.par_nombre,
-            'par_correo': pe.par_eve_participante_fk.par_correo,
+            'id': usuario.id,
+            
+            'username': usuario.username,
+            'email': usuario.email,
+            'first_name': usuario.first_name,
+            'last_name': usuario.last_name,
             'par_estado': pe.par_estado,
-            'par_eve_documentos': pe.par_eve_documentos
+            'par_eve_documentos': pe.par_eve_documentos,
         })
     
     return render(request, "app_admin/gestionar_inscripciones.html", {
@@ -62,28 +69,31 @@ def gestionar_inscripciones(request, eve_id):
 def gestionar_inscripcion_asis(request, eve_id):
     """Gestionar inscripciones de asistentes"""
     evento = get_object_or_404(Evento, pk=eve_id)
-    
+
     asistentes_eventos = AsistentesEventos.objects.filter(
-        asi_eve_evento_fk=eve_id
-    ).select_related('asi_eve_asistente_fk')
-    
+    asi_eve_evento_fk=evento
+).select_related("asi_eve_asistente_fk__usuario")
+
     asistentes = []
     for ae in asistentes_eventos:
+        asistente = ae.asi_eve_asistente_fk  # instancia de Asistentes
+        usuario = asistente.usuario  # instancia de Usuario relacionado
+
         asistentes.append({
-            'asi_id': ae.asi_eve_asistente_fk.asi_id,
-            'asi_nombre': ae.asi_eve_asistente_fk.asi_nombre,
-            'asi_correo': ae.asi_eve_asistente_fk.asi_correo,
-            'asi_telefono': ae.asi_eve_asistente_fk.asi_telefono,
+            'id': usuario.id,
+            
+            'username': usuario.username,
+            'email': usuario.email,
+            'first_name': usuario.first_name,
+            'last_name': usuario.last_name,
             'asi_eve_estado': ae.asi_eve_estado,
-            'asi_eve_soporte': ae.asi_eve_soporte
+            'asi_eve_soporte': ae.asi_eve_soporte,
         })
-    
+
     return render(request, "app_admin/gestionar_inscripciones_asis.html", {
         'evento': evento,
         'asistentes': asistentes
     })
-    
-    
     
 def gestionar_evaluadores(request, evento_id):
     evento = get_object_or_404(Evento, pk=evento_id)
@@ -94,13 +104,17 @@ def gestionar_evaluadores(request, evento_id):
 
     evaluadores = []
     for ee in evaluadores_eventos:
+        asistente = ee.eva_eve_evaluador_fk  # instancia de Asistentes
+        usuario = asistente.usuario 
         evaluadores.append({
-            'eva_id': ee.eva_eve_evaluador_fk.eva_id,
-            'eva_nombre': ee.eva_eve_evaluador_fk.eva_nombre,
-            'eva_correo': ee.eva_eve_evaluador_fk.eva_correo,
-            'eva_telefono': ee.eva_eve_evaluador_fk.eva_telefono,
-            'eva_estado': ee.eva_estado,  # Aquí sí está el campo
-            'eva_eve_clave': getattr(ee, 'eva_eve_clave', None)
+            'id': usuario.id,
+            
+            'username': usuario.username,
+            'email': usuario.email,
+            'first_name': usuario.first_name,
+            'last_name': usuario.last_name,
+            'eva_eve_estado': ee.eva_estado,
+            'eva_eve_documentos': ee.eva_eve_documentos,
         })
 
     return render(request, "app_admin/gestionar_evaluadores.html", {
@@ -118,179 +132,140 @@ def generar_qr_contenido(contenido, nombre_archivo='qr.png'):
     buffer.seek(0)
     return ContentFile(buffer.read(), name=nombre_archivo)
 
+import random
+import string
+
+def generar_contrasena(longitud=10):
+    """Genera una contraseña aleatoria segura"""
+    caracteres = string.ascii_letters + string.digits + string.punctuation
+    return ''.join(random.choices(caracteres, k=longitud))
+
+
 def actualizar_estado(request):
-    """Actualizar estado de participantes, evaluadores o asistentes"""
-    par_id = request.POST.get('par_id')
-    asi_id = request.POST.get('asi_id')
-    eva_id = request.POST.get('eva_id')
+    if request.method != 'POST':
+        messages.error(request, "Método no permitido.")
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    usuario_id = request.POST.get('usuario_id')
     evento_id = request.POST.get('evento_id')
     nuevo_estado = request.POST.get('estado')
-
-    # Validar datos
-    if not evento_id or not (par_id or asi_id or eva_id):
-        messages.error(request, "Error: Faltan datos para actualizar el estado.")
+    print("📥 Datos recibidos:")
+    print("Usuario ID:", usuario_id)
+    print("Evento ID:", evento_id)
+    print("Nuevo Estado:", nuevo_estado)
+    if not usuario_id or not evento_id or not nuevo_estado:
+        messages.error(request, "Faltan datos para actualizar el estado.")
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
-    # CASO PARTICIPANTE
-    if par_id:
-        try:
-            participante_evento = ParticipantesEventos.objects.get(
-                par_eve_participante_fk=par_id,
-                par_eve_evento_fk=evento_id
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    evento = get_object_or_404(Evento, pk=evento_id)
+
+    nombre = f"{usuario.first_name} {usuario.last_name}"
+    correo = usuario.email
+    asunto = f"Estado actualizado - Evento {evento.eve_nombre}"
+    mensaje = f"Hola {nombre},\n\nSu estado ha sido actualizado a: {nuevo_estado}."
+    clave = "EVT" + str(evento.pk).zfill(5)
+
+    try:
+        if usuario.rol == 'PARTICIPANTE':
+            participante, _ = Participantes.objects.get_or_create(usuario=usuario)
+            participante_evento, creado = ParticipantesEventos.objects.get_or_create(
+                par_eve_participante_fk=participante,
+                par_eve_evento_fk=evento,
+                defaults={
+                    'par_estado': nuevo_estado,
+                    'par_eve_clave': clave,
+                    'par_eve_fecha_hora': now()
+                }
             )
-            
-            participante_evento.par_estado = nuevo_estado
-            participante_evento.save()
-
-            clave_evento = getattr(participante_evento, 'par_eve_clave', None) or "No asignada"
-            participante = get_object_or_404(Participantes, pk=par_id)
-
-            correo_participante = participante.par_correo
-            asunto = f"Estado actualizado para el evento #{evento_id}"
-            mensaje_correo = f"Hola {participante.par_nombre},\n\nSu estado ha sido actualizado a: {nuevo_estado}."
-
-            if nuevo_estado == "ACEPTADO":
-                mensaje_correo += f"\n\nSu clave de acceso es: {clave_evento}\nAdjuntamos su código QR de acceso."
-
-                qr_contenido = f"Participante: {participante.par_nombre}\nClave: {clave_evento}\nEvento ID: {evento_id}"
-                qr_img = generar_qr_contenido(qr_contenido)
-
-                email = EmailMessage(
-                    asunto,
-                    mensaje_correo,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [correo_participante],
-                )
-                email.attach('qr_participante.png', qr_img.read(), 'image/png')
-                email.send(fail_silently=False)
-            else:
-                send_mail(
-                    asunto,
-                    mensaje_correo,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [correo_participante],
-                    fail_silently=False,
-                )
-
-            messages.success(request, "Estado del participante actualizado y correo enviado correctamente.")
-            return redirect('main:lista_eventos')
-
-        except ParticipantesEventos.DoesNotExist:
-            messages.error(request, "No se encontró la inscripción del participante.")
-            return redirect(request.META.get('HTTP_REFERER', '/'))
-        except Exception as e:
-            messages.error(request, f"Error al actualizar el estado del participante: {str(e)}")
-            return redirect(request.META.get('HTTP_REFERER', '/'))
-
-    # CASO EVALUADOR
-    elif eva_id:
-        try:
-            evaluador_evento = EvaluadorEventos.objects.get(
-                eva_eve_evaluador_fk=eva_id,
-                eva_eve_evento_fk=evento_id
-            )
-                         
-            evaluador_evento.eva_estado = nuevo_estado
-            print(f"Nuevo estado recibido: {nuevo_estado}")
-
-            evaluador_evento.save()
-
-            clave_evento = getattr(evaluador_evento, 'eva_eve_clave', None) or "No asignada"
-            evaluador = get_object_or_404(Evaluador, pk=eva_id)
-
-            correo_evaluador = evaluador.eva_correo
-            asunto = f"Estado actualizado para el evento #{evento_id}"
-            mensaje_correo = f"Hola {evaluador.eva_nombre},\n\nSu estado como evaluador ha sido actualizado a: {nuevo_estado}."
-
-            if nuevo_estado == "ACEPTADO":
-                mensaje_correo += f"\n\nSu clave de acceso como evaluador es: {clave_evento}\nAdjuntamos su código QR de acceso."
+            if not creado:
+                participante_evento.par_estado = nuevo_estado
+                participante_evento.save()
                 
-                qr_contenido = f"Evaluador: {evaluador.eva_nombre}\nClave: {clave_evento}\nEvento ID: {evento_id}"
+            print("Evaluador:", evaluador.id, "Evento:", evento.id, "Estado:", nuevo_estado)
+
+
+            if nuevo_estado == "ACEPTADO":
+                nueva_password = generar_contrasena()
+                usuario.set_password(nueva_password)
+                usuario.save()
+                qr_contenido = f"Participante: {nombre}\nClave: {clave}\nEvento ID: {evento.eve_id}"
                 qr_img = generar_qr_contenido(qr_contenido)
-               
-                email = EmailMessage(
-                    asunto,
-                    mensaje_correo,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [correo_evaluador],
-                )
-                email.attach('qr_evaluador.png', qr_img.read(), 'image/png')
-                email.send(fail_silently=False)
+                mensaje +=f"Hola {usuario.first_name},\n\nHas sido aceptado como Participante en el evento.\n\nTus credenciales:\nUsuario: {usuario.email}\nContraseña: {nueva_password}\n\nPor favor cambia tu contraseña después de iniciar sesión."
+                email = EmailMessage(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
+                email.attach('qr_participante.png', qr_img.read(), 'image/png')
+                email.send()
             else:
-                send_mail(
-                    asunto,
-                    mensaje_correo,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [correo_evaluador],
-                    fail_silently=False,
-                )
+                send_mail(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
 
-            messages.success(request, "Estado del evaluador actualizado y correo enviado correctamente.")
-            return redirect('main:lista_eventos')
-         
-        except EvaluadorEventos.DoesNotExist:
-            messages.error(request, "No se encontró la inscripción del evaluador.")
-            return redirect(request.META.get('HTTP_REFERER', '/'))
-        except Exception as e:
-            messages.error(request, f"Error al actualizar el estado del evaluador: {str(e)}")
-            return redirect(request.META.get('HTTP_REFERER', '/'))
-
-    # CASO ASISTENTE
-    elif asi_id:
-        try:
-            asistente_evento = AsistentesEventos.objects.get(
-                asi_eve_asistente_fk=asi_id,
-                asi_eve_evento_fk=evento_id
+        elif usuario.rol == 'EVALUADOR':
+            evaluador, _ = Evaluador.objects.get_or_create(usuario=usuario)
+            evaluador_evento, creado = EvaluadorEventos.objects.get_or_create(
+                eva_eve_evaluador_fk=evaluador,
+                eva_eve_evento_fk=evento,
+                defaults={
+                    'eva_estado': nuevo_estado,
+                    'eva_eve_clave': clave,
+                    'eva_eve_fecha_hora': now()
+                    
+                }
+            
             )
             
-            asistente_evento.asi_eve_estado = nuevo_estado
-            asistente_evento.save()
+            
+            if not creado:
+                evaluador_evento.eva_estado = nuevo_estado
+                evaluador_evento.save()
 
-            asistente = get_object_or_404(Asistentes, pk=asi_id)
-            
-            correo_asistente = asistente.asi_correo
-            asunto = f"Estado actualizado para el evento #{evento_id}"
-            mensaje_correo = f"Hola {asistente.asi_nombre},\n\nSu estado como asistente ha sido actualizado a: {nuevo_estado}."
-            
-            # Solo enviar QR si es ACEPTADO, similar a participantes y evaluadores
             if nuevo_estado == "ACEPTADO":
-                mensaje_correo += f"\n\nAdjuntamos su código QR de acceso al evento."
-                qr_contenido = f"Asistente: {asistente.asi_nombre}\nEvento ID: {evento_id}\nEstado: {nuevo_estado}"
+                nueva_password = generar_contrasena()
+                usuario.set_password(nueva_password)
+                usuario.save()
+                qr_contenido = f"Evaluador: {nombre}\nClave: {clave}\nEvento ID: {evento.eve_id}"
                 qr_img = generar_qr_contenido(qr_contenido)
-
-                email = EmailMessage(
-                    asunto,
-                    mensaje_correo,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [correo_asistente],
-                )
-                email.attach('qr_asistente.png', qr_img.read(), 'image/png')
-                email.send(fail_silently=False)
+                mensaje +=f"Hola {usuario.first_name},\n\nHas sido aceptado como Evaluador en el evento.\n\nTus credenciales:\nUsuario: {usuario.email}\nContraseña: {nueva_password}\n\nPor favor cambia tu contraseña después de iniciar sesión."
+                email = EmailMessage(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
+                email.attach('qr_evaluador.png', qr_img.read(), 'image/png')
+                email.send()
             else:
-                send_mail(
-                    asunto,
-                    mensaje_correo,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [correo_asistente],
-                    fail_silently=False,
-                )
+                send_mail(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
 
-            messages.success(request, "Estado del asistente actualizado y correo enviado correctamente.")
-            return redirect('main:lista_eventos')
+        elif usuario.rol == 'ASISTENTE':
+            asistente, _ = Asistentes.objects.get_or_create(usuario=usuario)
+            asistente_evento, creado = AsistentesEventos.objects.get_or_create(
+                asi_eve_asistente_fk=asistente,
+                asi_eve_evento_fk=evento,
+                defaults={
+                    'asi_eve_estado': nuevo_estado,
+                    'asi_eve_fecha_hora': now()
+                }
+            )
+            if not creado:
+                asistente_evento.asi_eve_estado = nuevo_estado
+                asistente_evento.save()
 
-        except AsistentesEventos.DoesNotExist:
-            messages.error(request, "No se encontró la inscripción del asistente.")
+            if nuevo_estado == "ACEPTADO":
+                nueva_password = generar_contrasena()
+                usuario.set_password(nueva_password)
+                usuario.save()
+                qr_contenido = f"Asistente: {nombre}\nEvento ID: {evento.eve_id}\nEstado: {nuevo_estado}"
+                qr_img = generar_qr_contenido(qr_contenido)
+                mensaje +=f"Hola {usuario.first_name},\n\nHas sido aceptado como Asistente en el evento.\n\nTus credenciales:\nUsuario: {usuario.email}\nContraseña: {nueva_password}\n\nPor favor cambia tu contraseña después de iniciar sesión."
+                email = EmailMessage(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
+                email.attach('qr_asistente.png', qr_img.read(), 'image/png')
+                email.send()
+            else:
+                send_mail(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
+        else:
+            messages.error(request, "Rol no válido.")
             return redirect(request.META.get('HTTP_REFERER', '/'))
-        except Exception as e:
-            messages.error(request, f"Error al actualizar el estado del asistente: {str(e)}")
-            return redirect(request.META.get('HTTP_REFERER', '/'))
 
-    # Si no es ninguno de los casos anteriores
-    else:
-        messages.error(request, "Error: No se especificó el tipo de usuario a actualizar.")
+        messages.success(request, "Estado actualizado correctamente y correo enviado.")
+        return redirect('main:lista_eventos')
+
+    except Exception as e:
+        messages.error(request, f"Error al actualizar el estado: {str(e)}")
         return redirect(request.META.get('HTTP_REFERER', '/'))
-
-
 
 def ver_estadisticas(request):
     """Ver estadísticas de eventos"""

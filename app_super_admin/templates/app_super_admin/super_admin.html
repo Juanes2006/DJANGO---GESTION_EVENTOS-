@@ -1,14 +1,51 @@
 {% extends 'app_main/base.html' %} {% load static %} {% block nav_links %}
-<li class="nav-item"><a class="nav-link" href="{% url 'superadmin:agregar_area' %}">Agregar Area</a></li>
-<li class="nav-item"><a class="nav-link" href="{% url 'superadmin:agregar_categoria' %}">Agregar Categoria</a></li>
+<div class="dropdown ms-auto position-relative me-3">
+    <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-person-circle fs-5"></i>
+        👤{{ request.user.first_name }}
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end shadow-lg animate__animated animate__fadeIn" aria-labelledby="userDropdown" style="min-width: 260px;">
+        <li class="px-3 py-2">
+            <p class="mb-1 fw-semibold text-primary">{{ request.user.first_name }} {{ request.user.last_name }}</p>
+            <p class="mb-0 small text-muted">{{ request.user.email }}</p>
+        </li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li class="px-3 py-1 small text-muted">
+            <i class="bi bi-telephone me-1"></i> {{ request.user.telefono|default:"Sin número" }}<br>
+            <i class="bi bi-person-badge me-1"></i> Rol: <span class="text-uppercase">{{ request.user.rol }}</span>
+        </li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 text-primary" href="{% url 'superadmin:agregar_area' %}">
+                <i class="bi bi-journal-text"></i>Agregar Area
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'superadmin:agregar_categoria' %}">
+                <i class="bi bi-box-arrow-right"></i> Agregar Categoria
+            </a>
+        </li>
+
+
+    </ul>
+</div>
 {% endblock %} {% block eventos_url %} {% url 'superadmin:super_admin' %} {% endblock %} {% block eventos_text %} Super Admin {% endblock %} {% block content %}
 <div class="container mt-4">
+    <div class="text-start mb-2">
+        <p>👋 Bienvenid@, <strong>{{ request.user.username }}</strong></p>
+    </div>
+
     <div class="text-center">
         <h2 class="text-center mb-4 fw-bold text-primary">Super Admin</h2>
         <p class="lead">Aquí podrás ver y Activar los eventos creados.</p>
     </div>
 
     <div class="row g-4">
+
         {% if eventos %} {% for evento in eventos %}
         <div class="col-md-4">
             <div class="card h-100 shadow-sm rounded-5 event-card position-relative overflow-hidden">

@@ -2,30 +2,14 @@
 <div class="container mt-4">
     <h2 class="text-center">🧾 Consultar Asignaciones como Evaluador</h2>
 
-    <form method="POST" class="mb-4">
-        {% csrf_token %}
-        <div class="input-group">
-            <input type="text" name="eva_id" class="form-control" placeholder="Ingrese su ID de evaluador" required>
-            <button type="submit" class="btn btn-primary">Consultar</button>
-        </div>
-    </form>
-
-    {% if evaluador %}
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h4 class="card-title">👤 Información Personal-Evaluador</h4>
-            <p><strong>ID:</strong> {{ evaluador.eva_id }}</p>
-            <p><strong>Nombre:</strong> {{ evaluador.eva_nombre }}</p>
-            <p><strong>Correo:</strong> {{ evaluador.eva_correo }}</p>
-        </div>
-    </div>
-
     <div class="mt-4">
         <h4>📅 Eventos en los que estás asignado como evaluador</h4>
         {% if eventos_asignados %}
         <ul class="list-group">
             {% for evento in eventos_asignados %}
             <li class="list-group-item">
+                <!-- ... otros campos ... -->
+
                 <strong>📌 Evento:</strong> {{ evento.evento.eve_nombre }} <br>
                 <strong>📅 Fecha de inicio:</strong> {{ evento.evento.eve_fecha_inicio }} <br>
                 <strong>📍 Ciudad:</strong> {{ evento.evento.eve_ciudad }} <br>
@@ -33,33 +17,34 @@
                 <span class="badge bg-success">✅ Aceptado</span> {% elif evento.eva_estado == 'PENDIENTE' %}
                 <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% else %}
                 <span class="badge bg-danger">❌ Rechazado</span> {% endif %}
-                <br> {% if evento.eva_eve_documentos %}
-                <strong>📂 Documento:</strong>
-                <a href="{{ evento.eva_eve_documentos.url }}" target="_blank">📄 Ver Documento</a> {% else %}
-                <p class="text-muted">No se han cargado documentos.</p>
+                <br>
+                <strong>📂 Documento:</strong> {% if evento.eva_eve_documentos %}
+                <div class="mb-3">
+                    <label class="form-label">Documento actual:</label>
+                    <p>
+                        <a href="{% static 'uploads/' %}{{ evento.eva_eve_documentos }}" target="_blank" class="btn btn-outline-primary btn-sm">
+            📄 Ver Documento
+          </a>
+                    </p>
+                </div>
+                {% else %}
+                <p class="text-muted">No se ha cargado un documento aún.</p>
                 {% endif %}
 
                 <br> {% if evento.archivo_programacion %}
-                <a href="{{ evento.archivo_programacion.url }}" target="_blank" class="btn btn-outline-success mt-2">📄 Ver Archivo de Programación</a> {% else %}
-                <p class="text-muted">No hay archivo de programación disponible.</p>
+                <div class="my-4">
+                    <a href="{{ MEDIA_URL }}programacion/{{ evento.archivo_programacion }}" target="_blank" class="btn btn-outline-success btn-lg shadow-sm">
+          📄 Ver Archivo de Programación
+        </a>
+                </div>
+                {% else %}
+                <p class="text-muted fst-italic">No hay archivo de programación disponible.</p>
                 {% endif %}
 
-                <br>
-
-                <!-- 🟡 Editar Información del Evaluador -->
-                <a href="{% url 'evaluadores:modificar_evaluador' user_id=evaluador.eva_id evento_id=evento.evento.eve_id %}" class="btn btn-warning mt-2">
-    ✏️ Editar Información
-</a>
-
-                <!-- 🔴 Cancelar Asignación como Evaluador -->
-                <a href="{% url 'evaluadores:cancelar_inscripcion' evento_id=evento.evento.eve_id user_id=evaluador.eva_id %}" class="btn btn-danger mt-2" onclick="return confirm('¿Estás seguro de cancelar tu asignación como evaluador?');">
-    ❌ Cancelar Asignación
-</a>
-
-                <!-- 🔵 Ver Participantes del Evento -->
-                <a class="btn btn-primary " href="{% url 'evaluadores:gestionar_inscripciones' evento.evento.eve_id %}">
-    👥 Ver Participantes
-</a>
+                <!-- Botones de acción -->
+                <a href="{% url 'evaluadores:modificar_evaluador' user_id=evaluador.usuario.id evento_id=evento.evento.eve_id %}" class="btn btn-warning mt-2">✏️ Editar Información</a>
+                <a href="{% url 'evaluadores:cancelar_inscripcion' evento_id=evento.evento.eve_id user_id=evaluador.usuario.id %}" class="btn btn-danger mt-2" onclick="return confirm('¿Estás seguro de cancelar tu asignación?');">❌ Cancelar Asignación</a>
+                <a href="{% url 'evaluadores:gestionar_inscripciones' evento.evento.eve_id %}" class="btn btn-primary mt-2">👥 Ver Participantes</a>
 
             </li>
             {% endfor %}
@@ -67,7 +52,7 @@
         {% else %}
         <p class="text-muted">No estás asignado a ningún evento.</p>
         {% endif %}
+
     </div>
-    {% endif %}
 </div>
 {% endblock %}

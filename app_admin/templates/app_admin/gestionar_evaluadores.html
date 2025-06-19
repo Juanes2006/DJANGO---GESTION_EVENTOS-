@@ -13,7 +13,6 @@
                         <tr>
                             <th>🆔 ID</th>
                             <th>👤 Nombre</th>
-                            <th>📱 Teléfono</th>
                             <th>📧 Correo</th>
                             <th>📌 Estado</th>
                             <th>⚙️ Acciones</th>
@@ -22,38 +21,34 @@
                     <tbody>
                         {% if evaluadores %} {% for evaluador in evaluadores %}
                         <tr>
-                            <td>{{ evaluador.eva_id }}</td>
-                            <td>{{ evaluador.eva_nombre }}</td>
-                            <td>{{ evaluador.eva_telefono }}</td>
-                            <td>{{ evaluador.eva_correo }}</td>
-
-
+                            <td>{{ evaluador.id }}</td>
+                            <td>{{ evaluador.first_name }} {{ evaluador.last_name }}</td>
+                            <td>{{ evaluador.email }}</td>
                             <td>
-                                {% if evaluador.eva_estado == 'PENDIENTE' %}
-                                <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% elif evaluador.eva_estado == 'ACEPTADO' %}
-                                <span class="badge bg-success">✅ Aceptado</span> {% elif evaluador.eva_estado == 'RECHAZADO' %}
+                                {% with estado=evaluador.eva_eve_estado|default_if_none:""|upper %} {% if estado == 'REGISTRADO' %}
+                                <span class="badge bg-info text-dark">📝 Registrado</span> {% elif estado == 'PENDIENTE' %}
+                                <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% elif estado == 'ACEPTADO' %}
+                                <span class="badge bg-success">✅ Aceptado</span> {% elif estado == 'RECHAZADO' %}
                                 <span class="badge bg-danger">❌ Rechazado</span> {% else %}
-                                <span class="badge bg-secondary">🔍 {{ evaluador.eva_estado }}</span> {% endif %}
+                                <span class="badge bg-secondary">🔍 Desconocido</span> {% endif %} {% endwith %}
                             </td>
-
-
                             <td class="text-center">
                                 <form action="{% url 'admin_evento:actualizar_estado' %}" method="post">
                                     {% csrf_token %}
-                                    <input type="hidden" name="eva_id" value="{{ evaluador.eva_id }}">
+                                    <input type="hidden" name="usuario_id" value="{{ evaluador.id }}">
                                     <input type="hidden" name="evento_id" value="{{ evento.eve_id }}">
                                     <div class="d-grid gap-2 d-md-flex justify-content-md-center">
                                         <button type="submit" name="estado" value="ACEPTADO" class="btn btn-success btn-sm">
-                                                ✅ Aceptar
-                                            </button>
+                    ✅ Aceptar
+                </button>
                                         <button type="submit" name="estado" value="RECHAZADO" class="btn btn-danger btn-sm">
-                                                ❌ Rechazar
-</button>
-                                        </button>
+                    ❌ Rechazar
+                </button>
                                     </div>
                                 </form>
                             </td>
                         </tr>
+
                         {% endfor %} {% else %}
                         <tr>
                             <td colspan="6" class="text-center text-muted py-4">

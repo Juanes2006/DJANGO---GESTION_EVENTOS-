@@ -1,4 +1,16 @@
 from django.db import models
+from app_usuarios.models import Usuario
+
+
+class SuperAdmin(models.Model):
+    
+    #### NUEVO CAMPO PARA RELACIONAR CON USUARIO ####
+    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)
+
+    def _str_(self):
+        return f"Super Admin: {self.usuario.username}"
+
+
 
 class Area(models.Model):
     are_codigo = models.AutoField(primary_key=True)

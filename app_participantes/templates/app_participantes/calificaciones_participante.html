@@ -15,8 +15,8 @@
             <tbody>
                 {% for cal in calificaciones %}
                 <tr>
-                    <td>{{ cal.cri_descripcion }}</td>
-                    <td>{{ cal.eva_nombre }}</td>
+                    <td>{{ cal.cal_criterio_fk.cri_descripcion }}</td>
+                    <td>{{ cal.cal_evaluador_fk.eva_nombre }}</td>
                     <td>{{ cal.cal_valor }}</td>
                 </tr>
                 {% endfor %}

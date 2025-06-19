@@ -1,66 +1,58 @@
-{% extends 'app_main/base.html' %} {% load static %} {% block eventos_url %} {% url 'admin_ventana' %} {% endblock %} {% block eventos_text %} Administrador {% endblock %} {% block content %}
+{% extends 'app_main/base.html' %} {% load static %} {% block eventos_url %}{% url 'admin_ventana' %}{% endblock %} {% block eventos_text %}Administrador{% endblock %} {% block content %}
 <div class="container mt-4">
     <h2 class="text-center mb-4">
-        👥 Gestión de Inscripciones de Participantes: <br> <strong>{{ evento.eve_nombre }}</strong>
+        👥 Gestión de Inscripciones de Participantes:<br>
+        <strong>{{ evento.eve_nombre }}</strong>
     </h2>
 
     <!-- Tabla de Participantes -->
-    <div class="card shadow-sm rounded-4 mb-4">
+    <div class="card shadow-sm rounded-4 mb-5">
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-striped table-hover align-middle">
-                    <thead class="table-dark">
+                    <thead class="table-dark text-center">
                         <tr>
                             <th>🆔 ID</th>
                             <th>👤 Nombre</th>
                             <th>📧 Correo</th>
                             <th>📌 Estado</th>
                             <th>📂 Documentos</th>
-                            <th class="text-center">⚙️ Acciones</th>
+                            <th>⚙️ Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% if participantes %} {% for participante in participantes %}
-                        <tr>
-                            <td>{{ participante.par_id }}</td>
-                            <td>{{ participante.par_nombre }}</td>
-                            <td>{{ participante.par_correo }}</td>
-
-
-
-
-
-
+                        <tr class="text-center">
+                            <td>{{ participante.id }}</td>
+                            <td>{{ participante.first_name }} {{ participante.last_name }}</td>
+                            <td>{{ participante.email }}</td>
 
                             <td>
-                                {% if participante.par_estado == 'PENDIENTE' %}
-                                <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% elif participante.par_estado == 'ACEPTADO' %}
-                                <span class="badge bg-success">✅ Aceptado</span> {% elif participante.par_estado == 'RECHAZADO' %}
+                                {% with estado=participante.par_estado|default_if_none:""|upper %} {% if estado == 'REGISTRADO' %}
+                                <span class="badge bg-info text-dark">📝 Registrado</span> {% elif estado == 'PENDIENTE' %}
+                                <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% elif estado == 'ACEPTADO' %}
+                                <span class="badge bg-success">✅ Aceptado</span> {% elif estado == 'RECHAZADO' %}
                                 <span class="badge bg-danger">❌ Rechazado</span> {% else %}
-                                <span class="badge bg-secondary">🔍 Desconocido</span> {% endif %}
+                                <span class="badge bg-secondary">🔍 Desconocido</span> {% endif %} {% endwith %}
                             </td>
+
+
+
                             <td>
                                 {% if participante.par_eve_documentos %}
-                                <a href="{% static 'uploads/' %}{{ participante.par_eve_documentos }}" target="_blank" rel="noopener noreferrer">
-        📄 Ver Documentos
-    </a> {% else %}
-                                <p class="text-muted">No se han cargado documentos.</p>
-                                {% endif %}
-
+                                <a href="{% static 'uploads/' %}{{ participante.par_eve_documentos }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
+                                            📄 Ver Documentos
+                                        </a> {% else %}
+                                <span class="text-muted">Sin documentos</span> {% endif %}
                             </td>
                             <td class="text-center">
-                                <form action="{% url 'admin_evento:actualizar_estado' %}" method="POST" class="d-inline">
+                                <form action="{% url 'admin_evento:actualizar_estado' %}" method="post" class="d-inline">
                                     {% csrf_token %}
-                                    <input type="hidden" name="par_id" value="{{ participante.par_id }}">
+                                    <input type="hidden" name="usuario_id" value="{{ participante.id }}">
                                     <input type="hidden" name="evento_id" value="{{ evento.eve_id }}">
-
-                                    <div class="btn-group" role="group">
-                                        <button type="submit" name="estado" value="ACEPTADO" class="btn btn-success btn-sm">
-                                                    ✅ Aceptar
-                                                </button>
-                                        <button type="submit" name="estado" value="RECHAZADO" class="btn btn-danger btn-sm">
-                                                    ❌ Rechazar
-                                                </button>
+                                    <div class="btn-group" role="group" aria-label="Acciones">
+                                        <button type="submit" name="estado" value="ACEPTADO" class="btn btn-success btn-sm">✅ Aceptar</button>
+                                        <button type="submit" name="estado" value="RECHAZADO" class="btn btn-danger btn-sm">❌ Rechazar</button>
                                     </div>
                                 </form>
                             </td>
@@ -79,36 +71,32 @@
     </div>
 
     <!-- Abrir/Cerrar inscripciones -->
-    <div class="mb-4 text-center">
+    <div class="mb-5 text-center">
         <h5>🔧 Gestión de Inscripciones</h5>
         <form method="POST" action="{% url 'admin_evento:toggle_inscripcion' evento.eve_id 'participantes' %}">
             {% csrf_token %} {% if evento.inscripciones_participantes_abiertas %}
             <button type="submit" class="btn btn-danger">
-                🔒 Cerrar inscripciones de participantes
-            </button> {% else %}
+                    🔒 Cerrar inscripciones de participantes
+                </button> {% else %}
             <button type="submit" class="btn btn-success">
-                🔓 Abrir inscripciones de participantes
-            </button> {% endif %}
+                    🔓 Abrir inscripciones de participantes
+                </button> {% endif %}
         </form>
     </div>
 
-
+    <!-- Opciones adicionales -->
     <div class="row mt-4 justify-content-center">
         <div class="col-md-6 mb-3">
             <div class="card shadow-sm rounded-4 p-4 text-center">
-                <h4 class="mb-3">📋 Ver Ranking</h4>
-                <a href="{% url 'admin_evento:ver_ranking_admin' evento.eve_id %}" class="btn btn-success">
-                    Ver Ranking
-                </a>
+                <h4 class="mb-3">📊 Ver Ranking</h4>
+                <a href="{% url 'admin_evento:ver_ranking_admin' evento.eve_id %}" class="btn btn-outline-success">Ver Ranking</a>
             </div>
         </div>
 
         <div class="col-md-6 mb-3">
             <div class="card shadow-sm rounded-4 p-4 text-center">
                 <h4 class="mb-3">📋 Ver Calificaciones</h4>
-                <a href="{% url 'admin_evento:ver_calificaciones_evento' evento.eve_id %}" class="btn btn-success">
-                    Ver Calificaciones
-                </a>
+                <a href="{% url 'admin_evento:ver_calificaciones_evento' evento.eve_id %}" class="btn btn-outline-success">Ver Calificaciones</a>
             </div>
         </div>
     </div>

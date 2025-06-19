@@ -18,27 +18,28 @@
                     <tbody>
                         {% for participante in participantes %}
                         <tr>
-                            <td>{{ participante.par_id }}</td>
-                            <td>{{ participante.par_nombre }} {{ participante.par_telefono|default_if_none:'' }}</td>
+                            <td>{{ participante.usuario.id }}</td>
+                            <td>{{ participante.usuario.first_name }} {{ participante.usuario.last_name }}</td>
                             <td class="text-center">
-                                <a href="{% url 'evaluadores:calificar_participante' eva_id=eva_id evento_id=evento_id par_id=participante.par_id %}" class="btn btn-sm btn-success">
+                                <a href="{% url 'evaluadores:calificar_participante' eva_id=evaluador_id evento_id=evento_id par_id=participante.id %}" class="btn btn-sm btn-success">
                                     <i class="bi bi-pencil-square me-1"></i> Calificar
                                 </a>
                             </td>
                         </tr>
                         {% endfor %}
+
                     </tbody>
                 </table>
             </div>
             {% else %}
             <div class="alert alert-info" role="alert">
-                No hay participantes aceptados.
+                No hay participantes aceptados en este evento.
             </div>
             {% endif %}
 
             <div class="mt-4">
-                <a href="{% url 'evaluadores:seleccionar_evento'%}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left-circle me-1"></i> Volver a Eventos
+                <a href="{% url 'evaluadores:seleccionar_evento' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left-circle me-1"></i> Volver a Mis Eventos
                 </a>
             </div>
         </div>

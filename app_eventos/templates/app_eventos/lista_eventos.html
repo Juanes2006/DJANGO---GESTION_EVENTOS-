@@ -1,9 +1,18 @@
 {% extends 'app_main/base.html' %} {% load static %} {% block eventos_url %} {% url 'main:visitante' %} {% endblock %} {% block eventos_text %} Visitante Web {% endblock %} {% block nav_links %}
 <li class="nav-item"><a class="nav-link" href="{% url 'main:buscar_eventos' %}">Buscar Eventos</a></li>
+<!--
 <li class="nav-item"><a class="nav-link" href="{% url 'qr:consulta_qr' %}">Consultar Boletas</a></li>
 <li class="nav-item"><a class="nav-link" href="{% url 'evaluadores:seleccionar_evento' %}">Evaluador</a></li>
 <li class="nav-item"><a class="nav-link" href="{% url 'participantes:mi_info' %}">Consultar Información P</a></li>
-<li class="nav-item"><a class="nav-link" href="{% url 'evaluadores:mi_info' %}">Consultar Información E</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'evaluadores:mi_info' %}">Consultar Información E</a></li>-->
+<li class="nav-item">
+    <a class="nav-link btn btn-outline-primary rounded-pill px-4 py-2 fw-semibold shadow-sm me-2 transition" href="{% url 'main:login_view' %}">
+        🔐 Iniciar Sesión
+    </a>
+</li>
+
+
+
 {% endblock %} {% block content %}
 <div class="container mt-5">
     <h2 class="text-center mb-5 fw-bold text-primary">{{ titulo|default:"Lista de Eventos" }}</h2>

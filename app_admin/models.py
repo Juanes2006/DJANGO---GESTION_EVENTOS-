@@ -1,10 +1,15 @@
 from django.db import models
+from app_usuarios.models import Usuario
 
 class AdministradorEvento(models.Model):
-    adm_id = models.CharField(primary_key=True, max_length=20)
-    adm_nombre = models.CharField(max_length=100)
-    adm_correo = models.CharField(max_length=100)
-    adm_telefono = models.CharField(max_length=45)
+    
+    
+    ### nuevo acampo para relacionar con Usuario
+    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)
 
-    def __str__(self):
-        return self.adm_nombre
+    def _str_(self):
+        return f"AdminEvento: {self.usuario.username}"
+
+
+    
+    

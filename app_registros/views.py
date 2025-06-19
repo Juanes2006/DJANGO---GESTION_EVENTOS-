@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
 from django.conf import settings
 import os
 from .forms import RegistroEventoForm
@@ -9,15 +8,11 @@ from app_participantes.models import ParticipantesEventos, Participantes
 from app_registros.models import Asistentes
 from app_evaluadores.models import Evaluador, EvaluadorEventos
 from datetime import datetime
-from django.conf import settings
-
-
-import os
-from datetime import datetime
-from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.core.mail import send_mail
-from django.conf import settings
+from app_usuarios.models import Usuario
+from django.contrib.auth.decorators import login_required
+
 
 # Función para enviar correo
 def enviar_correo(destinatario, asunto, mensaje):
@@ -26,117 +21,163 @@ def enviar_correo(destinatario, asunto, mensaje):
     send_mail(asunto, mensaje, email_desde, destinatarios, fail_silently=False)
 
 
+
+
 def registrarme_evento(request, evento_id):
     evento = get_object_or_404(Evento, pk=evento_id)
 
     if request.method == 'POST':
         form = RegistroEventoForm(request.POST, request.FILES)
         if form.is_valid():
-            tipo = form.cleaned_data['tipo_inscripcion']
+            tipo = form.cleaned_data['tipo_inscripcion'].lower()  # Normalizamos a minúsculas
             user_id = form.cleaned_data['user_id']
+            username = form.cleaned_data['username']
             nombre = form.cleaned_data['nombre']
             correo = form.cleaned_data['correo']
             telefono = form.cleaned_data['telefono']
-            soporte_pago = form.cleaned_data.get('soporte_pago')
-            documentos = form.cleaned_data.get('documentos')
+            
+            # Validaciones de datos duplicados
+            if Usuario.objects.filter(username=username).exclude(pk=user_id).exists():
+                messages.error(request, "El nombre de usuario ya está en uso.")
+                return redirect(request.path)
 
-            if tipo == 'Asistente':
-                asistente, created = Asistentes.objects.get_or_create(
-                    asi_id=user_id,
-                    defaults={'asi_nombre': nombre, 'asi_correo': correo, 'asi_telefono': telefono}
-                )
+            if Usuario.objects.filter(email=correo).exclude(pk=user_id).exists():
+                messages.error(request, "El correo electrónico ya está en uso.")
+                return redirect(request.path)
+            
+            if Usuario.objects.filter(telefono=telefono).exclude(pk=user_id).exists():
+                messages.error(request, "Este telefono  ya está en uso.")
+                return redirect(request.path)
+            
 
-                soporte_pago_filename = None
-                if evento.cobro.lower() in ['sí', 'si'] and soporte_pago:
-                    soporte_pago_filename = soporte_pago.name
-                    soporte_pago_path = os.path.join(settings.MEDIA_ROOT, 'static/uploads', soporte_pago_filename)
-                    with open(soporte_pago_path, 'wb+') as destination:
-                        for chunk in soporte_pago.chunks():
-                            destination.write(chunk)
 
-                clave_asis = user_id[::-1]
+            # Crear o actualizar usuario
+            usuario, created = Usuario.objects.get_or_create(
+                pk=user_id,
+                defaults={
+                    'username': username,
+                    'first_name': nombre,
+                    'email': correo,
+                }
+            )
+            if not created:
+                usuario.username = username
+                usuario.first_name = nombre
+                usuario.email = correo
 
-                AsistentesEventos.objects.create(
+            usuario.telefono = telefono
+            usuario.rol = tipo.upper()  # 'ASISTENTE', 'PARTICIPANTE', 'EVALUADOR'
+            usuario.save()
+
+            # Archivos
+            soporte_pago_file = request.FILES.get('soporte_pago')
+            documentos_part_file = request.FILES.get('documentos_participante')
+            documentos_eval_file = request.FILES.get('documentos_evaluador')
+
+            if tipo == 'asistente':
+                asistente, _ = Asistentes.objects.get_or_create(usuario=usuario)
+
+                ya_registrado = AsistentesEventos.objects.filter(
                     asi_eve_asistente_fk=asistente,
-                    asi_eve_evento_fk=evento,
-                    asi_eve_fecha_hora=datetime.utcnow(),
-                    asi_eve_soporte=soporte_pago_filename,
-                    asi_eve_estado='Registrado',
-                    asi_eve_clave=clave_asis
-                )
+                    asi_eve_evento_fk=evento
+                ).exists()
+                if not ya_registrado:
+                    soporte_pago_filename = guardar_archivo(soporte_pago_file) if soporte_pago_file else None
+                    clave_asis = str(usuario.pk)[::-1]
 
-            elif tipo == 'Participante':
-                participante, created = Participantes.objects.get_or_create(
-                    par_id=user_id,
-                    defaults={'par_nombre': nombre, 'par_correo': correo, 'par_telefono': telefono}
-                )
+                    AsistentesEventos.objects.create(
+                        asi_eve_asistente_fk=asistente,
+                        asi_eve_evento_fk=evento,
+                        asi_eve_fecha_hora=datetime.utcnow(),
+                        asi_eve_soporte=soporte_pago_filename,
+                        asi_eve_estado='Registrado',
+                        asi_eve_clave=clave_asis
+                    )
+                    messages.success(request, "¡Te has preinscrito exitosamente como Asistente!")
+                else:
+                    messages.info(request, "Ya estás registrado como asistente en este evento.")
 
-                documentos_filename = None
-                if documentos:
-                    documentos_filename = documentos.name
-                    documentos_path = os.path.join(settings.MEDIA_ROOT, 'static/uploads', documentos_filename)
-                    with open(documentos_path, 'wb+') as destination:
-                        for chunk in documentos.chunks():
-                            destination.write(chunk)
+            elif tipo == 'participante':
+                participante, _ = Participantes.objects.get_or_create(usuario=usuario)
 
-                clave_par = user_id[::-1]
-
-                ParticipantesEventos.objects.create(
+                ya_registrado = ParticipantesEventos.objects.filter(
                     par_eve_participante_fk=participante,
-                    par_eve_evento_fk=evento,
-                    par_eve_fecha_hora=datetime.utcnow(),
-                    par_eve_documentos=documentos_filename,
-                    par_eve_or=clave_par,
-                    par_eve_clave=clave_par
-                )
-                
-                
-            elif tipo == 'Evaluador':
-                evaluador, evaluador_created = Evaluador.objects.get_or_create(
-                    eva_id=user_id,
-                    defaults={'eva_nombre': nombre, 'eva_correo': correo, 'eva_telefono': telefono}
-                )
+                    par_eve_evento_fk=evento
+                ).exists()
+                if not ya_registrado:
+                    documentos_filename = guardar_archivo(documentos_part_file) if documentos_part_file else None
+                    clave_par = str(usuario.pk)[::-1]
 
-                documentos_filename = None
-                if documentos:
-                    documentos_filename = documentos.name
-                    documentos_path = os.path.join(settings.MEDIA_ROOT, 'static/uploads', documentos_filename)
-                    with open(documentos_path, 'wb+') as destination:
-                        for chunk in documentos.chunks():
-                            destination.write(chunk)
+                    ParticipantesEventos.objects.create(
+                        par_eve_participante_fk=participante,
+                        par_eve_evento_fk=evento,
+                        par_eve_fecha_hora=datetime.utcnow(),
+                        par_eve_documentos=documentos_filename,
+                        par_eve_or=clave_par,
+                        par_eve_clave=clave_par
+                    )
+                    messages.success(request, "¡Te has preinscrito exitosamente como Participante!")
+                else:
+                    messages.info(request, "Ya estás registrado como participante en este evento.")
 
-                clave_eva = user_id[::-1]
+            elif tipo == 'evaluador':
+                evaluador, _ = Evaluador.objects.get_or_create(usuario=usuario)
 
-                # Usar get_or_create para evitar duplicados
-                evaluador_evento, evento_created = EvaluadorEventos.objects.get_or_create(
+                ya_registrado = EvaluadorEventos.objects.filter(
                     eva_eve_evaluador_fk=evaluador,
-                    eva_eve_evento_fk=evento,
-                    defaults={
-                        'eva_eve_fecha_hora': datetime.utcnow(),
-                        'eva_eve_documentos': documentos_filename,
-                        'eva_eve_or': clave_eva,
-                        'eva_eve_clave': clave_eva,
-                        'eva_estado': 'PENDIENTE'
-                    }
-                )
+                    eva_eve_evento_fk=evento
+                ).exists()
+                if not ya_registrado:
+                    documentos_filename = guardar_archivo(documentos_eval_file) if documentos_eval_file else None
+                    clave_eva = str(usuario.pk)[::-1]
 
-                if evento_created:  # ✅ Verificar si se creó el registro del evento
-                        messages.success(request, "¡Te has preinscrito exitosamente como Evaluador!")
+                    EvaluadorEventos.objects.create(
+                        eva_eve_evaluador_fk=evaluador,
+                        eva_eve_evento_fk=evento,
+                        eva_eve_fecha_hora=datetime.utcnow(),
+                        eva_eve_documentos=documentos_filename,
+                        eva_eve_or=clave_eva,
+                        eva_eve_clave=clave_eva,
+                        eva_estado='PENDIENTE'
+                    )
+                    messages.success(request, "¡Te has preinscrito exitosamente como Evaluador!")
                 else:
                     messages.info(request, "Ya estás registrado como evaluador en este evento.")
+            else:
+                messages.error(request, "Tipo de inscripción no válido.")
+                return redirect('main:lista_eventos')
 
-            messages.success(request, f"¡Te has preinscrito exitosamente como {tipo}!")
-
-            # Enviar correo de confirmación
+            # Enviar correo
             asunto = f"Confirmación de registro en {evento.eve_nombre}"
-            mensaje = f"Hola {nombre}\n\nTe has preinscrito exitosamente como {tipo} en el evento '{evento.eve_nombre}'.\n¡Confirmemos tus datos!\nDocumento : {user_id}\nNombre: {nombre}\nCorreo: {correo}\nTelefono: {telefono}\n¡Espera tu confirmacion!\n¡Gracias por tu participación!"
-            enviar_correo(correo, asunto, mensaje)
+            mensaje = (
+                f"Hola {usuario.first_name},\n\n"
+                f"Te has preinscrito exitosamente como {tipo.capitalize()} en el evento '{evento.eve_nombre}'.\n"
+                f"Tu usuario es: {user_id}\n"
+                "Por favor, espera la confirmación.\n"
+                "Gracias por participar."
+            )
+            enviar_correo(usuario.email, asunto, mensaje)
 
             return redirect('main:lista_eventos')
+        else:
+            messages.error(request, "Por favor corrige los errores en el formulario.")
+            print(form.errors)  #depurador
+
     else:
         form = RegistroEventoForm()
 
     return render(request, 'app_registros/formulario_registro.html', {'form': form, 'evento': evento})
+
+
+def guardar_archivo(fichero):
+    filename = fichero.name
+    upload_dir = os.path.join(settings.MEDIA_ROOT, 'uploads')
+    os.makedirs(upload_dir, exist_ok=True)
+    filepath = os.path.join(upload_dir, filename)
+    with open(filepath, 'wb+') as destination:
+        for chunk in fichero.chunks():
+            destination.write(chunk)
+    return filename
 
 
 def cancelar_inscripcion(request, evento_id, user_id):

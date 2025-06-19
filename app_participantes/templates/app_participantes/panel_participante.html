@@ -1,0 +1,154 @@
+{% extends 'app_main/base.html' %}{% load static %}{% block nav_links %}
+
+<div class="position-fixed top-0 end-0 m-3" style="z-index: 1050;">
+    <div class="dropdown">
+        <button class="btn btn-primary dropdown-toggle" type="button" id="infoDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+      👤 {{ request.user.first_name }}
+    </button>
+        <ul class="dropdown-menu dropdown-menu-end p-3 shadow" aria-labelledby="infoDropdown" style="min-width: 250px;">
+            <li><strong>Nombre:</strong> {{ request.user.first_name }} {{ request.user.last_name }}</li>
+            <li><strong>Email:</strong> {{ request.user.email }}</li>
+            <li><strong>Teléfono:</strong> {{ request.user.telefono }}</li>
+            <li><strong>Rol:</strong> {{ request.user.rol }}</li>
+            <hr>
+            <li><a class="dropdown-item text-primary" href="{% url 'participantes:mi_info' %}">📋 Mis Eventos</a></li>
+            <li><a class="dropdown-item text-danger" href="{% url 'evaluadores:logout_evaluador' %}">🔴 Cerrar Sesión</a></li>
+        </ul>
+    </div>
+</div>
+{% endblock %} {% block content %}
+
+
+<div class="container mt-4">
+    <div class="container mt-4">
+        <div class="text-start mb-2">
+            <p>👋 Bienvenido, <strong>{{ request.user.username }}</strong></p>
+        </div>
+
+
+        <div class="text-center">
+            <h2 class="mb-4 fw-bold text-primary">Mis Eventos</h2>
+            <p class="lead">Estos son los eventos donde estás inscrito como participante.</p>
+        </div>
+
+        <div class="row g-4">
+            {% if eventos_inscritos %} {% for inscripcion in eventos_inscritos %} {% with evento=inscripcion.par_eve_evento_fk %}
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm rounded-5 event-card position-relative overflow-hidden">
+
+                    <!-- Imagen del evento -->
+                    {% if evento.imagen %}
+                    <img src="{% static 'imagenes/'|add:evento.imagen %}" class="card-img-top rounded-top" alt="Imagen del evento" style="height: 220px; width: 100%; object-fit: cover;"> {% else %}
+                    <div class="no-image-placeholder rounded-top d-flex align-items-center justify-content-center text-secondary fs-4" style="height: 220px; background:#f8f9fa;">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    {% endif %}
+
+                    <!-- Contenido del evento -->
+                    <div class="card-body d-flex flex-column p-4">
+                        <h5 class="card-title fw-semibold text-truncate" title="{{ evento.eve_nombre }}">
+                            {{ evento.eve_nombre }}
+                        </h5>
+                        <p class="card-text flex-grow-1 text-muted small" style="line-height: 1.4;">
+                            {{ evento.eve_descripcion|truncatewords:25 }}<br>
+                            <strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}<br>
+                            <strong>📅 Inicio:</strong> {{ evento.eve_fecha_inicio }}<br>
+                            <strong>🏁 Fin:</strong> {{ evento.eve_fecha_fin }}<br>
+                            <strong>🔸 Estado Inscripción:</strong>
+                            <span class="badge bg-info text-dark">
+                                    {{ inscripcion.par_estado|default:"DESCONOCIDO" }}
+                                </span>
+                        </p>
+
+                        <!-- Botón opcional (por ejemplo: ver QR o clave) -->
+
+                    </div>
+
+                    <!-- Cinta del estado del evento -->
+                    <div class="ribbon {% if evento.eve_estado == 'ACTIVO' %}ribbon-green{% else %}ribbon-red{% endif %}">
+                        {{ evento.eve_estado }}
+                    </div>
+                </div>
+            </div>
+            {% endwith %} {% endfor %} {% else %}
+            <div class="col-12">
+                <p class="alert alert-warning text-center">No estás inscrito en ningún evento actualmente.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <style>
+        .event-card {
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+            cursor: pointer;
+            background: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .event-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 12px 25px rgba(0, 123, 255, 0.25), 0 6px 12px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        .event-card img.card-img-top {
+            border-top-left-radius: 1.25rem;
+            border-top-right-radius: 1.25rem;
+            transition: transform 0.4s ease;
+        }
+        
+        .event-card:hover img.card-img-top {
+            transform: scale(1.08);
+            filter: brightness(0.9);
+        }
+        
+        .text-truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .no-image-placeholder i {
+            font-size: 3rem;
+            opacity: 0.2;
+        }
+        
+        .btn.transition-shadow:hover {
+            box-shadow: 0 8px 20px rgba(13, 110, 253, 0.6);
+            transition: box-shadow 0.3s ease;
+        }
+        /* Ribbon estilos */
+        
+        .ribbon {
+            position: absolute;
+            top: 12px;
+            right: -30px;
+            width: 140px;
+            text-align: center;
+            line-height: 28px;
+            color: white;
+            font-weight: 700;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            transform: rotate(45deg);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            user-select: none;
+            pointer-events: none;
+            z-index: 15;
+        }
+        
+        .ribbon-green {
+            background: #198754;
+        }
+        
+        .ribbon-yellow {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .ribbon-gray {
+            background: #6c757d;
+        }
+    </style>
+    {% endblock %}

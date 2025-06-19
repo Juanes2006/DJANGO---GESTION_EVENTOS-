@@ -1,16 +1,52 @@
 {% extends 'app_main/base.html' %} {% block eventos_url %} {% url 'admin_ventana' %} {% endblock %} {% block eventos_text %}
-<i class="fas fa-user-cog"></i> Administración {% endblock %} {% block nav_links %}
-<div class="d-flex flex-column flex-md-row gap-3">
-    <a class="btn btn-success shadow-sm px-4 d-flex align-items-center gap-2" href="{% url 'eventos:eventos_crear_evento' %}">
-        <i class="fas fa-plus"></i> Crear Evento
-    </a>
-    <a class="btn btn-info shadow-sm px-4 d-flex align-items-center gap-2" href="{% url 'admin_evento:ver_estadisticas' %}">
-        <i class="fas fa-chart-bar"></i> Estadísticas
-    </a>
+<i class="fas fa-user-cog"></i> Administración {% endblock %}{% block nav_links %}
+<div class="dropdown ms-auto position-relative me-3">
+    <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-person-circle fs-5"></i>
+        👤{{ request.user.first_name }}
+    </button>
+
+    <ul class="dropdown-menu dropdown-menu-end shadow-lg animate__animated animate__fadeIn" aria-labelledby="userDropdown" style="min-width: 260px;">
+
+        <!-- Información del usuario -->
+        <li class="px-3 py-2">
+            <p class="mb-1 fw-semibold text-primary">{{ request.user.first_name }} {{ request.user.last_name }}</p>
+            <p class="mb-0 small text-muted">{{ request.user.email }}</p>
+        </li>
+
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+
+        <!-- Info adicional -->
+        <li class="px-3 py-1 small text-muted">
+            <i class="bi bi-telephone me-1"></i> {{ request.user.telefono|default:"Sin número" }}<br>
+            <i class="bi bi-person-badge me-1"></i> Rol: <span class="text-uppercase">{{ request.user.rol }}</span>
+        </li>
+
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+
+        <!-- Botones de acción -->
+        <li class="px-3 pb-3 d-flex flex-column gap-2">
+            <a href="{% url 'eventos:eventos_crear_evento' %}" class="btn btn-success d-flex align-items-center justify-content-center gap-2">
+                <i class="fas fa-plus"></i><span>Crear Evento</span>
+            </a>
+            <a href="{% url 'admin_evento:ver_estadisticas' %}" class="btn btn-info d-flex align-items-center justify-content-center gap-2">
+                <i class="fas fa-chart-bar"></i><span>Estadísticas</span>
+            </a>
+        </li>
+    </ul>
 </div>
 {% endblock %} {% block content %}
 <div class="container my-5">
+    <div class="text-start mb-2">
+        <p>👋 Bienvenid@, <strong>{{ request.user.username }}</strong></p>
+    </div>
+
     <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+
         <div class="card-header bg-gradient-primary text-white text-center py-4">
             <h1 class="mb-0 fs-3 fw-bold text-shadow">
                 <i class="fas fa-tasks me-2"></i> Panel de Administración

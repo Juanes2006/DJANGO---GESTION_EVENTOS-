@@ -6,9 +6,28 @@ from django.db.models import Sum, F
 from app_eventos.models import Evento
 from app_participantes.models import Participantes, ParticipantesEventos
 from app_evaluadores.models import Criterio, Instrumento, Calificacion, Evaluador
-
+from app_participantes.models import Participantes, ParticipantesEventos
+from django.contrib.auth.decorators import login_required
 
 from .utils import save_file  
+
+@login_required
+def panel_participante(request):
+    usuario = request.user
+
+    if usuario.rol != 'PARTICIPANTE':
+        messages.error(request, "No tienes permiso para acceder a esta página.")
+        return redirect("main:index")
+
+    eventos_inscritos = ParticipantesEventos.objects.select_related('par_eve_evento_fk')\
+        .filter(par_eve_participante_fk__usuario=usuario)
+
+    return render(request, "app_participantes/panel_participante.html", {
+        "eventos_inscritos": eventos_inscritos
+    })
+
+
+
 
 def verificar_participante(request):
     if request.method == 'POST':
@@ -171,16 +190,15 @@ def ver_calificaciones_participante(request, evento_id, participante_id):
     participante = get_object_or_404(Participantes, pk=participante_id)
 
     calificaciones = Calificacion.objects.filter(
-        cal_participante_fk=participante_id,
-        cal_criterio_fk__cri_evento_fk=evento_id
-    ).select_related('cal_criterio_fk', 'cal_evaluador_fk').values(
-        'cal_criterio_fk__cri_descripcion',
-        'cal_evaluador_fk__eva_nombre',
-        'cal_valor'
-    )
+        cal_criterio_fk__cri_evento_fk=evento,
+        cal_participante_fk=participante
+    ).select_related('cal_criterio_fk', 'cal_evaluador_fk')
 
-    return render(request, 'app_participantes/calificaciones_participante.html', {
+    context = {
         'evento': evento,
         'participante': participante,
-        'calificaciones': calificaciones,
-    })
+        'calificaciones': calificaciones
+    }
+
+    return render(request, 'app_participantes/calificaciones_participante.html', context)
+

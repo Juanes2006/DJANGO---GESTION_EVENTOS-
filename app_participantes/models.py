@@ -1,14 +1,16 @@
 from django.db import models
 from app_eventos.models import Evento
+from app_usuarios.models import Usuario
 
 class Participantes(models.Model):
-    par_id = models.CharField(primary_key=True, max_length=20)
-    par_nombre = models.CharField(max_length=100)
-    par_correo = models.CharField(max_length=100)
-    par_telefono = models.CharField(max_length=45)
+    
+    
+    #### NUEVO CAMPO PARA RELACIONAR CON USUARIO ####
+    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)
 
-    def __str__(self):
-        return self.par_nombre
+    def _str_(self):
+        return f"Participante: {self.usuario.username}"
+
 
 class ParticipantesEventos(models.Model):
     ESTADOS = (

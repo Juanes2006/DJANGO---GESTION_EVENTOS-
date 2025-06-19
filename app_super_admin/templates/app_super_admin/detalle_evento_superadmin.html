@@ -1,4 +1,4 @@
-{% extends 'app_main/base.html' %} {% load static %} {% block eventos_url %} {% url 'superadmin:super_admin' %} {% endblock %} {% block eventos_text %} Super Admin Detalle {% endblock %} {% block content %}
+{% extends 'app_main/base.html' %} {% block eventos_url %} {% url 'superadmin:super_admin' %} {% endblock %} {% block eventos_text %} Super Admin Detalle {% endblock %} {% block content %}
 <div class="container mt-4">
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white text-center">
@@ -8,10 +8,12 @@
             <div class="row g-4" style="min-height: 400px;">
                 <!-- Columna imagen -->
                 <div class="col-md-6 p-0" style="min-height: 400px; overflow: hidden;">
-                    {% if evento.imagen %}
-                    <img src="{% static 'imagenes/'|add:evento.imagen %}" alt="Imagen del evento" style="width: 100%; height: 100%; object-fit: cover; display: block;
-                                    border: 3px solid #444444; border-radius: 8px;"> {% else %}
-                    <p class="text-center mt-3">No hay imagen disponible para este evento.</p>
+                    {% load static %} {% if evento.imagen %}
+                    <div class="text-center mb-4">
+                        <img src="{% static 'imagenes/' %}{{ evento.imagen }}" alt="Imagen del evento" class="img-fluid rounded shadow-sm" style="max-height: 400px; width: auto; object-fit: contain;">
+                    </div>
+                    {% else %}
+                    <p class="text-muted fst-italic mb-4 text-center">No hay imagen disponible para este evento.</p>
                     {% endif %}
                 </div>
 

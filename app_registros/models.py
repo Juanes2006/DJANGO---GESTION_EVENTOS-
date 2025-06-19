@@ -1,14 +1,17 @@
 from django.db import models
+from app_usuarios.models import Usuario
 from app_eventos.models import Evento
 
 class Asistentes(models.Model):
-    asi_id = models.CharField(primary_key=True, max_length=20)
-    asi_nombre = models.CharField(max_length=100)
-    asi_correo = models.CharField(max_length=100)
-    asi_telefono = models.CharField(max_length=20)
+    
+    ########### NUEVO CAMPO PARA RELACIONAR CON USUARIO ###########
+    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)
 
-    def __str__(self):
-        return self.asi_nombre
+    def _str_(self):
+        return f"Asistente: {self.usuario.username}"
+
+
+   
 
 class AsistentesEventos(models.Model):
     asi_eve_asistente_fk = models.ForeignKey(Asistentes, on_delete=models.CASCADE)

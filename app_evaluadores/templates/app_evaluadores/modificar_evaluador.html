@@ -6,7 +6,7 @@
     {% if messages %} {% for message in messages %}
     <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
         {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
     </div>
     {% endfor %} {% endif %}
 
@@ -15,27 +15,25 @@
 
         <div class="mb-3">
             <label for="nombre" class="form-label">Nombre Completo</label>
-            <input type="text" class="form-control" id="nombre" name="nombre" value="{{ evaluador.eva_nombre }}" required>
+            <input type="text" class="form-control" id="nombre" name="nombre" value="{{ usuario.first_name }}" required>
         </div>
 
         <div class="mb-3">
             <label for="correo" class="form-label">Correo Electrónico</label>
-            <input type="email" class="form-control" id="correo" name="correo" value="{{ evaluador.eva_correo }}" required>
+            <input type="email" class="form-control" id="correo" name="correo" value="{{ usuario.email }}" required>
         </div>
 
         <div class="mb-3">
             <label for="telefono" class="form-label">Teléfono</label>
-            <input type="text" class="form-control" id="telefono" name="telefono" value="{{ evaluador.eva_telefono }}" required>
+            <input type="text" class="form-control" id="telefono" name="telefono" value="{{ usuario.telefono }}" required>
         </div>
 
-        {% if evento_evaluador.eva_eve_documentos %}
+        {% if asignacion.eva_eve_documentos %}
         <div class="mb-3">
-            <label class="form-label">
-                Documento actual del evento {{ evento_nombre }}
-            </label>
+            <label class="form-label">Documento actual:</label>
             <p>
-                <a href="{% static 'uploads/' %}{{ evento_evaluador.eva_eve_documentos }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                    📄 Ver documento actual
+                <a href="{% static 'uploads/' %}{{ asignacion.eva_eve_documentos }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                    📄 Ver Documento
                 </a>
             </p>
         </div>
@@ -45,7 +43,7 @@
 
         <div class="mb-3">
             <label for="documento" class="form-label">Subir Nuevo Documento (opcional)</label>
-            <input type="file" class="form-control" id="documento" name="documento">
+            <input type="file" class="form-control" id="documento" name="documento" accept=".pdf,.doc,.docx,.jpg,.png">
         </div>
 
         <button type="submit" class="btn btn-primary">Guardar Cambios</button>

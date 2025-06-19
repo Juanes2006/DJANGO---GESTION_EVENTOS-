@@ -1,6 +1,11 @@
 {% extends 'app_main/base.html' %} {% block nav_links %}
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'super_admin:eventos_superadmin' %}">Inicio</a>
+</li>
 <li class="nav-item"><a class="nav-link" href="{% url 'super_admin:agregar_area' %}">Agregar Área</a></li>
 <li class="nav-item"><a class="nav-link" href="{% url 'super_admin:agregar_categoria' %}">Agregar Categoría</a></li>
+
+
 {% endblock %} {% block eventos_url %} {% url 'super_admin' %} {% endblock %} {% block eventos_text %} Super Admin {% endblock %} {% block content %}
 <div class="container mt-4">
     <div class="card shadow-sm">

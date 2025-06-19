@@ -36,8 +36,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
+    'app_usuarios',
     'app_admin',
     'app_evaluadores',
+    'app_asistentes',
     'app_eventos',
     'app_main',
     'app_participantes',
@@ -45,6 +47,11 @@ INSTALLED_APPS = [
     'app_registros',
     'app_super_admin',
 ]
+
+AUTH_USER_MODEL = 'app_usuarios.Usuario'  # Cambiado para usar el modelo personalizado
+LOGIN_URL = 'login'
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -65,11 +72,14 @@ TEMPLATES = [
             'app_admin/templates', 
             'app_evaluadores/templates', 
             'app_eventos/templates', 
-            'app_main/templates',  # Agregué /templates
-            'app_participantes/templates',  # Agregué /templates
+            'app_main/templates',  
+            'app_participantes/templates',  
             'app_qr/templates', 
             'app_registros/templates', 
             'app_super_admin/templates',
+            'app_asistentes/templates', 
+        
+            'app_main/templates',  # Carpeta global de templates
             os.path.join(BASE_DIR, 'templates'),  # Carpeta global de templates
         ],
         'APP_DIRS': True,

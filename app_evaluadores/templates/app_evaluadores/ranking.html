@@ -3,7 +3,7 @@
     <div class="card shadow-sm rounded-4">
         <div class="card-header bg-primary text-white">
             <h2 class="mb-0">Ranking de Participantes</h2>
-            <p class="mb-0">Evento: {{ evento.eve_nombre }} / Evaluador: {{ evaluador.eva_nombre }}</p>
+            <p class="mb-0">Evento: {{ evento.eve_nombre }} / Evaluador: {{ evaluador.usuario.first_name }} {{ evaluador.usuario.last_name }}</p>
         </div>
         <div class="card-body">
             {% if ranking %}
@@ -17,21 +17,19 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for row in ranking %} {% with posicion=forloop.counter %}
-                        <tr class="{% if posicion == 1 %}table-warning{% elif posicion == 2 %}table-secondary{% elif posicion == 3 %}table-info{% endif %}">
-                            <td>{{ posicion }}</td>
-                            <td>{{ row.par_nombre }}</td>
-                            <td class="text-end">{{ row.puntaje_total }}</td>
+                        {% for row in ranking %}
+                        <tr class="{% if forloop.counter == 1 %}table-warning{% elif forloop.counter == 2 %}table-secondary{% elif forloop.counter == 3 %}table-info{% endif %}">
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ row.usuario.first_name }} {{ row.usuario.last_name }}</td>
+                            <td class="text-end">{{ row.puntaje_total|floatformat:2 }}</td>
                         </tr>
-                        {% endwith %} {% empty %}
+                        {% empty %}
                         <tr>
                             <td colspan="3" class="text-center">No hay participantes con calificaciones en este evento.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-
-
             </div>
             {% else %}
             <div class="alert alert-info" role="alert">
@@ -40,7 +38,7 @@
             {% endif %}
 
             <div class="mt-4">
-                <a href="{% url 'evaluadores:seleccionar_evento'%}" class="btn btn-secondary">
+                <a href="{% url 'evaluadores:seleccionar_evento' %}" class="btn btn-secondary">
                     <i class="bi bi-arrow-left-circle me-1"></i> Volver a Eventos
                 </a>
             </div>

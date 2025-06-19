@@ -26,3 +26,13 @@ $ python manage.py runserver
 MIGRACION APPS 
 python manage.py makemigrations app_evaluadores
 python manage.py migrate
+
+
+
+########################################
+USUARIO SUPERUSER
+
+USER Juanes@gmail.com - jj@gmail.com
+
+PASSWORD Juanes2006 - Juanes2006
+########################################

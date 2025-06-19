@@ -9,9 +9,13 @@
             <h3 class="text-primary fw-semibold mb-3">{{ evento.eve_nombre }}</h3>
 
             {% load static %} {% if evento.imagen %}
-            <img src="{% static 'imagenes/' %}{{ evento.imagen }}" alt="Imagen del evento" class="img-fluid rounded shadow-sm mb-4" style="max-height: 250px; width: 100%; object-fit: cover;"> {% else %}
-            <p class="text-muted fst-italic mb-4">No hay imagen disponible para este evento.</p>
+            <div class="text-center mb-4">
+                <img src="{% static 'imagenes/' %}{{ evento.imagen }}" alt="Imagen del evento" class="img-fluid rounded shadow-sm" style="max-height: 400px; width: auto; object-fit: contain;">
+            </div>
+            {% else %}
+            <p class="text-muted fst-italic mb-4 text-center">No hay imagen disponible para este evento.</p>
             {% endif %}
+
 
             <p class="lead text-secondary fst-italic mb-5">{{ evento.eve_descripcion }}</p>
 
@@ -66,7 +70,7 @@
             </div>
             {% endif %} {% if evento.archivo_programacion %}
             <div class="my-4">
-                <a href="{% static evento.archivo_programacion %}" target="_blank" class="btn btn-outline-success btn-lg shadow-sm">
+                <a href="{% static 'programacion/' %}{{ evento.archivo_programacion }}" target="_blank" class="btn btn-outline-success btn-lg shadow-sm">
                     📄 Ver Archivo de Programación
                 </a>
             </div>
