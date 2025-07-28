@@ -32,3 +32,14 @@ class EventoCategoria(models.Model):
 
     class Meta:
         unique_together = ('evento', 'categoria')
+
+
+
+class MemoriaEvento(models.Model):
+    evento = models.ForeignKey(Evento, on_delete=models.CASCADE, related_name='memorias')
+    titulo = models.CharField(max_length=255)
+    archivo = models.FileField(upload_to='memorias_evento/', blank=True, null=True)
+    fecha_subida = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.titulo} ({self.evento.eve_nombre})"

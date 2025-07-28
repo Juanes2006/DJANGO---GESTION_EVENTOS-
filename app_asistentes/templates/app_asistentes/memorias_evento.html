@@ -1,0 +1,51 @@
+{% extends 'app_main/base.html' %} {% block content %}
+<div class="container mt-4">
+    <h2>📚 Memorias del Evento: {{ evento.eve_nombre }}</h2>
+
+    {% if memorias %}
+    <table class="table table-bordered mt-4 align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>📄 Título</th>
+                <th>📁 Archivo</th>
+                <th>⏱️ Subido</th>
+                <th>⚙️ Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for memoria in memorias %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ memoria.titulo }}</td>
+                <td>
+                    <a href="{{ memoria.archivo.url }}" target="_blank">
+                    {{ memoria.archivo.name|slice:"20:" }}
+                    </a>
+                </td>
+                <td>{{ memoria.fecha_subida|date:"d/m/Y H:i" }}</td>
+                <td class="text-center">
+
+                    <a href="{{ memoria.archivo.url }}" target="_blank" class="btn btn-sm btn-link text-secondary" title="Ver archivo">
+                        👁 <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{{ memoria.archivo.url }}" download class="btn btn-sm btn-link text-primary" title="Descargar archivo">
+                        ⬇ <i class="fas fa-download"></i>
+                    </a>
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info mt-4 ">
+        📭 No se han subido memorias para este evento.
+    </div>
+    {% endif %}
+
+    <a class="btn btn-outline-secondary mt-3 " href="{% url 'asistente:panel_asistente' %} ">
+        🔙 <i class="fas fa-arrow-left "></i> Volver atrás
+    </a>
+</div>
+{% endblock %}

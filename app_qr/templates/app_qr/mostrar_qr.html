@@ -4,7 +4,8 @@
     <p>{{ evento.eve_descripcion }}</p>
 
     <p><strong>Registrado como:</strong> {{ registration_type }}</p>
-    <p><strong>Documento:</strong> {{ user_document }}</p>
+    <p><strong>Nombre:</strong> {{ user_document.usuario.first_name}}</p>
+    <p><strong>Documento:</strong> {{ user_document.usuario.id }}</p>
     <hr> {% if qr_image %}
     <h3>Tu Código QR</h3>
     <img src="data:image/png;base64,{{ qr_image }}" alt="Código QR" class="img-fluid" style="max-width:300px;">
@@ -32,8 +33,9 @@
     <p>No hay archivo de programación disponible.</p>
     {% endif %}
 </div>
-{% endblock %} {% block nav_links %}
+{% endblock %} {% block nav_links %} {% if registration_type == "Asistente" %}
 <li class="nav-item">
-    <a class="nav-link" href="{% url 'qr:consulta_qr' %}">Consultar otro QR</a>
+    <a class="nav-link" href="{% url 'asistente:panel_asistente' %}">Volver al Panel</a>
 </li>
-{% endblock %}
+
+{% endif %} {% endblock %}

@@ -1,13 +1,38 @@
 {% extends 'app_main/base.html' %} {% block eventos_text %}<span class="fw-bold">Panel Evaluador</span> {% endblock %} {% block nav_links %}
-<div class="d-flex flex-column flex-md-row gap-2">
-    <a href="{% url 'evaluadores:seleccionar_evento' %}" class="btn btn-primary d-flex align-items-center">
-        <i class="fas fa-arrow-left me-1"></i> Volver Atrás
-    </a>
-    <a href="{% url 'evaluadores:logout_evaluador' %}" class="btn btn-outline-danger d-flex align-items-center">
-        <i class="fas fa-sign-out-alt me-1"></i> Cerrar Sesión
-    </a>
+<div class="dropdown ms-auto position-relative me-3">
+    <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-person-circle fs-5"></i>
+        👤{{ request.user.first_name }}
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end shadow-lg animate__animated animate__fadeIn" aria-labelledby="userDropdown" style="min-width: 260px;">
+        <li class="px-3 py-2">
+            <p class="mb-1 fw-semibold text-primary">{{ request.user.first_name }} {{ request.user.last_name }}</p>
+            <p class="mb-0 small text-muted">{{ request.user.email }}</p>
+        </li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li class="px-3 py-1 small text-muted">
+            <i class="bi bi-telephone me-1"></i> {{ request.user.telefono|default:"Sin número" }}<br>
+            <i class="bi bi-person-badge me-1"></i> Rol: <span class="text-uppercase">{{ request.user.rol }}</span>
+        </li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+
+        <li>
+            <a href="{% url 'evaluadores:seleccionar_evento' %}" class="dropdown-item btn-info d-flex align-items-center gap-2">
+                <i class="fas fa-search me-1"></i> ⬅️ PanelEvaluador
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'evaluadores:logout_evaluador' %}">
+                <i class="bi bi-box-arrow-right"></i> ❌ Cerrar Sesión
+            </a>
+        </li>
+    </ul>
 </div>
-{% endblock %} {% block content %}
+{% endblock %}{% block content %}
 <div class="container mt-4">
     <div class="text-start mb-2">
         <p>👋 Bienvenido, <strong>{{ request.user.username }}</strong></p>

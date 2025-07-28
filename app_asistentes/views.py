@@ -17,8 +17,8 @@ from django.contrib.auth.decorators import login_required
 def panel_asistente(request):
     usuario = request.user
 
-    if usuario.rol != 'ASISTENTE':
-        messages.error(request, "No tienes permiso para acceder a esta página.")
+    if not hasattr(usuario, 'rol') or usuario.rol != 'ASISTENTE':
+        messages.error(request, "⛔ No tienes permiso para acceder a esta sección.")
         return redirect("main:visitante")
 
     eventos_inscritos = AsistentesEventos.objects.select_related('asi_eve_evento_fk')\
@@ -27,3 +27,26 @@ def panel_asistente(request):
     return render(request, "app_asistentes/panel_asistente.html", {
         "eventos_inscritos": eventos_inscritos
     })
+
+    
+from app_eventos.models import MemoriaEvento
+@login_required
+def ver_memorias_evento_asis(request, evento_id):
+    evento = get_object_or_404(Evento, pk=evento_id)
+    
+    inscrito = AsistentesEventos.objects.filter(
+        asi_eve_asistente_fk__usuario=request.user,
+        asi_eve_evento_fk=evento
+    ).exists()
+
+    if not inscrito:
+        messages.error(request, "No tienes acceso a las memorias de este evento.")
+        return redirect('main:lista_eventos')
+
+    memorias = MemoriaEvento.objects.filter(evento=evento)
+
+    return render(request, "app_asistentes/memorias_evento.html", {
+        "evento": evento,
+        "memorias": memorias
+    })
+

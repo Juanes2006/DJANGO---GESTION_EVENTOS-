@@ -2,17 +2,42 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
 import os
 from .forms import RegistroEventoForm
-from app_eventos.models import Evento
+from app_eventos.models import Evento, MemoriaEvento
 from app_registros.models import AsistentesEventos
 from app_participantes.models import ParticipantesEventos, Participantes
 from app_registros.models import Asistentes
 from app_evaluadores.models import Evaluador, EvaluadorEventos
 from datetime import datetime
+from app_admin.models import AdministradorEvento
 from django.contrib import messages
 from django.core.mail import send_mail
 from app_usuarios.models import Usuario
 from django.contrib.auth.decorators import login_required
 
+from twilio.rest import Client
+from django.conf import settings
+
+
+#FUNCION PARA ENVIAR SMS
+
+
+def enviar_sms(destinatario, mensaje):
+   
+    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    
+    try:
+        message = client.messages.create(
+            body=mensaje,
+            from_=settings.TWILIO_PHONE_NUMBER,
+            to=destinatario
+        )
+        return message.sid  # Devuelve el SID como confirmación
+    except Exception as e:
+        # Puedes loguearlo o manejarlo como desees
+        print(f"Error al enviar SMS: {e}")
+        return None
+    
+    
 
 # Función para enviar correo
 def enviar_correo(destinatario, asunto, mensaje):
@@ -146,6 +171,17 @@ def registrarme_evento(request, evento_id):
             else:
                 messages.error(request, "Tipo de inscripción no válido.")
                 return redirect('main:lista_eventos')
+            
+            admin = evento.admin_id
+            asunto_admin = f"Nuevo Registro en tu evento: {evento.eve_nombre}"
+            mensaje_admin = (
+                f"Hola {admin.usuario.first_name},\n\n"
+                f"Un nuevo usuario se ha preinscrito como {tipo.capitalize()} en tu evento '{evento.eve_nombre}'.\n"
+                f"Usuario: {usuario.username}\n"
+                f"Correo: {usuario.email}\n\n"
+                "Por favor, revisa los registros y confirma la inscripción si es necesario."
+            )
+            enviar_correo(admin.usuario.email, asunto_admin, mensaje_admin)
 
             # Enviar correo
             asunto = f"Confirmación de registro en {evento.eve_nombre}"
@@ -157,6 +193,20 @@ def registrarme_evento(request, evento_id):
                 "Gracias por participar."
             )
             enviar_correo(usuario.email, asunto, mensaje)
+            mensaje_sms = (
+                f"Hola {usuario.first_name}, te preinscribiste como {tipo.capitalize()} "
+                f"en '{evento.eve_nombre}'. Tu usuario: {user_id}. "
+                "Espera confirmación. ¡Gracias por participar!"
+            )
+
+            # Formatear número al formato internacional (+57...)
+            telefono = usuario.telefono.strip()
+            if not telefono.startswith('+'):
+                telefono = '+57' + telefono.lstrip('0')
+
+            # Enviar SMS con número correcto
+            enviar_sms(telefono, mensaje_sms)
+
 
             return redirect('main:lista_eventos')
         else:
@@ -224,3 +274,56 @@ def cancelar_inscripcion(request, evento_id, user_id):
         enviar_correo(correo, asunto, mensaje)
 
     return redirect('qr:consulta_qr')
+
+
+from django.contrib.auth.hashers import make_password
+
+
+def admin_solicitud(request):
+    if request.method == 'POST':
+        TIPO_ADMIN = 'ADMINISTRADOR'
+        ...
+        tipo = TIPO_ADMIN
+
+        username = request.POST.get('username', '').strip()  # O usa un campo específico si tienes uno
+
+        nombre = request.POST.get('nombre', '').strip()
+        correo = request.POST.get('correo', '').strip()
+        telefono = request.POST.get('telefono', '').strip()
+
+        # Validaciones
+        if Usuario.objects.filter(username=username).exists():
+            messages.error(request, "El nombre de usuario ya está en uso.")
+            return redirect(request.path)
+
+        if Usuario.objects.filter(email=correo).exists():
+            messages.error(request, "El correo electrónico ya está en uso.")
+            return redirect(request.path)
+
+        if Usuario.objects.filter(telefono=telefono).exists():
+            messages.error(request, "Este teléfono ya está en uso.")
+            return redirect(request.path)
+
+        # Crear usuario
+        usuario = Usuario.objects.create(
+            username=username,
+            email=correo,
+            first_name=nombre,
+            telefono=telefono,
+            rol="ADMINISTRADOR",
+            is_active=True  # Puedes usar False si quieres bloquear el login hasta que lo aprueben
+        )
+
+        # Crear registro de AdministradorEvento
+        AdministradorEvento.objects.create(
+            usuario=usuario,
+            aprobado=False
+        )
+
+        messages.success(request, "Solicitud enviada correctamente. Espera aprobación del superadministrador.")
+        return redirect('main:inicio')
+
+    return render(request, 'app_registros/admin_formulario.html')
+
+
+

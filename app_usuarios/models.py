@@ -44,6 +44,6 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     objects = UsuarioManager()
 
-    def _str_(self):
+    def __str__(self):
         return f"{self.username} ({self.rol})"
 

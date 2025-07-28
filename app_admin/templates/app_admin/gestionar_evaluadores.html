@@ -1,4 +1,4 @@
-{% extends 'app_main/base.html' %} {% block eventos_url %}{% url 'admin:ventana' %}{% endblock %} {% block eventos_text %}Administrador{% endblock %} {% block nav_links %}{% endblock %} {% block content %}
+{% extends 'app_main/base.html' %} {% block eventos_text %}Administrador{% endblock %} {% block nav_links %}{% endblock %} {% block content %}
 <div class="container mt-4">
     <h2 class="text-center mb-4">
         👥 Gestión de Evaluadores: <br> <strong>{{ evento.eve_nombre }}</strong>
@@ -46,6 +46,41 @@
                 </button>
                                     </div>
                                 </form>
+
+                                <button type="button" class="btn btn-info btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#modalPlantillaEvaluador{{ evaluador.id }}">
+    📩 Enviar Certificado Evaluador
+</button>
+                                <div class="modal fade" id="modalPlantillaEvaluador{{ evaluador.id }}" tabindex="-1" aria-labelledby="modalLabel{{ evaluador.id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content border-primary shadow-lg">
+                                            <form method="post" action="{% url 'admin_evento:enviar_certificado_evaluador_individual' evento_id=evento.eve_id usuario_id=evaluador.id %}">
+                                                {% csrf_token %}
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title" id="modalLabel{{ evaluador.id }}">📄 Seleccionar Plantilla de Certificado</h5>
+                                                    <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                                </div>
+
+                                                <div class="modal-body">
+                                                    <div class="form-group mb-3">
+                                                        <label for="plantilla_id_{{ evaluador.id }}" class="form-label fw-bold">Plantilla disponible</label>
+                                                        <select name="plantilla_id" id="plantilla_id_{{ evaluador.id }}" class="form-select" required>
+                            {% for plantilla in plantillas %}
+                                <option value="{{ plantilla.id }}">{{ plantilla.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">❌ Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary">📤 Enviar Certificado</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+
                             </td>
                         </tr>
 
@@ -64,6 +99,8 @@
 
     <!-- Toggle de inscripciones corregido -->
     <div class="text-center">
+        <h5>🔧 Gestión de Inscripciones</h5>
+
         <form method="post" action="{% url 'admin_evento:toggle_inscripcion' tipo='evaluadores' evento_id=evento.eve_id %}">
             {% csrf_token %} {% if evento.inscripciones_evaluadores_abiertas %}
             <button class="btn btn-warning btn-lg">
@@ -73,9 +110,80 @@
                     🔓 Abrir inscripciones de evaluadores
                 </button> {% endif %}
         </form>
+
+        {% if evaluadores %}
+
+        <button type="button" class="btn btn-info mt-3" data-bs-toggle="modal" data-bs-target="#modalSeleccionarPlantillaTodos">
+    📤 Enviar certificados a todos los Evaluadores
+</button> {% else %}
+        <h5 class="text-center text-muted">🚀 No hay evaluadores registrados para este evento aún.</h5>
+        {% endif %}
+
     </div>
 </div>
 
-<!-- Script para debug - temporal -->
 
-{% endblock %}
+<!-- Modal para seleccionar plantilla para todos los evaluadores -->
+<div class="modal fade" id="modalSeleccionarPlantillaTodos" tabindex="-1" aria-labelledby="modalPlantillaLabelTodos" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-primary">
+            <form id="formEnviarTodos" method="post" action="{% url 'admin_evento:enviar_certificados_evaluadores' evento_id=evento.eve_id %}">
+                {% csrf_token %}
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalPlantillaLabelTodos">🖼 Seleccionar Plantilla</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="plantillaSelectTodos" class="form-label">Selecciona la plantilla a usar:</label>
+                        <select class="form-select" id="plantillaSelectTodos" name="plantilla_id" required>
+                            {% for plantilla in plantillas %}
+                                <option value="{{ plantilla.id }}">{{ plantilla.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" onclick="mostrarModalCarga()">📤 Enviar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-- Script para debug - temporal -->
+<!-- Modal de Envío Exitoso -->
+<div class="modal fade" id="modalExitoCertificado" tabindex="-1" aria-labelledby="modalExitoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-success text-white border-0 rounded-top">
+                <h5 class="modal-title" id="modalExitoLabel">🎉 ¡Certificado Enviado!</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: #28a745;"></i>
+                </div>
+                <h5 class="fw-bold">¡Éxito!</h5>
+                <p class="text-muted mb-0">El certificado ha sido enviado exitosamente al evaluador. 📩</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-success px-4" data-bs-dismiss="modal">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% if request.GET.exito == "1" %}
+<script>
+    window.addEventListener('DOMContentLoaded', function() {
+        var modalExito = new bootstrap.Modal(document.getElementById('modalExitoCertificado'));
+        modalExito.show();
+    });
+</script>
+{% endif %} {% endblock %}

@@ -19,16 +19,41 @@
         <li>
             <hr class="dropdown-divider">
         </li>
+
         <li>
-            <a class="dropdown-item d-flex align-items-center gap-2 text-primary" href="{% url 'superadmin:agregar_area' %}">
-                <i class="bi bi-journal-text"></i>Agregar Area
+            <a class="dropdown-item d-flex align-items-center gap-2 text-primary" href="{% url 'superadmin:agregar_area' %}" title="Agregar una nueva área">
+                <i class="bi bi-journal-text fs-5"></i>
+                <span>📁 Agregar Área</span>
+            </a>
+        </li>
+
+        <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 text-success" href="{% url 'superadmin:agregar_categoria' %}" title="Agregar una nueva categoría">
+                <i class="bi bi-tags fs-5"></i>
+                <span>🏷️ Agregar Categoría</span>
             </a>
         </li>
         <li>
-            <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'superadmin:agregar_categoria' %}">
-                <i class="bi bi-box-arrow-right"></i> Agregar Categoria
+            <a class="dropdown-item d-flex align-items-center gap-2 text-primary" href="{% url 'superadmin:panel_aprobaciones' %}" title="Ver y aprobar solicitudes de administradores">
+                <i class="bi bi-person-check fs-5"></i>
+                <span>✅ Aceptar Administradores</span>
+            </a>
+
+
+
+
+
+
+        </li>
+
+
+        <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'evaluadores:logout_evaluador' %}" title="Cerrar sesión">
+                <i class="bi bi-box-arrow-right fs-5"></i>
+                <span>🔴 Cerrar Sesión</span>
             </a>
         </li>
+
 
 
     </ul>

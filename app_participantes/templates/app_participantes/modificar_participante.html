@@ -1,6 +1,25 @@
-{% extends 'app_main/base.html' %} {% load static %} {% block eventos_url %} {% url 'participantes:verificar_participante' %} {% endblock %} {% block eventos_text %} Modificación de Datos del Participante {% endblock %} {% block content %}
-<div class="container mt-4">
+{% extends 'app_main/base.html' %} {% load static %} {% block eventos_url %} {% url 'participantes:verificar_participante' %} {% endblock %} {% block eventos_text %} Modificación de Datos del Participante {% endblock %}{% block nav_links %}
 
+<div class="position-fixed top-0 end-0 m-3" style="z-index: 1050;">
+    <div class="dropdown">
+        <button class="btn btn-primary dropdown-toggle" type="button" id="infoDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+      👤 {{ request.user.first_name }}
+    </button>
+        <ul class="dropdown-menu dropdown-menu-end p-3 shadow" aria-labelledby="infoDropdown" style="min-width: 250px;">
+            <li><strong>Nombre:</strong> {{ request.user.first_name }} {{ request.user.last_name }}</li>
+            <li><strong>Email:</strong> {{ request.user.email }}</li>
+            <li><strong>Teléfono:</strong> {{ request.user.telefono }}</li>
+            <li><strong>Rol:</strong> {{ request.user.rol }}</li>
+            <hr>
+            <li><a class="dropdown-item text-primary" href="{% url 'participantes:mi_info' %}">📋 Mis Eventos</a></li>
+
+            <li><a class="dropdown-item text-primary" href="{% url 'participantes:panel_participante' %}">📊 Panel Participante</a></li>
+            <li><a class="dropdown-item text-danger" href="{% url 'evaluadores:logout_evaluador' %}">🔴 Cerrar Sesión</a></li>
+        </ul>
+    </div>
+</div>
+{% endblock %} {% block content %}
+<div class="container mt-4">
     <h2 class="text-center mb-2">Modificar Datos del Participante</h2>
     <h4 class="text-center text-primary mb-4">📌 Evento: {{ evento_nombre }}</h4>
 
@@ -13,34 +32,31 @@
 
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
+
         <div class="mb-3">
             <label for="nombre" class="form-label">Nombre Completo</label>
-            <input type="text" class="form-control" id="nombre" name="nombre" value="{{ participante.par_nombre }}" required>
+            <input type="text" class="form-control" id="nombre" name="nombre" value="{{ participante.usuario.first_name }}" required>
         </div>
 
         <div class="mb-3">
             <label for="correo" class="form-label">Correo Electrónico</label>
-            <input type="email" class="form-control" id="correo" name="correo" value="{{ participante.par_correo }}" required>
+            <input type="email" class="form-control" id="correo" name="correo" value="{{ participante.usuario.email }}" required>
         </div>
 
         <div class="mb-3">
             <label for="telefono" class="form-label">Teléfono</label>
-            <input type="text" class="form-control" id="telefono" name="telefono" value="{{ participante.par_telefono }}" required>
+            <input type="text" class="form-control" id="telefono" name="telefono" value="{{ participante.usuario.telefono }}" required>
         </div>
 
-        {% if participante.par_id and participante.participante_eventos %} {% for evento_participante in participante.participante_eventos %} {% if evento_participante.par_eve_documentos %}
+        {% if participante.participante_eventos %} {% for evento_participante in participante.participante_eventos %} {% if evento_participante.par_eve_documentos %}
         <div class="mb-3">
-            <label class="form-label">
-                            Documento actual del evento {{ evento_nombre }}
-                        </label>
+            <label class="form-label">Documento actual del evento {{ evento_nombre }}</label>
             <p>
                 <a href="{% static 'uploads/' %}{{ evento_participante.par_eve_documentos }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                📄 Ver documento actual
-                            </a>
+                            📄 Ver documento actual
+                        </a>
             </p>
         </div>
-        {% else %}
-        <p class="text-muted">No se ha cargado un documento aún.</p>
         {% endif %} {% endfor %} {% endif %}
 
         <div class="mb-3">
@@ -48,8 +64,8 @@
             <input type="file" class="form-control" id="documento" name="documento">
         </div>
 
-        <button type="submit" class="btn btn-primary">Guardar Cambios</button> {% if evento_id %}
-        <a href="{% url 'participantes:mi_info'%}" class="btn btn-secondary">Cancelar</a> {% else %} {% endif %}
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        <a href="{% url 'participantes:mi_info' %}" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
 {% endblock %}

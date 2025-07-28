@@ -1,0 +1,72 @@
+{% extends 'app_main/base.html' %} {% load static %} {% block eventos_url %} {% url 'admin:ventana' %} {% endblock %} {% block eventos_text %} Administrador {% endblock %} {% block content %}
+<div class="container my-5" style="max-width: 720px;">
+    <div class="card shadow-lg rounded-4 border-success border-3">
+        <div class="card-body p-5">
+            <h2 class="text-center mb-5 display-5 fw-bold text-success">
+                Subir Memorias del Evento
+            </h2>
+
+            <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label for="titulo" class="form-label fw-semibold">Título base para los archivos</label>
+                    <input type="text" class="form-control form-control-lg border-success shadow-sm" name="titulo" id="titulo" required placeholder="Ej: Memoria evento nacional 2025">
+                    <div class="invalid-feedback">
+                        Por favor, ingresa un título para las memorias.
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <label for="archivos" class="form-label fw-semibold">Seleccionar archivos</label>
+                    <input type="file" class="form-control form-control-lg border-success shadow-sm" name="archivos" id="archivos" multiple required>
+                    <div class="invalid-feedback">
+                        Por favor, selecciona al menos un archivo.
+                    </div>
+                    <div class="form-text text-muted mt-1">
+                        Puedes seleccionar varios archivos manteniendo presionada la tecla Ctrl (Windows) o Cmd (Mac).
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center">
+                    <button type="submit" class="btn btn-success btn-lg px-5 fw-semibold shadow-sm">
+                        Subir Memorias
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block nav_links %}
+<li class="nav-item dropdown">
+    <li>
+        <a class="nav-link" href="{% url 'eventos:consultar_memorias' evento.eve_id %}">
+            <i class="fas fa-book text-success fs-5"></i> Ver Memorias
+        </a>
+
+    </li>
+    <a class="nav-link" href="{% url 'admin_evento:ventana' %}">
+        <i class="fas fa-file-upload text-success fs-5"></i> Volver atrás
+    </a>
+
+    <li>
+
+    </li>
+</li>
+{% endblock %}
+
+<script>
+    (() => {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>

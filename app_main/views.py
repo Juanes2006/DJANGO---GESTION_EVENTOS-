@@ -10,37 +10,79 @@ from app_usuarios.models import Usuario
 from app_evaluadores.models import Evaluador
 from app_evaluadores.models import Evaluador, EvaluadorEventos  # asegurarte de importar el intermedio si es necesario
 from django.contrib.auth.decorators import login_required
+##########################################################
+#manejo de errores personalizados
+
+from django.utils.deprecation import MiddlewareMixin
+
+class Error500Middleware(MiddlewareMixin):
+    def process_exception(self, request, exception):
+        return redirect('main:visitante')  # o la vista que prefieras
+    
+from django.shortcuts import redirect
+
+def handler404(request, exception):
+    return redirect('main:login')  # o la ruta que tú quieras
+
+def handler500(request):
+    return redirect('main:login')
+
+def handler403(request, exception):
+    return redirect('main:login')
+
+def handler400(request, exception):
+    return redirect('main:login')
 
 
 
+
+###########################################################################
+from django.views.decorators.csrf import csrf_protect
+
+@csrf_protect  
 def login_view(request):
     if request.method == "POST":
-        email = request.POST.get("email")
-        password = request.POST.get("password")
+        email = request.POST.get("email", "").strip()
+        password = request.POST.get("password", "")
+
         user = authenticate(request, email=email, password=password)
 
         if user is not None:
-            login(request, user)
+            if user.is_active:
+                login(request, user)
 
-            if user.rol == "SUPER_ADMINISTRADOR":
-                return redirect("super_admin:super_admin")
-            elif user.rol == "ADMINISTRADOR":
-                return redirect("admin_evento:ventana")
-            elif user.rol == "EVALUADOR":
-               return redirect("evaluadores:seleccionar_evento")
+                request.session['usuario_id'] = user.id
+                request.session['rol'] = user.rol
+
+                print("USUARIO EN SESIÓN:", request.session.get('usuario_id'))
+                print("ROL DEL USUARIO:", request.session.get('rol'))
 
                
-            elif user.rol == "PARTICIPANTE":
-                return redirect("participantes:panel_participante")
-            elif user.rol == "ASISTENTE":
-                return redirect("asistente:panel_asistente")
+                rol = user.rol
+                redirecciones = {
+                    "SUPER_ADMINISTRADOR": "super_admin:super_admin",
+                    "ADMINISTRADOR": "admin_evento:ventana",
+                    "EVALUADOR": "evaluadores:seleccionar_evento",
+                    "PARTICIPANTE": "participantes:panel_participante",
+                    "ASISTENTE": "asistente:panel_asistente",
+                }
+
+                return redirect(redirecciones.get(rol, "login_view"))
+
+
+
+                if rol in redirecciones:
+                    return redirect(redirecciones[rol])
+                else:
+                    messages.error(request, "⛔ Rol desconocido.")
+                    return redirect("login_view")
             else:
-                messages.error(request, "Rol desconocido.")
-                return redirect("login")
+                messages.error(request, "⛔ Tu cuenta está desactivada.")
         else:
-            messages.error(request, "Credenciales incorrectas.")
+            messages.error(request, "❌ Credenciales incorrectas.")
 
     return render(request, "app_main/login.html")
+
 
 
 def lista_eventos(request):
@@ -112,4 +154,3 @@ def evento_detalle(request, eve_id):
     })
 
 
-# The code below is commented out because it seems to be part of a registration process that is not currently in use.

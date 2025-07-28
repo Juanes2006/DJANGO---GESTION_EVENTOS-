@@ -1,0 +1,62 @@
+{% extends 'app_main/base.html' %} {% load static %} {% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">📝 Solicitud para ser Administrador de Eventos</h2>
+
+    {% if messages %} {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    {% endfor %} {% endif %}
+
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="username" class="form-label">👤 Nombre de usuario</label>
+            <input type="text" class="form-control" name="username" id="username" required>
+            <div class="invalid-feedback">Este campo es obligatorio.</div>
+        </div>
+
+        <div class="mb-3">
+            <label for="nombre" class="form-label">🧑 Nombre completo</label>
+            <input type="text" class="form-control" name="nombre" id="nombre" required>
+            <div class="invalid-feedback">Este campo es obligatorio.</div>
+        </div>
+
+        <div class="mb-3">
+            <label for="correo" class="form-label">📧 Correo electrónico</label>
+            <input type="email" class="form-control" name="correo" id="correo" required>
+            <div class="invalid-feedback">Ingresa un correo válido.</div>
+        </div>
+
+        <div class="mb-3">
+            <label for="telefono" class="form-label">📱 Teléfono</label>
+            <input type="tel" class="form-control" name="telefono" id="telefono" required pattern="[0-9]{7,15}">
+            <div class="invalid-feedback">Número de teléfono inválido.</div>
+        </div>
+
+
+
+        <div class="d-grid">
+            <button type="submit" class="btn btn-primary">🚀 Enviar Solicitud</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    (function() {
+        'use strict'
+        const forms = document.querySelectorAll('.needs-validation')
+        Array.from(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })();
+</script>
+{% endblock %}

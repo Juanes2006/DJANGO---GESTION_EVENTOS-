@@ -1,0 +1,35 @@
+{% extends 'app_main/base.html' %} {% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">📧 Notificar sobre el evento <strong>"{{ evento.eve_nombre }}"</strong></h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">👥 ¿A quién deseas notificar?</label><br>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" name="destinatarios" value="participantes" id="chk_participantes" checked>
+                <label class="form-check-label" for="chk_participantes">Participantes</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" name="destinatarios" value="evaluadores" id="chk_evaluadores" checked>
+                <label class="form-check-label" for="chk_evaluadores">Evaluadores</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" name="destinatarios" value="asistentes" id="chk_asistentes" checked>
+                <label class="form-check-label" for="chk_asistentes">Asistentes</label>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="mensaje_adicional" class="form-label fw-bold">
+                📝 Mensaje adicional (aparecerá luego del resumen del evento):
+            </label>
+            <textarea name="mensaje_adicional" class="form-control" rows="5" placeholder="Escribe aquí información adicional para los destinatarios..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success">📨 Enviar Notificaciones</button>
+        <a href="{% url 'admin_evento:ventana' %}" class="btn btn-secondary ms-2">⬅️ Volver</a>
+    </form>
+</div>
+{% endblock %}

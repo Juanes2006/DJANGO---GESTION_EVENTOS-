@@ -49,7 +49,6 @@ INSTALLED_APPS = [
 ]
 
 AUTH_USER_MODEL = 'app_usuarios.Usuario'  # Cambiado para usar el modelo personalizado
-LOGIN_URL = 'login'
 
 
 
@@ -274,8 +273,8 @@ NOTIFICATIONS_SETTINGS = {
     'FROM_EMAIL': 'noreply@tueventos.com',
 }
 
-
-
+#### CONFIGURACION DE MENSAJES POR GMAIL Y TWILIO ####
+# gmail
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -285,3 +284,48 @@ EMAIL_HOST_PASSWORD = 'tnxy tzxx zgxf etqc'    # Pon aquí la contraseña de apl
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Usar el mismo correo como remitente por defecto
 
 
+# twilio
+
+TWILIO_ACCOUNT_SID = 'AC34d526efb1d04b4741e5a66a1a52db84'
+TWILIO_AUTH_TOKEN = '1d33d378933caf65c026253e40969d84'
+TWILIO_PHONE_NUMBER = '+19382017428'
+
+""" LOGIN_URL = 'main:login_view'  # Asegúrate de que 'login' sea el nombre de tu vista de login
+LOGIN_REDIRECT_URL = 'main:login_view'  # A dónde redirigir después del login
+LOGOUT_REDIRECT_URL = 'login'  # A dónde ir luego del logout
+
+
+
+AUTHENTICATION_BACKENDS = [
+    'app_usuarios.backends.EmailBackend',  # Ruta al archivo que vamos a crear
+    'django.contrib.auth.backends.ModelBackend',  # Opción por defecto (por si usas username)
+]
+ """
+ 
+ # settings.py
+LOGIN_URL = 'main:login'
+LOGIN_REDIRECT_URL = 'main:visitante'  # Asegúrate de que 'home' sea la vista a la que quieres redirigir después del login
+
+
+MIDDLEWARE += ['app_main.views.Error500Middleware']
+
+
+import logging
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
+}
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

@@ -10,7 +10,18 @@ urlpatterns = [
     path('cancelar/<int:pk>/', views.cancelar_evento, name="cancelar_evento"),
     path('activar/<int:pk>/', views.activar_evento, name="activar_evento"),
     path('evento/<int:eve_id>/eliminar/', views.eliminar_evento, name='eliminar_evento'),
+    
 
     path('desactivar/<int:pk>/', views.desactivar_evento, name="desactivar_evento"),
     path('descargar/<int:pk>/', views.descargar_programacion, name="descargar_programacion"),
+    
+    
+    
+    #########
+    path('evento/<int:evento_id>/subir-memoria/', views.subir_memoria_evento, name='subir_memoria_evento'),
+    path('evento/<int:evento_id>/consultar-memorias/', views.consultar_memorias, name='consultar_memorias'),
+
+    path('eliminar-memoria/<int:memoria_id>/', views.eliminar_memoria, name='eliminar_memoria'),
+    
+
 ]

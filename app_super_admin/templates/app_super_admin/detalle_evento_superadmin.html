@@ -36,8 +36,8 @@
                     </p>
 
                     <h4>Administrador</h4>
-                    <p>Nombre: {{ administrador.adm_nombre }}</p>
-
+                    <p>Nombre: {{ evento.adm_id.usuario.first_name }} <br> Email: {{ evento.adm_id.usuario.email }}
+                    </p>
                     {% if evento.eve_estado == "CREADO" %}
                     <form action="{% url 'eventos:activar_evento' evento.eve_id %}" method="post" class="mb-2">
                         {% csrf_token %}

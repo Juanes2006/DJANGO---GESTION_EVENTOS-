@@ -24,7 +24,11 @@
             <div class="container-fluid">
                 <a class="navbar-brand d-flex align-items-center" href="{% url 'main:lista_eventos' %}">
                     <div class="navbar-brand d-flex align-items-center">
-                        <img src="{% static 'imagenes/Logo VOLTAGE.png' %}" alt="Logo" class="logo me-2"> {% block eventos_text %} <span class="fw-bold">Eventos</span> {% endblock %}
+                        <a>
+                            <img src="{% static 'imagenes/Logo VOLTAGE.png' %}" alt="Logo" class="logo me-2">
+                        </a>
+                        {% block eventos_text %}
+                        <span class="fw-bold text-white">Eventos</span> {% endblock %}
                     </div>
 
                 </a>

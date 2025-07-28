@@ -35,4 +35,68 @@ USUARIO SUPERUSER
 USER Juanes@gmail.com - jj@gmail.com
 
 PASSWORD Juanes2006 - Juanes2006
+
+
+evaluador 
+juanjoseorregourrea@gmail.com
+SenasoftCll98A_
 ########################################
+
+############
+
+pip install weasyprint
+
+instalcion de dependencias que no viene en windows
+gtk3-runtime-3.24.31-2022-01-04-ts-win64.exe
+
+
+
+////////
+@login_required
+
+urls
+
+login_required( views.funcion, login_url='login')
+
+importacion en urls.py 
+from django.contrib.auth.decorators import login_required
+
+
+evitar la violacion de la url si no esta logueado
+
+
+
+#############
+
+titulo de cada ventana no clikeable
+
+
+<title>{{ page_title|default:"Eventos" }}</title>
+
+
+def panel_evaluador(request, evento_id, eva_id):
+    # tu lógica...
+    return render(request, 'evaluadores/panel.html', {
+        'page_title': 'Panel del Evaluador',
+        # otras variables
+    })
+
+
+
+
+######################
+
+
+COMO CAMBIAR EL TITULO DE LA PAGINA
+
+{% block eventos_text %}
+<span class="fw-bold text-white">PONER ACA EL NOMBRE DE LA PAGINA</span> 
+{% endblock %}
+
+
+#########################
+
+hasattr() es una función incorporada de Python que verifica si un objeto tiene un atributo con un nombre específico.
+
+
+getattr() es otra función incorporada en Python, y sirve para obtener dinámicamente el valor de un atributo de un objeto.

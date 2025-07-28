@@ -32,7 +32,7 @@ urlpatterns = [
     path('qr/', include(('app_qr.urls', 'qr'), namespace='qr')),
     path('registros/', include(('app_registros.urls', 'registros'), namespace='registros')),
     path('super_admin/', include(('app_super_admin.urls', 'super_admin'), namespace='superadmin'))
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

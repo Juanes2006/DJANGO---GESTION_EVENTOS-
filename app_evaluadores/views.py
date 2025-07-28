@@ -78,7 +78,7 @@ def seleccionar_evento(request):
     try:
         evaluador = Evaluador.objects.get(usuario=usuario)
     except Evaluador.DoesNotExist:
-        return render(request, "evaluadores/seleccionar_evento.html", {
+        return render(request, "app_evaluadores/seleccionar_evento.html", {
             'eventos': [],
             'evaluador': None
         })
@@ -333,15 +333,21 @@ def ver_ranking(request, evento_id):
     })
 
 
-# --- Login evaluador ---
 
+from django.contrib.auth import logout
 
 
 # --- Logout evaluador ---
 def logout_evaluador(request):
+    # Cerrar sesión del sistema
+    logout(request)
+
+    # Eliminar claves específicas si las usas (opcional)
     request.session.pop('evaluador_id', None)
-    messages.success(request, 'Sesión cerrada exitosamente.')
-    return redirect('main:login_view|')
+    request.session.pop('otro_dato_custom', None)
+
+    messages.success(request, "🔒 Has cerrado sesión correctamente.")
+    return redirect('main:login_view')
 
 @login_required
 # --- Ver calificaciones evento ---
@@ -400,6 +406,7 @@ def verificar_evaluador(request):
     return render(request, 'app_evaluadores/verificar_evaluador.html')
 
 
+@login_required
 
 def modificar_evaluador(request, user_id, evento_id):
     # Obtener el usuario y su evaluador relacionado
@@ -507,6 +514,8 @@ def mi_info(request):
         'eventos_asignados': eventos_asignados,
     })
 
+@login_required
+
 def cancelar_inscripcion(request, evento_id, user_id):
     evento = get_object_or_404(Evento, pk=evento_id)
     correo = None
@@ -560,26 +569,31 @@ def cancelar_inscripcion(request, evento_id, user_id):
     return redirect('qr:consulta_qr')
 
 
-
-
-
+@login_required
 def gestionar_inscripciones(request, eve_id):
     """Gestionar inscripciones de participantes por parte de un evaluador"""
 
-    if 'usuario_id' not in request.session:
-        messages.error(request, "Debes iniciar sesión para continuar.")
-        return redirect('login')
+    # Verifica que el usuario autenticado tenga el rol adecuado
+    rol = request.session.get('rol')
+    print("ROL EN SESIÓN:", request.session.get('rol'))
 
-    if request.session.get('rol') != 'EVALUADOR':
+    if rol != 'EVALUADOR':
         messages.warning(request, "Acceso restringido solo a evaluadores.")
         return redirect('inicio')
 
+    # Obtener el evaluador según el ID de usuario en sesión
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        messages.error(request, "Información de sesión incompleta. Vuelve a iniciar sesión.")
+        return redirect('login')
+
     try:
-        evaluador = Evaluador.objects.get(usuario__id=request.session['usuario_id'])
+        evaluador = Evaluador.objects.get(usuario__id=usuario_id)
     except Evaluador.DoesNotExist:
         messages.error(request, "No se encontró información como evaluador.")
         return redirect('inicio')
 
+    # Verifica si está asignado al evento y fue aceptado
     asignacion = EvaluadorEventos.objects.filter(
         eva_eve_evaluador_fk=evaluador,
         eva_eve_evento_fk=eve_id,
@@ -590,6 +604,7 @@ def gestionar_inscripciones(request, eve_id):
         messages.warning(request, "No estás asignado a este evento o tu acceso aún no ha sido aprobado.")
         return redirect('inicio')
 
+    # Guardamos el evento actual en sesión (opcional)
     request.session['evento_actual_id'] = eve_id
 
     evento = get_object_or_404(Evento, pk=eve_id)
@@ -612,4 +627,22 @@ def gestionar_inscripciones(request, eve_id):
     return render(request, "app_evaluadores/ver_participantes.html", {
         'evento': evento,
         'participantes': participantes
+    })
+from app_eventos.models import MemoriaEvento
+@login_required
+def consultar_memorias_eva(request, evento_id):
+    evento = get_object_or_404(Evento, pk=evento_id)
+    
+    inscrito = EvaluadorEventos.objects.filter(
+        eva_eve_evaluador_fk__usuario=request.user,
+        eva_eve_evento_fk=evento
+    ).exists()
+    print(f"¿Evaluador inscrito? {inscrito}")
+
+   
+    memorias = MemoriaEvento.objects.filter(evento=evento)
+
+    return render(request, "app_evaluadores/memorias_evento.html", {
+        "evento": evento,
+        "memorias": memorias
     })

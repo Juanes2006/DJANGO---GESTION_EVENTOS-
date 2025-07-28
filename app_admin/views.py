@@ -7,11 +7,13 @@ from django.views.decorators.csrf import csrf_protect
 from django.utils.safestring import mark_safe
 from django.db import transaction
 from app_eventos.models import Evento
-from app_super_admin.models import Area, Categoria
 from app_participantes.models import Participantes, ParticipantesEventos
 from app_registros.models import Asistentes, AsistentesEventos
 from app_evaluadores.models import Criterio, Instrumento, Calificacion, Evaluador, EvaluadorEventos
 from django.utils.timezone import now
+from app_admin.models import AdministradorEvento, PlantillaCertificado
+import logging
+logger = logging.getLogger(__name__)
 
 import qrcode
 from io import BytesIO
@@ -28,13 +30,26 @@ from collections import defaultdict
 
 app_name = 'app_admin'
 
+from django.contrib.auth.decorators import login_required
 
+from django.http import HttpResponseForbidden
 
+@login_required
 def ventana(request):
-    """Vista principal del administrador de eventos"""
-    eventos = Evento.objects.all()
+    if request.user.rol != 'ADMINISTRADOR':
+        return HttpResponseForbidden("⛔ Acceso denegado. No tienes permiso.")
+
+    try:
+        admin = AdministradorEvento.objects.get(usuario=request.user)
+        if not admin.aprobado:
+            return HttpResponseForbidden("⛔ Tu cuenta aún no ha sido aprobada por el superadministrador.")
+    except AdministradorEvento.DoesNotExist:
+        return HttpResponseForbidden("⛔ No estás registrado como administrador de eventos.")
+
+    # Filtrar eventos del administrador autenticado
+    eventos = Evento.objects.filter(adm_id=admin)
+
     return render(request, 'app_admin/administrador_evento.html', {'eventos': eventos})
-###################################
 
 def gestionar_inscripciones(request, eve_id):
     """Gestionar inscripciones de participantes"""
@@ -44,6 +59,8 @@ def gestionar_inscripciones(request, eve_id):
     participantes_eventos = ParticipantesEventos.objects.filter(
         par_eve_evento_fk=eve_id
     ).select_related('par_eve_participante_fk__usuario')
+    plantillas = PlantillaCertificado.objects.all()
+
     
     participantes = []
     for pe in participantes_eventos:
@@ -62,7 +79,8 @@ def gestionar_inscripciones(request, eve_id):
     
     return render(request, "app_admin/gestionar_inscripciones.html", {
         'evento': evento,
-        'participantes': participantes
+        'participantes': participantes,
+        'plantillas': plantillas
     })
 
 
@@ -73,6 +91,8 @@ def gestionar_inscripcion_asis(request, eve_id):
     asistentes_eventos = AsistentesEventos.objects.filter(
     asi_eve_evento_fk=evento
 ).select_related("asi_eve_asistente_fk__usuario")
+    plantillas = PlantillaCertificado.objects.all()
+
 
     asistentes = []
     for ae in asistentes_eventos:
@@ -92,7 +112,8 @@ def gestionar_inscripcion_asis(request, eve_id):
 
     return render(request, "app_admin/gestionar_inscripciones_asis.html", {
         'evento': evento,
-        'asistentes': asistentes
+        'asistentes': asistentes,
+        'plantillas': plantillas
     })
     
 def gestionar_evaluadores(request, evento_id):
@@ -101,6 +122,9 @@ def gestionar_evaluadores(request, evento_id):
     evaluadores_eventos = EvaluadorEventos.objects.filter(
         eva_eve_evento_fk=evento_id
     ).select_related('eva_eve_evaluador_fk')
+    
+    plantillas = PlantillaCertificado.objects.all()
+
 
     evaluadores = []
     for ee in evaluadores_eventos:
@@ -119,7 +143,8 @@ def gestionar_evaluadores(request, evento_id):
 
     return render(request, "app_admin/gestionar_evaluadores.html", {
         'evento': evento,
-        'evaluadores': evaluadores
+        'evaluadores': evaluadores,
+        'plantillas': plantillas
     })
 
 
@@ -135,10 +160,30 @@ def generar_qr_contenido(contenido, nombre_archivo='qr.png'):
 import random
 import string
 
+
 def generar_contrasena(longitud=10):
     """Genera una contraseña aleatoria segura"""
     caracteres = string.ascii_letters + string.digits + string.punctuation
     return ''.join(random.choices(caracteres, k=longitud))
+
+from twilio.rest import Client
+from django.conf import settings
+
+def enviar_sms(destinatario, mensaje):
+   
+    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    
+    try:
+        message = client.messages.create(
+            body=mensaje,
+            from_=settings.TWILIO_PHONE_NUMBER,
+            to=destinatario
+        )
+        return message.sid  # Devuelve el SID como confirmación
+    except Exception as e:
+        # Puedes loguearlo o manejarlo como desees
+        print(f"Error al enviar SMS: {e}")
+        return None
 
 
 def actualizar_estado(request):
@@ -165,6 +210,9 @@ def actualizar_estado(request):
     asunto = f"Estado actualizado - Evento {evento.eve_nombre}"
     mensaje = f"Hola {nombre},\n\nSu estado ha sido actualizado a: {nuevo_estado}."
     clave = "EVT" + str(evento.pk).zfill(5)
+    
+    
+    
 
     try:
         if usuario.rol == 'PARTICIPANTE':
@@ -182,7 +230,8 @@ def actualizar_estado(request):
                 participante_evento.par_estado = nuevo_estado
                 participante_evento.save()
                 
-            print("Evaluador:", evaluador.id, "Evento:", evento.id, "Estado:", nuevo_estado)
+            print("Participante:", participante.id, "Evento:", evento.eve_id, "Estado:", nuevo_estado)
+
 
 
             if nuevo_estado == "ACEPTADO":
@@ -195,6 +244,16 @@ def actualizar_estado(request):
                 email = EmailMessage(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
                 email.attach('qr_participante.png', qr_img.read(), 'image/png')
                 email.send()
+                
+                
+                telefono = usuario.telefono.strip()
+                if not telefono.startswith('+'):
+                    telefono = '+57' + telefono.lstrip('0')  # Colombia por defecto
+                mensaje_sms = (
+                    f"Hola {usuario.first_name}, fuiste aceptado como Participante en {evento.eve_nombre}.\n"
+                    f"Usuario: {usuario.email}\nContraseña: {nueva_password}"
+                )
+                enviar_sms(telefono, mensaje_sms)
             else:
                 send_mail(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
 
@@ -227,6 +286,15 @@ def actualizar_estado(request):
                 email = EmailMessage(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
                 email.attach('qr_evaluador.png', qr_img.read(), 'image/png')
                 email.send()
+                
+                telefono = usuario.telefono.strip()
+                if not telefono.startswith('+'):
+                    telefono = '+57' + telefono.lstrip('0') (
+                    f"Hola {usuario.first_name}, fuiste aceptado como Participante en {evento.eve_nombre}.\n"
+                    f"Usuario: {usuario.email}\nContraseña: {nueva_password}\nPor favor cambia tu contraseña después de iniciar sesión."
+                )
+                enviar_sms(telefono, mensaje_sms)
+                
             else:
                 send_mail(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
 
@@ -254,6 +322,15 @@ def actualizar_estado(request):
                 email = EmailMessage(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
                 email.attach('qr_asistente.png', qr_img.read(), 'image/png')
                 email.send()
+                
+                telefono = usuario.telefono.strip()
+                if not telefono.startswith('+'):
+                    telefono = '+57' + telefono.lstrip('0')  
+                mensaje_sms = (
+                    f"Hola {usuario.first_name}, fuiste aceptado como Participante en {evento.eve_nombre}.\n"
+                    f"Usuario: {usuario.email}\nContraseña: {nueva_password}"
+                )
+                enviar_sms(telefono, mensaje_sms)
             else:
                 send_mail(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
         else:
@@ -261,7 +338,7 @@ def actualizar_estado(request):
             return redirect(request.META.get('HTTP_REFERER', '/'))
 
         messages.success(request, "Estado actualizado correctamente y correo enviado.")
-        return redirect('main:lista_eventos')
+        return redirect('admin_evento:ventana')
 
     except Exception as e:
         messages.error(request, f"Error al actualizar el estado: {str(e)}")
@@ -453,28 +530,50 @@ def cargar_instrumento_admin(request, evento_id):
         'evento': evento
     })
 
+
+from django.db.models import F
+import logging
+logger = logging.getLogger(__name__)
+
+
+@login_required
 def ver_ranking_admin(request, evento_id):
     """Ver ranking de participantes en un evento"""
-    evento = get_object_or_404(Evento, pk=evento_id)
+    logger.info(f"⚠️ ENTRANDO a ver_ranking_admin con evento_id={evento_id}")
 
-    # Django ORM equivalent of the complex query
-    from django.db.models import F
-    
-    ranking_query = Participantes.objects.filter(
-        calificacion__cal_criterio_fk__cri_evento_fk=evento_id
-    ).annotate(
-        puntaje_total=Sum(F('calificacion__cal_valor') * F('calificacion__cal_criterio_fk__cri_peso'))
-    ).values(
-        'par_id', 'par_nombre', 'puntaje_total'
-    ).order_by('-puntaje_total')
+    evento = get_object_or_404(Evento, pk=evento_id)
+    logger.info(f"✅ Evento encontrado: {evento.eve_nombre} (ID: {evento.eve_id})")
+
+    try:
+        # Obtener ranking usando anotaciones con calificaciones y pesos
+        ranking_query = Participantes.objects.filter(
+            calificacion__cal_criterio_fk__cri_evento_fk=evento_id
+        ).annotate(
+            puntaje_total=Sum(
+                F('calificacion__cal_valor') * F('calificacion__cal_criterio_fk__cri_peso')
+            )
+        ).values(
+            'id', 'usuario__first_name', 'usuario__last_name', 'puntaje_total'
+        ).order_by('-puntaje_total')
+
+        logger.info(f"🔍 Participantes encontrados en ranking: {ranking_query.count()}")
+    except Exception as e:
+        logger.error(f"❌ Error al calcular el ranking: {e}")
+        messages.error(request, "Ocurrió un error al generar el ranking.")
+        return redirect('admin_evento:panel_eventos')  # o redirección más adecuada
 
     ranking = []
     for item in ranking_query:
+        nombre = f"{item['usuario__first_name']} {item['usuario__last_name']}"
+        puntaje = item['puntaje_total'] or 0
+        logger.debug(f"🏅 {nombre} → Puntaje: {puntaje}")
         ranking.append({
-            'participante_id': item['par_id'],
-            'participante_nombre': item['par_nombre'],
-            'puntaje_total': item['puntaje_total'] or 0
+            'participante_id': item['id'],
+            'participante_nombre': nombre,
+            'puntaje_total': puntaje
         })
+
+    logger.warning(f"🧾 Total en ranking final: {len(ranking)} participantes")
 
     return render(request, 'app_admin/ranking.html', {
         'evento': evento,
@@ -569,3 +668,533 @@ def descargar_ranking(request, evento_id):
         writer.writerow(fila)
 
     return response
+
+from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpResponse
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from io import BytesIO
+from reportlab.pdfgen import canvas
+
+
+
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import cm
+
+
+
+from django.contrib.auth.models import User
+
+@login_required
+def crear_plantilla_certificado(request):
+    logger.info("✅ Entrando a crear_plantilla_certificado")
+
+    if request.method == 'POST':
+        logger.info("📩 Método POST recibido")
+
+        nombre = request.POST.get('nombre')
+        titulo = request.POST.get('titulo')
+        subtitulo = request.POST.get('subtitulo')
+        color_titulo = request.POST.get('color_titulo')
+        color_nombre = request.POST.get('color_nombre')
+        mostrar_firma = request.POST.get('mostrar_firma') == 'on'
+        texto_firma = request.POST.get('texto_firma')
+        pos_titulo_y = request.POST.get('pos_titulo_y')
+        pos_nombre_y = request.POST.get('pos_nombre_y')
+        logo = request.FILES.get('logo')
+        sello = request.FILES.get('sello')
+        
+        try:
+            plantilla = PlantillaCertificado.objects.create(
+                nombre=nombre,
+                titulo=titulo,
+                subtitulo=subtitulo,
+                color_titulo=color_titulo,
+                color_nombre=color_nombre,
+                mostrar_firma=mostrar_firma,
+                texto_firma=texto_firma,
+                pos_titulo_y=pos_titulo_y,
+                pos_nombre_y=pos_nombre_y,
+                logo = logo,
+                sello = sello
+            )
+            logger.info(f"✅ Plantilla creada con ID {plantilla.id}")
+            messages.success(request, "Plantilla creada exitosamente.")
+            return redirect('admin_evento:listar_plantillas_certificado')
+
+        except Exception as e:
+            logger.error(f"❌ Error al crear la plantilla: {e}")
+            messages.error(request, f"Ocurrió un error al guardar: {e}")
+
+    logger.info("🖼️ Mostrando formulario de creación")
+    return render(request, 'app_admin/crear_plantilla.html')
+
+@login_required
+def listar_plantillas_certificado(request):
+    print("🌟 Entrando a la vista listar_plantillas_certificado")
+    plantillas = PlantillaCertificado.objects.all()
+    print(f"🔍 Se encontraron {plantillas.count()} plantillas")
+    return render(request, 'app_admin/listar_plantillas.html', {'plantillas': plantillas})
+
+from reportlab.lib.utils import ImageReader
+
+def generar_certificado_pdf(usuario, evento, tipo, plantilla):
+    """Genera un certificado PDF personalizado basado en la plantilla guardada."""
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    # Color fondo
+    # En caso de que no haya ningun valor para color de fondo de pone el blanco por defecto
+    color_fondo = getattr(plantilla, 'color_fondo', "#FFFFFF")
+    if color_fondo:
+        p.setFillColor(color_fondo)
+        p.rect(0, 0, width, height, stroke=0, fill=1)
+
+    # Marco
+    color_borde = getattr(plantilla, 'color_borde', "#00008B")
+    borde_grosor = getattr(plantilla, 'borde_grosor', 4)
+    borde_margen = getattr(plantilla, 'borde_margen', 2 * cm)
+    p.setStrokeColor(color_borde)
+    p.setLineWidth(borde_grosor)
+    p.rect(borde_margen, borde_margen, width - 2 * borde_margen, height - 2 * borde_margen)
+
+    # Título
+    fuente_titulo = getattr(plantilla, 'fuente_titulo', "Helvetica-Bold")
+    tamano_titulo = getattr(plantilla, 'tamano_titulo', 24)
+    color_titulo = getattr(plantilla, 'color_titulo', "#00008B")
+    texto_titulo = getattr(plantilla, 'texto_titulo', "🎓 CERTIFICADO")
+    p.setFont(fuente_titulo, tamano_titulo)
+    p.setFillColor(color_titulo)
+    p.drawCentredString(width / 2, height - 4 * cm, texto_titulo)
+
+    # Subtítulo
+    texto_subtitulo = getattr(plantilla, 'texto_subtitulo', "Se otorga el presente certificado a")
+    p.setFont("Helvetica-Bold", 16)
+    p.setFillColor(colors.black)
+    p.drawCentredString(width / 2, height - 6 * cm, texto_subtitulo)
+
+    # Nombre usuario
+    color_nombre = getattr(plantilla, 'color_nombre', "#8B0000")
+    p.setFont("Helvetica-Bold", 20)
+    p.setFillColor(color_nombre)
+    full_name = f"{usuario.first_name} {usuario.last_name}"
+    p.drawCentredString(width / 2, height - 8 * cm, full_name)
+    
+    if plantilla.logo:
+        logo_path = plantilla.logo.path
+        logo = ImageReader(logo_path)
+        p.drawImage(logo, x=2 * cm, y=height - 5 * cm, width=3*cm, height=3*cm, mask='auto')
+
+    if plantilla.sello:
+        sello_path = plantilla.sello.path
+        sello = ImageReader(sello_path)
+        p.drawImage(sello, x=width - 5 * cm, y=2 * cm, width=3*cm, height=3*cm, mask='auto')
+
+
+    # Texto participación
+    p.setFont("Helvetica", 14)
+    p.setFillColor(colors.black)
+    evento_nombre = evento.eve_nombre.upper()
+    tipo_label = tipo.capitalize()
+    p.drawCentredString(width / 2, height - 10 * cm, f"Por su destacada participación como {tipo_label}")
+    p.drawCentredString(width / 2, height - 11.2 * cm, f"en el evento: {evento_nombre}")
+
+    # Fecha
+    if hasattr(evento, 'eve_fecha'):
+        fecha_str = evento.eve_fecha.strftime('%d de %B de %Y')
+        p.setFont("Helvetica-Oblique", 12)
+        p.drawCentredString(width / 2, height - 13.5 * cm, f"Fecha: {fecha_str}")
+
+    # Firma
+    mostrar_firma = getattr(plantilla, 'mostrar_firma', True)
+    texto_firma = getattr(plantilla, 'texto_firma', "Coordinador del Evento")
+
+    if mostrar_firma:
+        p.setFont("Helvetica", 12)
+        p.drawString(borde_margen + 1 * cm, borde_margen + 3 * cm, "_________________________")
+        p.drawString(borde_margen + 1 * cm, borde_margen + 2 * cm, texto_firma)
+
+    p.showPage()
+    p.save()
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def previsualizar_certificado(request, plantilla_id):
+    """Genera una vista previa del certificado usando la plantilla seleccionada."""
+    plantilla = get_object_or_404(PlantillaCertificado, pk=plantilla_id)
+
+    usuario = request.user if request.user.is_authenticated else User.objects.first()
+    evento = Evento.objects.first()
+    tipo = "asistente"
+
+    pdf = generar_certificado_pdf(usuario, evento, tipo, plantilla)
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="certificado_preview.pdf"'
+    return response
+
+
+@login_required
+def editar_plantilla_certificado(request, plantilla_id):
+    plantilla = get_object_or_404(PlantillaCertificado, id=plantilla_id)
+
+    if request.method == 'POST':
+        plantilla.nombre = request.POST.get('nombre', plantilla.nombre)
+        plantilla.titulo = request.POST.get('titulo', plantilla.titulo)
+        plantilla.subtitulo = request.POST.get('subtitulo', plantilla.subtitulo)
+        plantilla.color_titulo = request.POST.get('color_titulo', plantilla.color_titulo)
+        plantilla.color_nombre = request.POST.get('color_nombre', plantilla.color_nombre)
+        plantilla.mostrar_firma = request.POST.get('mostrar_firma') is not None
+        plantilla.texto_firma = request.POST.get('texto_firma', plantilla.texto_firma)
+        plantilla.logo = request.FILES.get('logo', plantilla.logo)
+        plantilla.sello = request.FILES.get('sello', plantilla.sello)
+        
+        if plantilla.logo:
+            plantilla.logo = plantilla.logo
+        if plantilla.sello:
+            plantilla.sello = plantilla.sello
+        plantilla.save()
+
+
+        try:
+            plantilla.pos_titulo_y = float(request.POST.get('pos_titulo_y', plantilla.pos_titulo_y))
+        except (TypeError, ValueError):
+            pass
+
+        try:
+            plantilla.pos_nombre_y = float(request.POST.get('pos_nombre_y', plantilla.pos_nombre_y))
+        except (TypeError, ValueError):
+            pass
+
+        plantilla.save()
+        messages.success(request, "Plantilla actualizada correctamente.")
+        return redirect('admin_evento:editar_plantilla', plantilla_id=plantilla.id)
+
+    return render(request, 'app_admin/editar_plantilla.html', {'plantilla': plantilla})
+@login_required
+def eliminar_plantilla(request, plantilla_id):
+    plantilla = get_object_or_404(PlantillaCertificado, id=plantilla_id)
+    plantilla.delete()
+    messages.success(request, "Plantilla eliminada correctamente.")
+    return redirect('admin_evento:listar_plantillas_certificado')
+
+
+@login_required
+def seleccionar_plantilla_envio(request, evento_id, rol):
+    evento = get_object_or_404(Evento, pk=evento_id)
+    plantillas = PlantillaCertificado.objects.all()
+
+    if request.method == 'POST':
+        plantilla_id = request.POST.get('plantilla_id')
+        if not plantilla_id:
+            messages.error(request, "Selecciona una plantilla.")
+            return redirect(request.path)
+
+        plantilla = get_object_or_404(PlantillaCertificado, pk=plantilla_id)
+
+        return redirect(f'/admin_evento/evento/{evento_id}/enviar-certificados/{rol}/?plantilla_id={plantilla.id}')
+
+    return render(request, 'admin_evento/seleccionar_plantilla.html', {
+        'evento': evento,
+        'rol': rol,
+        'plantillas': plantillas,
+    })
+
+
+from django.contrib.auth.models import User
+
+def enviar_certificado(usuario, evento, tipo, archivo_pdf):
+    """Envía el certificado por correo electrónico."""
+    asunto = f'🎓 Certificado de {tipo.capitalize()} - {evento.eve_nombre}'
+
+    mensaje = f"""
+    Hola {usuario.first_name},
+
+    Adjuntamos tu certificado como {tipo} del evento "{evento.eve_nombre}".
+
+    ¡Gracias por participar!
+    """
+
+    try:
+        logger.debug(f"[EMAIL] Preparando envío de certificado {tipo} a {usuario.email}")
+
+        email = EmailMessage(
+            asunto,
+            mensaje,
+            settings.EMAIL_HOST_USER,
+            [usuario.email]
+        )
+
+        # Adjuntar el archivo PDF
+        email.attach(f"certificado_{tipo}.pdf", archivo_pdf, "application/pdf")
+
+        email.send()
+        logger.debug(f"[EMAIL] Certificado enviado correctamente a {usuario.email}")
+    except Exception as e:
+        logger.error(f"[EMAIL] Error al enviar a {usuario.email}: {e}")
+
+from django.http import HttpResponseNotAllowed
+
+#########################
+
+def enviar_certificados_asistentes(request, evento_id):
+    logger.info(f"[MASIVO] Ingresando a enviar_certificados_asistentes con evento_id={evento_id}")
+
+    plantilla_id = request.POST.get('plantilla_id')
+    if not plantilla_id:
+        messages.error(request, "❌ Debes seleccionar una plantilla.")
+        return redirect('admin_evento:gestionar_inscripcion_asis', eve_id=evento_id)
+
+    plantilla = get_object_or_404(PlantillaCertificado, pk=plantilla_id)
+
+    evento = get_object_or_404(Evento, pk=evento_id)
+    logger.debug(f"[MASIVO] Evento encontrado: {evento.eve_nombre}")
+
+    try:
+        relaciones = AsistentesEventos.objects.filter(asi_eve_evento_fk=evento)
+        logger.debug(f"[MASIVO] Total relaciones encontradas: {relaciones.count()}")
+    except Exception as e:
+        logger.error(f"[MASIVO] Error al obtener relaciones: {e}")
+        messages.error(request, "❌ Error al obtener la lista de asistentes.")
+        return redirect('admin_evento:gestionar_inscripcion_asis', eve_id=evento_id)
+
+    enviados = 0
+    for rel in relaciones:
+        usuario = rel.asi_eve_asistente_fk.usuario
+        logger.debug(f"[MASIVO] Enviando certificado a: {usuario.email}")
+        try:
+            pdf = generar_certificado_pdf(usuario, evento, 'asistente', plantilla=plantilla)
+            enviar_certificado(usuario, evento, 'asistente', pdf)
+            enviados += 1
+        except Exception as e:
+            logger.error(f"[MASIVO] Error al generar o enviar certificado para {usuario.email}: {e}")
+
+    logger.info(f"[MASIVO] Total enviados: {enviados}")
+    messages.success(request, f"🎉 Certificados enviados a {enviados} asistentes.")
+    return redirect('admin_evento:gestionar_inscripcion_asis', eve_id=evento_id)
+
+@login_required
+def enviar_certificado_asistente_individual(request, evento_id, usuario_id):
+    logger.debug(f"[INDIVIDUAL] Ingresando con evento_id={evento_id}, usuario_id={usuario_id}")
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    plantilla_id = request.POST.get('plantilla_id')
+    if not plantilla_id:
+        messages.error(request, "Debes seleccionar una plantilla.")
+        return redirect('admin_evento:gestionar_inscripcion_asis', eve_id=evento_id)
+
+    plantilla = get_object_or_404(PlantillaCertificado, pk=plantilla_id)
+    evento = get_object_or_404(Evento, pk=evento_id)
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    try:
+        logger.debug(f"[INDIVIDUAL] Generando PDF para {usuario.email}")
+        pdf = generar_certificado_pdf(usuario, evento, 'asistente', plantilla=plantilla)
+        
+    except Exception as e:
+        logger.debug(f"[INDIVIDUAL] Enviando certificado a {usuario.email}")
+        enviar_certificado(usuario, evento, 'asistente', pdf)
+
+    messages.success(request, f"📨 Certificado enviado a {usuario.first_name} {usuario.last_name}.")
+    return redirect(f"{reverse('admin_evento:gestionar_inscripcion_asis', args=[evento_id])}?exito=1")
+
+
+#######################33
+
+
+@login_required
+def enviar_certificados_participantes(request, evento_id):
+    evento = get_object_or_404(Evento, pk=evento_id)
+    plantilla_id = request.POST.get('plantilla_id')
+
+    if not plantilla_id:
+        messages.error(request, "❌ Debes seleccionar una plantilla para enviar los certificados.")
+        return redirect('admin_evento:gestionar_inscripciones', eve_id=evento_id)
+
+    try:
+        plantilla = PlantillaCertificado.objects.get(pk=plantilla_id)
+    except PlantillaCertificado.DoesNotExist:
+        messages.error(request, "❌ La plantilla seleccionada no existe.")
+        return redirect('admin_evento:gestionar_inscripciones', eve_id=evento_id)
+
+    try:
+        relaciones = ParticipantesEventos.objects.filter(
+            par_eve_evento_fk=evento
+        )
+    except Exception as e:
+        logger.error(f"[MASIVO] Error al obtener relaciones: {e}")
+        messages.error(request, "❌ Error al obtener la lista de participantes.")
+        return redirect('admin_evento:gestionar_inscripciones', eve_id=evento_id)
+
+    enviados = 0
+    for rel in relaciones:
+        usuario = rel.par_eve_participante_fk.usuario
+        logger.debug(f"[MASIVO] Enviando certificado a: {usuario.email}")
+        pdf = generar_certificado_pdf(usuario, evento, 'participante', plantilla=plantilla)
+        enviar_certificado(usuario, evento, 'participante', pdf)
+        enviados += 1
+
+    logger.info(f"[MASIVO] Total certificados enviados a participantes: {enviados}")
+    messages.success(request, f"🎉 Certificados enviados a {enviados} participantes.")
+    return redirect('admin_evento:gestionar_inscripciones', eve_id=evento_id)
+
+@login_required
+def enviar_certificado_participante_individual(request, evento_id, usuario_id):
+    logger.debug(f"[INDIVIDUAL] Ingresando con evento_id={evento_id}, usuario_id={usuario_id}")
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    plantilla_id = request.POST.get('plantilla_id')
+    if not plantilla_id:
+        messages.error(request, "Debes seleccionar una plantilla.")
+        return redirect('admin_evento:gestionar_inscripcion_asis', eve_id=evento_id)
+
+    plantilla = get_object_or_404(PlantillaCertificado, pk=plantilla_id)
+    evento = get_object_or_404(Evento, pk=evento_id)
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    try:
+        logger.debug(f"[INDIVIDUAL] Generando PDF para {usuario.email}")
+        pdf = generar_certificado_pdf(usuario, evento, 'participante', plantilla)
+        
+    except Exception as e:
+        logger.debug(f"[INDIVIDUAL] Enviando PDF para {usuario.email}")     
+        enviar_certificado(usuario, evento, 'participante', pdf)
+
+    messages.success(request, f"📨 Certificado enviado a {usuario.first_name} {usuario.last_name}.")
+    return redirect(f"{reverse('admin_evento:gestionar_inscripciones', args=[evento_id])}?exito=1")
+
+##########################################
+
+@login_required
+def enviar_certificados_evaluadores(request, evento_id):
+    if request.method != 'POST':
+        messages.error(request, "Método no permitido.")
+        return redirect('admin_evento:gestionar_evaluadores', eve_id=evento_id)
+
+    evento = get_object_or_404(Evento, pk=evento_id)
+    logger.debug(f"[MASIVO] Evento encontrado: {evento.eve_nombre}")
+
+    plantilla_id = request.POST.get('plantilla_id')
+    if not plantilla_id:
+        messages.error(request, "❌ Debes seleccionar una plantilla para enviar los certificados.")
+        return redirect('admin_evento:gestionar_evaluadores', eve_id=evento_id)
+
+    try:
+        plantilla = PlantillaCertificado.objects.get(pk=plantilla_id)
+    except PlantillaCertificado.DoesNotExist:
+        messages.error(request, "❌ La plantilla seleccionada no existe.")
+        return redirect('admin_evento:gestionar_evaluadores', eve_id=evento_id)
+
+    try:
+        relaciones = EvaluadorEventos.objects.filter(
+            eva_eve_evento_fk=evento,
+            eva_eve_evaluador_fk__usuario__rol='EVALUADOR'
+        )
+        logger.debug(f"[MASIVO] Total relaciones encontradas: {relaciones.count()}")
+    except Exception as e:
+        logger.error(f"[MASIVO] Error al obtener relaciones: {e}")
+        messages.error(request, "❌ Error al obtener la lista de Evaluadores.")
+        return redirect('admin_evento:gestionar_evaluadores', eve_id=evento_id)
+
+    enviados = 0
+    for rel in relaciones:
+        usuario = rel.eva_eve_evaluador_fk.usuario
+        logger.debug(f"[MASIVO] Enviando certificado a: {usuario.email}")
+        pdf = generar_certificado_pdf(usuario, evento, 'evaluador', plantilla=plantilla)
+        enviar_certificado(usuario, evento, 'evaluador', pdf)
+        enviados += 1
+
+    logger.info(f"[MASIVO] Total enviados: {enviados}")
+    messages.success(request, f"🎉 Certificados enviados a {enviados} evaluadores.")
+    return redirect(f"{reverse('admin_evento:gestionar_evaluadores', args=[evento_id])}?exito=1")
+
+ 
+@login_required
+def enviar_certificado_evaluador_individual(request, evento_id, usuario_id):
+    logger.debug(f"[INDIVIDUAL] Ingresando con evento_id={evento_id}, usuario_id={usuario_id}")
+    
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    plantilla_id = request.POST.get('plantilla_id')
+    if not plantilla_id:
+        messages.error(request, "Debes seleccionar una plantilla.")
+        return redirect('admin_evento:gestionar_inscripcion_asis', eve_id=evento_id)
+
+    plantilla = get_object_or_404(PlantillaCertificado, pk=plantilla_id)
+    evento = get_object_or_404(Evento, pk=evento_id)
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
+
+    try:
+        pdf = generar_certificado_pdf(usuario, evento, 'evaluador', plantilla)
+        enviar_certificado(usuario, evento, 'evaluador', pdf)
+        messages.success(request, f"📨 Certificado enviado a {usuario.first_name} {usuario.last_name}.")
+
+    except Exception as e:
+        logger.error(f"Error al enviar certificado: {e}")
+        messages.error(request, "Ocurrió un error al enviar el certificado.")
+
+    return redirect(f"{reverse('admin_evento:gestionar_evaluadores', args=[evento_id])}?exito=1")
+
+########## MANEJO DE NOTIFICACIONES PARA CADA ROL 
+
+
+@login_required
+def notificar_evento(request, evento_id):
+    evento = get_object_or_404(Evento, pk=evento_id)
+
+    if request.method == 'POST':
+        mensaje_adicional = request.POST.get('mensaje_adicional', '').strip()
+        destinatarios = request.POST.getlist('destinatarios') 
+
+        total = 0
+        enviados_a = set()
+
+        encabezado = (
+            f"Hola,\n\n"
+            f"Te enviamos información importante sobre el evento:\n\n"
+            f"📌 Nombre: {evento.eve_nombre}\n"
+        )
+
+        if hasattr(evento, 'eve_fecha') and evento.eve_fecha:
+            encabezado += f"📅 Fecha: {evento.eve_fecha.strftime('%d/%m/%Y')}\n"
+        if hasattr(evento, 'eve_hora') and evento.eve_hora:
+            encabezado += f"⏰ Hora: {evento.eve_hora.strftime('%I:%M %p')}\n"
+
+        encabezado += "\n"
+        mensaje_completo = encabezado + mensaje_adicional + "\n\nSaludos,\nEquipo organizador"
+
+        
+        modelos = {
+            'participantes': (ParticipantesEventos, 'par_eve_participante_fk'),
+            'evaluadores': (EvaluadorEventos, 'eva_eve_evaluador_fk'),
+            'asistentes': (AsistentesEventos, 'asi_eve_asistente_fk'),
+        }
+
+        for rol in destinatarios:
+            modelo, attr = modelos[rol]
+            relaciones = modelo.objects.filter(**{f'{attr[:3]}_eve_evento_fk': evento})
+            for rel in relaciones:
+                usuario = getattr(rel, attr).usuario
+                if usuario.email and usuario.email not in enviados_a:
+                    send_mail(
+                        subject=f"📢 Información del evento {evento.eve_nombre}",
+                        message=mensaje_completo,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[usuario.email],
+                        fail_silently=False,
+                    )
+                    enviados_a.add(usuario.email)
+                    total += 1
+
+        messages.success(request, f"📨 Se enviaron {total} notificaciones.")
+        return redirect('admin_evento:ventana')
+
+    return render(request, 'app_admin/enviar_notificaciones.html', {'evento': evento})

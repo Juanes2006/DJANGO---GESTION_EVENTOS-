@@ -13,66 +13,74 @@
             <hr>
             <li><a class="dropdown-item text-primary" href="{% url 'participantes:mi_info' %}">📋 Mis Eventos</a></li>
             <li><a class="dropdown-item text-danger" href="{% url 'evaluadores:logout_evaluador' %}">🔴 Cerrar Sesión</a></li>
+            <li> <a class="dropdown-item text-info" href="{% url 'qr:consulta_qr' %} ">🔎 Consultar Boletas</a>
+            </li>
         </ul>
     </div>
 </div>
 {% endblock %} {% block content %}
 
 
-<div class="container mt-4">
-    <div class="container mt-4">
-        <div class="text-start mb-2">
+<div class="container mt-4 ">
+    <div class="container mt-4 ">
+        <div class="text-start mb-2 ">
             <p>👋 Bienvenido, <strong>{{ request.user.username }}</strong></p>
         </div>
 
 
-        <div class="text-center">
-            <h2 class="mb-4 fw-bold text-primary">Mis Eventos</h2>
-            <p class="lead">Estos son los eventos donde estás inscrito como participante.</p>
+        <div class="text-center ">
+            <h2 class="mb-4 fw-bold text-primary ">Mis Eventos</h2>
+            <p class="lead ">Estos son los eventos donde estás inscrito como participante.</p>
         </div>
 
-        <div class="row g-4">
+        <div class="row g-4 ">
             {% if eventos_inscritos %} {% for inscripcion in eventos_inscritos %} {% with evento=inscripcion.par_eve_evento_fk %}
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm rounded-5 event-card position-relative overflow-hidden">
+            <div class="col-md-4 ">
+                <div class="card h-100 shadow-sm rounded-5 event-card position-relative overflow-hidden ">
 
                     <!-- Imagen del evento -->
                     {% if evento.imagen %}
-                    <img src="{% static 'imagenes/'|add:evento.imagen %}" class="card-img-top rounded-top" alt="Imagen del evento" style="height: 220px; width: 100%; object-fit: cover;"> {% else %}
-                    <div class="no-image-placeholder rounded-top d-flex align-items-center justify-content-center text-secondary fs-4" style="height: 220px; background:#f8f9fa;">
-                        <i class="fas fa-calendar-alt"></i>
+                    <img src="{% static 'imagenes/'|add:evento.imagen %} " class="card-img-top rounded-top " alt="Imagen del evento " style="height: 220px; width: 100%; object-fit: cover; "> {% else %}
+                    <div class="no-image-placeholder rounded-top d-flex align-items-center justify-content-center text-secondary fs-4 " style="height: 220px; background:#f8f9fa; ">
+                        <i class="fas fa-calendar-alt "></i>
                     </div>
                     {% endif %}
 
                     <!-- Contenido del evento -->
-                    <div class="card-body d-flex flex-column p-4">
-                        <h5 class="card-title fw-semibold text-truncate" title="{{ evento.eve_nombre }}">
+                    <div class="card-body d-flex flex-column p-4 ">
+                        <h5 class="card-title fw-semibold text-truncate " title="{{ evento.eve_nombre }} ">
                             {{ evento.eve_nombre }}
                         </h5>
-                        <p class="card-text flex-grow-1 text-muted small" style="line-height: 1.4;">
+                        <p class="card-text flex-grow-1 text-muted small " style="line-height: 1.4; ">
                             {{ evento.eve_descripcion|truncatewords:25 }}<br>
                             <strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}<br>
                             <strong>📅 Inicio:</strong> {{ evento.eve_fecha_inicio }}<br>
                             <strong>🏁 Fin:</strong> {{ evento.eve_fecha_fin }}<br>
                             <strong>🔸 Estado Inscripción:</strong>
-                            <span class="badge bg-info text-dark">
-                                    {{ inscripcion.par_estado|default:"DESCONOCIDO" }}
+                            <span class="badge bg-info text-dark ">
+                                    {{ inscripcion.par_estado|default:"DESCONOCIDO " }}
                                 </span>
                         </p>
 
                         <!-- Botón opcional (por ejemplo: ver QR o clave) -->
 
+                        <a href="{% url 'participantes:ver_memorias_evento' evento.eve_id %}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-book me-1"></i> Ver Memorias
+                        </a>
+
+
                     </div>
 
-                    <!-- Cinta del estado del evento -->
+
                     <div class="ribbon {% if evento.eve_estado == 'ACTIVO' %}ribbon-green{% else %}ribbon-red{% endif %}">
                         {{ evento.eve_estado }}
                     </div>
+
                 </div>
             </div>
             {% endwith %} {% endfor %} {% else %}
-            <div class="col-12">
-                <p class="alert alert-warning text-center">No estás inscrito en ningún evento actualmente.</p>
+            <div class="col-12 ">
+                <p class="alert alert-warning text-center ">No estás inscrito en ningún evento actualmente.</p>
             </div>
             {% endif %}
         </div>

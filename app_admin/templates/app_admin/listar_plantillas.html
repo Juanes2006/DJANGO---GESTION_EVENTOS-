@@ -1,0 +1,42 @@
+{% extends 'app_main/base.html' %}{% block nav_links %}
+
+
+<a href="{% url 'admin_evento:crear_plantilla_certificado' %}" class="btn btn-success d-flex align-items-center justify-content-center gap-2">
+    <i class="fas fa-plus"></i><span>Crear Plantilla</span>
+</a>
+
+
+{% endblock %} {% block content %}
+<div class="container mt-5">
+    <h2>📄 Plantillas de Certificado</h2>
+
+    {% if plantillas %}
+    <table class="table table-bordered mt-4">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Título</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for plantilla in plantillas %}
+            <tr>
+                <td>{{ plantilla.id }}</td>
+                <td>{{ plantilla.nombre }}</td>
+                <td>{{ plantilla.titulo }}</td>
+                <td>
+                    <a href="{% url 'admin_evento:editar_plantilla' plantilla.id %}" class="btn btn-sm btn-warning">✏️ Editar</a>
+                    <a href="{% url 'admin_evento:previsualizar_certificado' plantilla.id %}" target="_blank" class="btn btn-sm btn-secondary">🔍 Previsualizar</a>
+                    <a href="{% url 'admin_evento:eliminar_plantilla' plantilla.id %}" class="btn btn-sm btn-danger">🗑 Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No hay plantillas creadas aún.</p>
+    {% endif %}
+</div>
+{% endblock %}

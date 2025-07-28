@@ -49,6 +49,52 @@
                                 <button type="submit" name="estado" value="RECHAZADO" class="btn btn-danger btn-sm">❌ Rechazar</button>
                             </div>
                         </form>
+                        <!--  certificado individual -->
+                        <button type="button" class="btn btn-primary btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#modalPlantillaAsistente{{ asistente.id }}">
+    📩 Enviar Certificado Asistente
+</button>
+
+                        <!-- Modal para seleccionar plantilla y enviar certificado -->
+                        <div class="modal fade" id="modalPlantillaAsistente{{ asistente.id }}" tabindex="-1" aria-labelledby="modalLabelAsistente{{ asistente.id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content shadow-lg rounded-4 border-0">
+                                    <form method="post" action="{% url 'admin_evento:enviar_certificado_asistente_individual' evento_id=evento.eve_id usuario_id=asistente.id %}">
+                                        {% csrf_token %}
+                                        <div class="modal-header bg-primary text-white rounded-top-4">
+                                            <h5 class="modal-title" id="modalLabelAsistente{{ asistente.id }}">
+                                                📄 Seleccionar plantilla para {{ asistente.usuario.first_name }} {{ asistente.usuario.last_name }}
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                        </div>
+
+                                        <div class="modal-body py-4 px-4">
+                                            <div class="mb-3">
+                                                <label for="plantilla_id_{{ asistente.id }}" class="form-label fw-semibold">🖼️ Plantilla de certificado</label>
+                                                <select name="plantilla_id" id="plantilla_id_{{ asistente.id }}" class="form-select" required>
+                            <option value="" disabled selected>-- Selecciona una plantilla --</option>
+                            {% for plantilla in plantillas %}
+                                <option value="{{ plantilla.id }}">{{ plantilla.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                                            </div>
+                                            <div class="alert alert-info mt-3" role="alert">
+                                                Se enviará el certificado solo a este asistente.
+                                            </div>
+                                        </div>
+
+                                        <div class="modal-footer bg-light rounded-bottom-4">
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        ❌ Cancelar
+                    </button>
+                                            <button type="submit" class="btn btn-success">
+                        📤 Enviar certificado
+                    </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
                     </td>
                 </tr>
                 {% endfor %} {% else %}
@@ -62,12 +108,92 @@
         </table>
     </div>
 
-    <h5 class="mt-4">🙋‍♂️ Inscripciones de Asistentes</h5>
-    <form method="post" action="{% url 'admin_evento:toggle_inscripcion' tipo='asistentes' evento_id=evento.eve_id %}">
-        {% csrf_token %} {% if evento.inscripciones_asistentes_abiertas %}
-        <button class="btn btn-warning btn-sm">🔒 Cerrar inscripciones de asistentes</button> {% else %}
-        <button class="btn btn-success btn-sm">🔓 Abrir inscripciones de asistentes</button> {% endif %}
-    </form>
+    <div class="text-center">
+        <h5>🔧 Gestión de Inscripciones</h5>
+        <form method="post" action="{% url 'admin_evento:toggle_inscripcion' tipo='asistentes' evento_id=evento.eve_id %}">
+            {% csrf_token %} {% if evento.inscripciones_asistentes_abiertas %}
+            <button class="btn btn-warning btn-sm">🔒 Cerrar inscripciones de asistentes</button> {% else %}
+            <button class="btn btn-success btn-sm">🔓 Abrir inscripciones de asistentes</button> {% endif %}
+        </form>
+
+
+        {% if asistentes %}
+        <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#modalCertificadoAsistentes">
+    📤 Enviar certificados a todos los Asistentes
+</button> {% else %}
+        <p class="text-muted mt-3">🚫 No hay asistentes registrados para enviar certificados.
+        </p>
+        {% endif %}
+
+    </div>
+
 
 </div>
-{% endblock %}
+<div class="modal fade" id="modalExitoCertificado" tabindex="-1" aria-labelledby="modalExitoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-success text-white border-0 rounded-top">
+                <h5 class="modal-title" id="modalExitoLabel">🎉 ¡Certificado Enviado!</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: #28a745;"></i>
+                </div>
+                <h5 class="fw-bold">¡Éxito!</h5>
+                <p class="text-muted mb-0">El certificado ha sido enviado exitosamente al Asistente. 📩</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-success px-4" data-bs-dismiss="modal">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal  Certificado-->
+<div class="modal fade" id="modalCertificadoAsistentes" tabindex="-1" aria-labelledby="modalCertificadoAsistentesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg rounded-4 border-0">
+            <form method="post" action="{% url 'admin_evento:enviar_certificados_participantes' evento_id=evento.eve_id %}">
+                {% csrf_token %}
+                <div class="modal-header bg-primary text-white rounded-top-4">
+                    <h5 class="modal-title" id="modalCertificadoParticipantesLabel">
+                        📄 Seleccionar plantilla para certificados
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body py-4 px-4">
+                    <div class="mb-3">
+                        <label for="plantilla_id_participantes" class="form-label fw-semibold">🖼️ Plantilla de certificado</label>
+                        <select name="plantilla_id" id="plantilla_id_participantes" class="form-select" required>
+                            <option value="" disabled selected>-- Selecciona una plantilla --</option>
+                            {% for plantilla in plantillas %}
+                                <option value="{{ plantilla.id }}">{{ plantilla.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        ❌ Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        📤 Enviar certificados
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+{% if request.GET.exito == "1" %}
+<script>
+    window.addEventListener('DOMContentLoaded', function() {
+        var modalExito = new bootstrap.Modal(document.getElementById('modalExitoCertificado'));
+        modalExito.show();
+    });
+</script>
+{% endif %} {% endblock %}

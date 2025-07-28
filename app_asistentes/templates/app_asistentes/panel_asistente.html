@@ -1,4 +1,4 @@
-{% extends 'app_main/base.html' %}{% load static %} {% block nav_links %}
+{% extends 'app_main/base.html' %}{% block eventos_text %}Panel Asistente{% endblock %}{% load static %} {% block nav_links %}
 <div class="dropdown ms-auto position-relative me-3">
     <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="bi bi-person-circle fs-5"></i>
@@ -19,16 +19,19 @@
         <li>
             <hr class="dropdown-divider">
         </li>
+
         <li>
-            <a class="dropdown-item d-flex align-items-center gap-2 text-primary" href="{% url 'evaluadores:mi_info' %}">
-                <i class="bi bi-journal-text"></i> Mis Eventos
+
+            <a class="dropdown-item d-flex alig-items-center gap-2 text-info" href="{% url 'qr:consulta_qr' %} ">
+                <i> 🔎 Consultar Boletas</i>
             </a>
-        </li>
-        <li>
-            <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'evaluadores:logout_evaluador' %}">
-                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-            </a>
-        </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'evaluadores:logout_evaluador' %}">
+                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                </a>
+            </li>
+
+
     </ul>
 </div>
 {% endblock %} {% block content %}
@@ -67,6 +70,9 @@
                                     {{ asistencia.asi_eve_estado|default:"DESCONOCIDO" }}
                                 </span>
                     </p>
+                    <a href="{% url 'asistente:ver_memorias_evento_asis' evento.eve_id %}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-book me-1"></i> Ver Memorias
+                    </a>
                 </div>
 
                 <div class="ribbon {% if evento.eve_estado == 'ACTIVO' %}ribbon-green{% else %}ribbon-red{% endif %}">

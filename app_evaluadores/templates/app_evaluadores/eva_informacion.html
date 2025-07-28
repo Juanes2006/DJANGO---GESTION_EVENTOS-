@@ -33,9 +33,9 @@
 
                 <br> {% if evento.archivo_programacion %}
                 <div class="my-4">
-                    <a href="{{ MEDIA_URL }}programacion/{{ evento.archivo_programacion }}" target="_blank" class="btn btn-outline-success btn-lg shadow-sm">
-          📄 Ver Archivo de Programación
-        </a>
+                    <a href="{% static 'programacion/' %}{{ evento.archivo_programacion }}" target="_blank" class="btn btn-outline-success btn-lg shadow-sm">
+                    📄 Ver Archivo de Programación
+                </a>
                 </div>
                 {% else %}
                 <p class="text-muted fst-italic">No hay archivo de programación disponible.</p>

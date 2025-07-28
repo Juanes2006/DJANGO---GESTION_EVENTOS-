@@ -1,0 +1,38 @@
+{% extends 'app_main/base.html' %} {% block content %}
+<div class="container mt-4">
+    <h2>📋 Panel de Aprobación de Administradores</h2>
+
+    {% if solicitudes %}
+    <table class="table mt-4">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for admin in solicitudes %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ admin.usuario.first_name }}</td>
+                <td>{{ admin.usuario.email }}</td>
+                <td>{{ admin.usuario.telefono }}</td>
+                <td>
+                    <form method="POST" action="{% url 'superadmin:aprobar_admin' admin.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">✅ Aprobar</button>
+                    </form>
+                </td>
+            </tr>
+
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info mt-4">No hay solicitudes pendientes.</div>
+    {% endif %}
+</div>
+{% endblock %}
