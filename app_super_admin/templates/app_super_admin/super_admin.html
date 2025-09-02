@@ -1,60 +1,65 @@
-{% extends 'app_main/base.html' %} {% load static %} {% block nav_links %}
+{% extends 'app_main/base.html' %} {% load static %}{% block nav_links %}
 <div class="dropdown ms-auto position-relative me-3">
     <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="bi bi-person-circle fs-5"></i>
-        👤{{ request.user.first_name }}
+        👤 {{ request.user.first_name }}
     </button>
+
     <ul class="dropdown-menu dropdown-menu-end shadow-lg animate__animated animate__fadeIn" aria-labelledby="userDropdown" style="min-width: 260px;">
+
+        <!-- Usuario info -->
         <li class="px-3 py-2">
             <p class="mb-1 fw-semibold text-primary">{{ request.user.first_name }} {{ request.user.last_name }}</p>
             <p class="mb-0 small text-muted">{{ request.user.email }}</p>
         </li>
+
         <li>
             <hr class="dropdown-divider">
         </li>
+
         <li class="px-3 py-1 small text-muted">
             <i class="bi bi-telephone me-1"></i> {{ request.user.telefono|default:"Sin número" }}<br>
             <i class="bi bi-person-badge me-1"></i> Rol: <span class="text-uppercase">{{ request.user.rol }}</span>
         </li>
+
         <li>
             <hr class="dropdown-divider">
         </li>
 
-        <li>
-            <a class="dropdown-item d-flex align-items-center gap-2 text-primary" href="{% url 'superadmin:agregar_area' %}" title="Agregar una nueva área">
-                <i class="bi bi-journal-text fs-5"></i>
-                <span>📁 Agregar Área</span>
-            </a>
+        <!-- Botones modales -->
+        <li class="px-3 py-2 d-flex flex-column gap-2">
+            <button type="button" class="btn btn-primary btn-sm w-100" data-bs-toggle="modal" data-bs-target="#modalArea">
+               📁 Agregar Área
+            </button>
+
+            <button type="button" class="btn btn-success btn-sm w-100" data-bs-toggle="modal" data-bs-target="#modalCategoria">
+               🏷️ Agregar Categoría
+            </button>
         </li>
 
         <li>
-            <a class="dropdown-item d-flex align-items-center gap-2 text-success" href="{% url 'superadmin:agregar_categoria' %}" title="Agregar una nueva categoría">
-                <i class="bi bi-tags fs-5"></i>
-                <span>🏷️ Agregar Categoría</span>
-            </a>
+            <hr class="dropdown-divider">
         </li>
+
+        <!-- Panel de aprobaciones -->
         <li>
             <a class="dropdown-item d-flex align-items-center gap-2 text-primary" href="{% url 'superadmin:panel_aprobaciones' %}" title="Ver y aprobar solicitudes de administradores">
                 <i class="bi bi-person-check fs-5"></i>
                 <span>✅ Aceptar Administradores</span>
             </a>
-
-
-
-
-
-
         </li>
 
+        <li>
+            <hr class="dropdown-divider">
+        </li>
 
+        <!-- Cerrar sesión -->
         <li>
             <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'evaluadores:logout_evaluador' %}" title="Cerrar sesión">
                 <i class="bi bi-box-arrow-right fs-5"></i>
                 <span>🔴 Cerrar Sesión</span>
             </a>
         </li>
-
-
 
     </ul>
 </div>
@@ -191,4 +196,71 @@
         background: #dc3545;
     }
 </style>
+
+
+<div class="modal fade" id="modalArea" tabindex="-1" aria-labelledby="modalAreaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="modalAreaLabel">Agregar Área</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formArea" method="POST" action="{% url 'super_admin:agregar_area' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="are_nombre" class="form-label">Nombre del Área</label>
+                        <input type="text" class="form-control" name="are_nombre" id="are_nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="are_descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" name="are_descripcion" id="are_descripcion" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="submit" class="btn btn-primary" form="formArea">Agregar Área</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalCategoriaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalCategoriaLabel">Agregar Categoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formCategoria" method="POST" action="{% url 'super_admin:agregar_categoria' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="cat_nombre" class="form-label">Nombre de la Categoría</label>
+                        <input type="text" class="form-control" name="cat_nombre" id="cat_nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cat_descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" name="cat_descripcion" id="cat_descripcion" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cat_area_fk" class="form-label">Área</label>
+                        <select class="form-select" name="cat_area_fk" id="cat_area_fk" required>
+    <option value="">Seleccione un área</option>
+    {% for area in areas %}
+        <option value="{{ area.id }}">{{ area.are_nombre }}</option>
+    {% endfor %}
+</select>
+
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="submit" class="btn btn-success" form="formCategoria">Agregar Categoría</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

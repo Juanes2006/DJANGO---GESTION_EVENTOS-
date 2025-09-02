@@ -1,6 +1,5 @@
 {% extends 'app_main/base.html' %} {% load static %} {% block eventos_url %} {% url 'main:visitante' %} {% endblock %} {% block eventos_text %} Visitante Web {% endblock %} {% block nav_links %}
 <li class="nav-item"><a class="nav-link" href="{% url 'main:buscar_eventos' %}">Buscar Eventos</a></li>
-<li class="nav-item"><a class="nav-link" href="{% url 'registros:admin_solicitud' %}"> Crea tus Eventos</a></li>
 
 <!--
 <li class="nav-item"><a class="nav-link" href="{% url 'qr:consulta_qr' %}">Consultar Boletas</a></li>

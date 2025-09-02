@@ -4,6 +4,10 @@ from app_usuarios.models import Usuario
 class AdministradorEvento(models.Model):
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)
     aprobado = models.BooleanField(default=False)
+    limite_eventos = models.PositiveIntegerField(default=3)  
+    activo = models.BooleanField(default=True)  
+
+
 
     def __str__(self):
         return f"AdminEvento: {self.usuario.username} - {'Aprobado' if self.aprobado else 'Pendiente'}"

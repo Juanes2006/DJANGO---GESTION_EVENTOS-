@@ -96,23 +96,6 @@
     </div>
 </div>
 
-{% endblock %} {% block nav_links %}
-<li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" id="editarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-      Editar Eventos
-    </a>
-    <ul class="dropdown-menu" aria-labelledby="editarDropdown">
-        {% for evento in eventos %}
-        <li>
-            <a class="dropdown-item" href="{% url 'editar_evento' evento.eve_id %}">
-                {{ evento.eve_nombre }}
-            </a>
-        </li>
-        {% empty %}
-        <li><span class="dropdown-item">No hay eventos disponibles</span></li>
-        {% endfor %}
-    </ul>
-</li>
 {% endblock %}
 
 <script>

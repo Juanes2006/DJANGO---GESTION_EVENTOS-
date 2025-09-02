@@ -1,38 +1,73 @@
 {% extends 'app_main/base.html' %} {% block content %}
 <div class="container mt-4">
-    <h2>📋 Panel de Aprobación de Administradores</h2>
+    <h2>📋 Panel de Administradores</h2>
 
-    {% if solicitudes %}
-    <table class="table mt-4">
-        <thead>
+    <!-- Mensajes de feedback -->
+    {% if messages %}
+    <div>
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %} {% if solicitudes %}
+    <table class="table table-striped table-hover mt-4">
+        <thead class="table-dark">
             <tr>
                 <th>#</th>
                 <th>Nombre</th>
                 <th>Email</th>
                 <th>Teléfono</th>
-                <th>Acción</th>
+                <th>Límite de Eventos</th>
+                <th>Activo</th>
+                <th>Aprobado</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
             {% for admin in solicitudes %}
-            <tr>
+            <tr class="{% if admin.aprobado %}table-success{% else %}table-warning{% endif %}">
                 <td>{{ forloop.counter }}</td>
                 <td>{{ admin.usuario.first_name }}</td>
                 <td>{{ admin.usuario.email }}</td>
-                <td>{{ admin.usuario.telefono }}</td>
+                <td>{{ admin.usuario.telefono|default:"-" }}</td>
+
+                <!-- Limite de Eventos -->
                 <td>
-                    <form method="POST" action="{% url 'superadmin:aprobar_admin' admin.id %}">
+                    <form method="POST" action="{% url 'superadmin:aprobar_admin' admin.id %}" class="d-flex gap-2 align-items-center">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-success">✅ Aprobar</button>
+                        <input type="number" name="limite_eventos" class="form-control form-control-sm" min="1" value="{{ admin.limite_eventos|default:3 }}" style="width: 80px;">
+                        <input type="hidden" name="activo" value="{{ admin.activo }}">
+                        <button type="submit" class="btn btn-success btn-sm">
+                            {% if admin.aprobado %}Actualizar{% else %}✅ Aprobar{% endif %}
+                        </button>
                     </form>
                 </td>
-            </tr>
 
+                <!-- Activo/Inactivo -->
+                <td>
+                    <form method="POST" action="{% url 'superadmin:cambiar_estado_admin' admin.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm {% if admin.activo %}btn-warning{% else %}btn-secondary{% endif %}">
+                            {% if admin.activo %}Inhabilitar{% else %}Habilitar{% endif %}
+                        </button>
+                    </form>
+                </td>
+
+                <!-- Aprobado -->
+                <td>{% if admin.aprobado %}✅ Sí{% else %}❌ No{% endif %}</td>
+
+                <!-- Espacio para futuras acciones -->
+                <td>
+                    <!-- Ej: editar o eliminar -->
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
     {% else %}
-    <div class="alert alert-info mt-4">No hay solicitudes pendientes.</div>
+    <div class="alert alert-info mt-4">
+        No hay administradores registrados.
+    </div>
     {% endif %}
 </div>
 {% endblock %}

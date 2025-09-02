@@ -28,11 +28,15 @@ def super_admin(request):
     if request.method == "POST":
         pass
     eventos = Evento.objects.all()
-    return render(request, "app_super_admin/super_admin.html", {"eventos": eventos})
+    areas = Area.objects.all()  # Filtra si quieres solo activas: Area.objects.filter(activo=True)
+
+    return render(request, "app_super_admin/super_admin.html", {"eventos": eventos, "areas": areas})
 @login_required
 def eventos_superadmin(request):
     eventos = Evento.objects.all()
-    return render(request, "app_super_admin/super_admin.html", {"eventos": eventos})
+    areas = Area.objects.all()  # Filtra si quieres solo activas: Area.objects.filter(activo=True)
+
+    return render(request, "app_super_admin/super_admin.html", {"eventos": eventos, "areas": areas})
 @login_required
 def ver_evento_superadmin(request, eve_id):
     # Suponiendo que el modelo Evento tiene un campo ForeignKey llamado 'creado_por' que apunta al modelo User
@@ -51,8 +55,8 @@ def agregar_area(request):
         nueva_area = Area(are_nombre=are_nombre, are_descripcion=are_descripcion)
         nueva_area.save()
         messages.success(request, f"Área '{are_nombre}' agregada exitosamente.")
-        return redirect("super_admin:agregar_area")
-    return render(request, "app_super_admin/agregar_area.html")
+        return redirect("super_admin:eventos_superadmin")
+    return render(request, "app_super_admin/super_admin.html")
 @login_required
 def agregar_categoria(request):
     if request.method == "POST":
@@ -67,9 +71,9 @@ def agregar_categoria(request):
         )
         nueva_categoria.save()
         messages.success(request, f"Categoría '{cat_nombre}' agregada exitosamente al área.")
-        return redirect("super_admin:agregar_categoria")
+        return redirect("super_admin:eventos_superadmin")
     areas = Area.objects.all()
-    return render(request, "app_super_admin/agregar_categoria.html", {"areas": areas})
+    return render(request, "app_super_admin/super_admin.html", {"areas": areas})
 
 
 
@@ -84,45 +88,75 @@ from django.contrib.auth.hashers import make_password
 # views.py
 @login_required
 def panel_aprobaciones_view(request):
-    solicitudes = AdministradorEvento.objects.filter(aprobado=False)
+    solicitudes = AdministradorEvento.objects.all()
     return render(request, 'app_super_admin/panel_aprobacion.html', {"solicitudes": solicitudes})
+@login_required
+def cambiar_estado_admin(request, admin_id):
+    admin_evento = get_object_or_404(AdministradorEvento, id=admin_id)
+    admin_evento.activo = not admin_evento.activo
+    admin_evento.save()
+    messages.success(request, f"✅ Estado de {admin_evento.usuario.username} actualizado correctamente.")
+    return redirect('superadmin:panel_aprobaciones')
 
 @login_required
 def aprobar_admin(request, admin_id):
     admin_evento = get_object_or_404(AdministradorEvento, id=admin_id)
     usuario = admin_evento.usuario
 
-    # ✅ Generar nueva contraseña aleatoria segura
-    nueva_contrasena = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))
-    
-    # ✅ Actualizar datos del usuario
-    usuario.username = usuario.email  # usar el correo como usuario
-    usuario.password = make_password(nueva_contrasena)
-    usuario.save()
+    if request.method == "POST":
+        # Limite de eventos
+        limite = request.POST.get("limite_eventos", 3)
+        try:
+            limite = int(limite)
+            if limite < 1:
+                limite = 1
+        except ValueError:
+            limite = 3
 
-    # ✅ Marcar como aprobado
-    admin_evento.aprobado = True
-    admin_evento.save()
+        # Checkbox activo
+        activo = request.POST.get("activo")
+        if activo is None:
+            activo = True
+        else:
+            activo = activo == "on"
 
-    # ✅ Enviar correo con credenciales
-    asunto = "🎉 Aprobación como Administrador de Eventos"
-    mensaje = (
-        f"Hola {usuario.first_name},\n\n"
-        f"Tu solicitud para ser administrador ha sido aprobada.\n"
-        f"Ya puedes iniciar sesión en el sistema con las siguientes credenciales:\n\n"
-        f"🔐 Usuario: {usuario.email}\n"
-        f"🔑 Contraseña: {nueva_contrasena}\n\n"
-        f"Por favor, cambia tu contraseña después de iniciar sesión.\n\n"
-        f"Saludos,\nEquipo de Eventos"
-    )
+        # Generar contraseña SOLO la primera vez que se aprueba
+        if not admin_evento.aprobado:
+            nueva_contrasena = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))
+            usuario.username = usuario.email
+            usuario.password = make_password(nueva_contrasena)
+            usuario.save()
 
-    send_mail(
-        asunto,
-        mensaje,
-        settings.DEFAULT_FROM_EMAIL,  # asegúrate de tenerlo configurado en settings.py
-        [usuario.email],
-        fail_silently=False,
-    )
+            # Enviar correo
+            asunto = "🎉 Aprobación como Administrador de Eventos"
+            mensaje = (
+                f"Hola {usuario.first_name},\n\n"
+                f"Tu solicitud para ser administrador ha sido aprobada.\n"
+                f"Ya puedes iniciar sesión en el sistema con las siguientes credenciales:\n\n"
+                f"🔐 Usuario: {usuario.email}\n"
+                f"🔑 Contraseña: {nueva_contrasena}\n\n"
+                f"Límite de eventos: {limite}\n"
+                f"Activo: {'Sí' if activo else 'No'}\n\n"
+                f"Por favor, cambia tu contraseña después de iniciar sesión.\n\n"
+                f"Saludos,\nEquipo de Eventos"
+            )
 
-    messages.success(request, f"✅ {usuario.username} fue aprobado y notificado por correo.")
-    return redirect('main:panel_aprobaciones')
+            send_mail(
+                asunto,
+                mensaje,
+                settings.DEFAULT_FROM_EMAIL,
+                [usuario.email],
+                fail_silently=False,
+            )
+
+        # Actualizar campos
+        admin_evento.aprobado = True
+        admin_evento.limite_eventos = limite
+        admin_evento.activo = activo
+        admin_evento.save()
+
+        messages.success(request, f"✅ {usuario.username} aprobado/actualizado correctamente.")
+        return redirect('superadmin:panel_aprobaciones')
+
+    messages.info(request, "❗ Acción no válida sin formulario.")
+    return redirect('superadmin:panel_aprobaciones')

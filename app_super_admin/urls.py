@@ -14,6 +14,7 @@ urlpatterns = [
     
 # urls.py
     path('panel-aprobaciones/', login_required(views.panel_aprobaciones_view, login_url='main:login'), name='panel_aprobaciones'),
-    path('aprobar_admin/<int:admin_id>/', login_required(views.aprobar_admin, login_url='main:login'), name='aprobar_admin'),
+    path('aprobar_admin/<int:admin_id>/', views.aprobar_admin, name='aprobar_admin'),
+    path('cambiar_estado_admin/<int:admin_id>/', views.cambiar_estado_admin, name='cambiar_estado_admin'),
 
 ]
