@@ -249,9 +249,10 @@
                         <select class="form-select" name="cat_area_fk" id="cat_area_fk" required>
     <option value="">Seleccione un área</option>
     {% for area in areas %}
-        <option value="{{ area.id }}">{{ area.are_nombre }}</option>
+        <option value="{{ area.pk }}">{{ area.pk }} - {{ area.are_nombre }}</option>
     {% endfor %}
 </select>
+
 
                     </div>
                 </form>

@@ -7,6 +7,8 @@ app_name = 'admin_evento'
 urlpatterns = [
     path('', views.ventana, name='ventana'),
     
+
+    
     path('evento/<int:evento_id>/toggle/<str:tipo>/', views.toggle_inscripcion, name='toggle_inscripcion'),
     
     path('evento/<int:evento_id>/calificaciones/', views.ver_calificaciones_evento, name='ver_calificaciones_evento'),
@@ -26,7 +28,6 @@ urlpatterns = [
     
     path('gestionar_evaluadores/<int:evento_id>/', views.gestionar_evaluadores, name='gestionar_evaluadores'),
         
-    path('estadisticas/', views.ver_estadisticas, name='ver_estadisticas'),
     
     path('ranking/<int:evento_id>/', views.ver_ranking_admin, name='ver_ranking_admin'),
     

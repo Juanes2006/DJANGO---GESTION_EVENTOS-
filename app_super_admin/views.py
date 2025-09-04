@@ -57,25 +57,52 @@ def agregar_area(request):
         messages.success(request, f"Área '{are_nombre}' agregada exitosamente.")
         return redirect("super_admin:eventos_superadmin")
     return render(request, "app_super_admin/super_admin.html")
+
 @login_required
 def agregar_categoria(request):
+    print("➡️ Entró a la vista agregar_categoria")  # Log inicial
+
     if request.method == "POST":
+        print("✅ Se recibió un POST")
+        print("📩 Datos recibidos:", request.POST)
+
         cat_nombre = request.POST.get("cat_nombre")
         cat_descripcion = request.POST.get("cat_descripcion")
         cat_area_fk = request.POST.get("cat_area_fk")
-        area = get_object_or_404(Area, pk=cat_area_fk)
-        nueva_categoria = Categoria(
-            cat_nombre=cat_nombre,
-            cat_descripcion=cat_descripcion,
-            cat_area_fk=area
-        )
-        nueva_categoria.save()
-        messages.success(request, f"Categoría '{cat_nombre}' agregada exitosamente al área.")
+
+        print(f"📝 Nombre: {cat_nombre}")
+        print(f"📝 Descripción: {cat_descripcion}")
+        print(f"📝 Área ID: {cat_area_fk}")
+
+        try:
+            area = get_object_or_404(Area, pk=cat_area_fk)
+            print(f"✅ Área encontrada: {area.are_nombre}")
+        except Exception as e:
+            print(f"❌ Error buscando el área con ID {cat_area_fk}: {e}")
+            messages.error(request, "No se pudo encontrar el área seleccionada.")
+            return redirect("super_admin:eventos_superadmin")
+
+        try:
+            nueva_categoria = Categoria(
+                cat_nombre=cat_nombre,
+                cat_descripcion=cat_descripcion,
+                cat_area_fk=area
+            )
+            nueva_categoria.save()
+            print("✅ Categoría guardada correctamente")
+            messages.success(request, f"Categoría '{cat_nombre}' agregada exitosamente al área.")
+        except Exception as e:
+            print(f"❌ Error al guardar la categoría: {e}")
+            messages.error(request, "Hubo un error al guardar la categoría.")
+        
         return redirect("super_admin:eventos_superadmin")
+
+    else:
+        print("ℹ️ Request no es POST (es GET probablemente)")
+
     areas = Area.objects.all()
+    print(f"📊 Áreas disponibles: {areas.count()}")
     return render(request, "app_super_admin/super_admin.html", {"areas": areas})
-
-
 
 import secrets
 import string

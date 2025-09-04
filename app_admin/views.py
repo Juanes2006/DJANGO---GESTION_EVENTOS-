@@ -33,23 +33,64 @@ app_name = 'app_admin'
 from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponseForbidden
+from app_super_admin.models import Categoria
+from app_eventos.models import EventoCategoria
+
 
 @login_required
 def ventana(request):
+    print("➡️ Entró a la vista ventana con usuario:", request.user)
+
     if request.user.rol != 'ADMINISTRADOR':
+        print("❌ Rol inválido:", request.user.rol)
         return HttpResponseForbidden("⛔ Acceso denegado. No tienes permiso.")
 
     try:
         admin = AdministradorEvento.objects.get(usuario=request.user)
+        print("✅ Admin encontrado:", admin)
         if not admin.aprobado:
+            print("❌ Admin no aprobado")
             return HttpResponseForbidden("⛔ Tu cuenta aún no ha sido aprobada por el superadministrador.")
     except AdministradorEvento.DoesNotExist:
+        print("❌ No existe AdministradorEvento para el usuario")
         return HttpResponseForbidden("⛔ No estás registrado como administrador de eventos.")
 
-    # Filtrar eventos del administrador autenticado
     eventos = Evento.objects.filter(adm_id=admin)
+    estadisticas = []
 
-    return render(request, 'app_admin/administrador_evento.html', {'eventos': eventos})
+    for evento in eventos:
+        total_asistentes = AsistentesEventos.objects.filter(asi_eve_evento_fk=evento.eve_id).count()
+        total_participantes = ParticipantesEventos.objects.filter(par_eve_evento_fk=evento.eve_id).count()
+        total = total_asistentes + total_participantes
+        
+        porcentaje_participantes = (total_participantes / total * 100) if total > 0 else 0
+
+        estadisticas.append({
+            'evento_id': evento.eve_id,
+            'evento_nombre': evento.eve_nombre,
+            'asistentes': total_asistentes,
+            'participantes': total_participantes,
+            'total': total,
+            'porcentaje_participantes': porcentaje_participantes
+        })
+        
+        
+    categorias = Categoria.objects.all()
+    if categorias.exists():
+        for categoria in categorias:
+            try:
+                EventoCategoria.objects.create(evento=evento, categoria=categoria)
+                print(f"✅ Evento {evento.pk} asociado a categoría {categoria.id}")
+            except Exception as e:
+                print(f"❌ Error al asociar categoría: {e}")
+
+    print(f"📊 Eventos encontrados: {eventos.count()}")
+
+    return render(request, 'app_admin/administrador_evento.html', {'eventos': eventos, 'estadisticas': estadisticas, 'categorias': categorias})
+
+
+
+
 
 def gestionar_inscripciones(request, eve_id):
     """Gestionar inscripciones de participantes"""
@@ -212,7 +253,6 @@ def actualizar_estado(request):
     clave = "EVT" + str(evento.pk).zfill(5)
     
     
-    
 
     try:
         if usuario.rol == 'PARTICIPANTE':
@@ -343,29 +383,6 @@ def actualizar_estado(request):
     except Exception as e:
         messages.error(request, f"Error al actualizar el estado: {str(e)}")
         return redirect(request.META.get('HTTP_REFERER', '/'))
-
-def ver_estadisticas(request):
-    """Ver estadísticas de eventos"""
-    eventos = Evento.objects.all()
-    estadisticas = []
-
-    for evento in eventos:
-        total_asistentes = AsistentesEventos.objects.filter(asi_eve_evento_fk=evento.eve_id).count()
-        total_participantes = ParticipantesEventos.objects.filter(par_eve_evento_fk=evento.eve_id).count()
-        total = total_asistentes + total_participantes
-        
-        porcentaje_participantes = (total_participantes / total * 100) if total > 0 else 0
-
-        estadisticas.append({
-            'evento_id': evento.eve_id,
-            'evento_nombre': evento.eve_nombre,
-            'asistentes': total_asistentes,
-            'participantes': total_participantes,
-            'total': total,
-            'porcentaje_participantes': porcentaje_participantes
-        })
-
-    return render(request, 'app_admin/estadisticas.html', {'estadisticas': estadisticas})
 
 
 def toggle_inscripcion(request, evento_id, tipo):
@@ -688,50 +705,17 @@ from reportlab.lib.units import cm
 
 
 from django.contrib.auth.models import User
+from app_admin.forms import PlantillaCertificadoForm
+
 
 @login_required
 def crear_plantilla_certificado(request):
-    logger.info("✅ Entrando a crear_plantilla_certificado")
-
-    if request.method == 'POST':
-        logger.info("📩 Método POST recibido")
-
-        nombre = request.POST.get('nombre')
-        titulo = request.POST.get('titulo')
-        subtitulo = request.POST.get('subtitulo')
-        color_titulo = request.POST.get('color_titulo')
-        color_nombre = request.POST.get('color_nombre')
-        mostrar_firma = request.POST.get('mostrar_firma') == 'on'
-        texto_firma = request.POST.get('texto_firma')
-        pos_titulo_y = request.POST.get('pos_titulo_y')
-        pos_nombre_y = request.POST.get('pos_nombre_y')
-        logo = request.FILES.get('logo')
-        sello = request.FILES.get('sello')
-        
-        try:
-            plantilla = PlantillaCertificado.objects.create(
-                nombre=nombre,
-                titulo=titulo,
-                subtitulo=subtitulo,
-                color_titulo=color_titulo,
-                color_nombre=color_nombre,
-                mostrar_firma=mostrar_firma,
-                texto_firma=texto_firma,
-                pos_titulo_y=pos_titulo_y,
-                pos_nombre_y=pos_nombre_y,
-                logo = logo,
-                sello = sello
-            )
-            logger.info(f"✅ Plantilla creada con ID {plantilla.id}")
-            messages.success(request, "Plantilla creada exitosamente.")
-            return redirect('admin_evento:listar_plantillas_certificado')
-
-        except Exception as e:
-            logger.error(f"❌ Error al crear la plantilla: {e}")
-            messages.error(request, f"Ocurrió un error al guardar: {e}")
-
-    logger.info("🖼️ Mostrando formulario de creación")
-    return render(request, 'app_admin/crear_plantilla.html')
+    form = PlantillaCertificadoForm(request.POST or None, request.FILES or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "✅ Plantilla creada exitosamente.")
+        return redirect("admin_evento:listar_plantillas_certificado")
+    return render(request, "app_admin/crear_plantilla.html", {"form": form})
 
 @login_required
 def listar_plantillas_certificado(request):
@@ -740,84 +724,88 @@ def listar_plantillas_certificado(request):
     print(f"🔍 Se encontraron {plantillas.count()} plantillas")
     return render(request, 'app_admin/listar_plantillas.html', {'plantillas': plantillas})
 
+from io import BytesIO
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.pdfgen import canvas
+from reportlab.lib.colors import HexColor, black, white, Color
+from reportlab.lib.units import cm
 from reportlab.lib.utils import ImageReader
 
 def generar_certificado_pdf(usuario, evento, tipo, plantilla):
-    """Genera un certificado PDF personalizado basado en la plantilla guardada."""
     buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
+    width, height = landscape(A4)
+    p = canvas.Canvas(buffer, pagesize=landscape(A4))
 
-    # Color fondo
-    # En caso de que no haya ningun valor para color de fondo de pone el blanco por defecto
-    color_fondo = getattr(plantilla, 'color_fondo', "#FFFFFF")
-    if color_fondo:
-        p.setFillColor(color_fondo)
-        p.rect(0, 0, width, height, stroke=0, fill=1)
+    # ----- Fondo -----
+    p.setFillColor(HexColor(plantilla.color_fondo))
+    p.rect(0, 0, width, height, stroke=0, fill=1)
 
-    # Marco
-    color_borde = getattr(plantilla, 'color_borde', "#00008B")
-    borde_grosor = getattr(plantilla, 'borde_grosor', 4)
-    borde_margen = getattr(plantilla, 'borde_margen', 2 * cm)
-    p.setStrokeColor(color_borde)
-    p.setLineWidth(borde_grosor)
-    p.rect(borde_margen, borde_margen, width - 2 * borde_margen, height - 2 * borde_margen)
+    # ----- Marco externo -----
+    p.setStrokeColor(HexColor(plantilla.color_borde))
+    p.setLineWidth(plantilla.borde_grosor)
+    p.rect(plantilla.borde_margen, plantilla.borde_margen,
+           width - 2*plantilla.borde_margen, height - 2*plantilla.borde_margen)
 
-    # Título
-    fuente_titulo = getattr(plantilla, 'fuente_titulo', "Helvetica-Bold")
-    tamano_titulo = getattr(plantilla, 'tamano_titulo', 24)
-    color_titulo = getattr(plantilla, 'color_titulo', "#00008B")
-    texto_titulo = getattr(plantilla, 'texto_titulo', "🎓 CERTIFICADO")
-    p.setFont(fuente_titulo, tamano_titulo)
-    p.setFillColor(color_titulo)
-    p.drawCentredString(width / 2, height - 4 * cm, texto_titulo)
+   
+    # ----- Título principal -----
+    p.setFont("Helvetica-Bold", 32)
+    p.setFillColor(HexColor(plantilla.color_titulo))
+    p.drawCentredString(width / 2, height - 5*cm, plantilla.titulo)
 
-    # Subtítulo
-    texto_subtitulo = getattr(plantilla, 'texto_subtitulo', "Se otorga el presente certificado a")
-    p.setFont("Helvetica-Bold", 16)
-    p.setFillColor(colors.black)
-    p.drawCentredString(width / 2, height - 6 * cm, texto_subtitulo)
+    # ----- Subtítulo elegante -----
+    p.setFont("Helvetica", 18)
+    p.setFillColor(black)
+    p.drawCentredString(width / 2, height - 6.2*cm, plantilla.subtitulo)
 
-    # Nombre usuario
-    color_nombre = getattr(plantilla, 'color_nombre', "#8B0000")
-    p.setFont("Helvetica-Bold", 20)
-    p.setFillColor(color_nombre)
-    full_name = f"{usuario.first_name} {usuario.last_name}"
-    p.drawCentredString(width / 2, height - 8 * cm, full_name)
-    
-    if plantilla.logo:
-        logo_path = plantilla.logo.path
-        logo = ImageReader(logo_path)
-        p.drawImage(logo, x=2 * cm, y=height - 5 * cm, width=3*cm, height=3*cm, mask='auto')
+    # Línea decorativa debajo del subtítulo
+    p.setStrokeColor(HexColor(plantilla.color_borde))
+    p.setLineWidth(1.2)
+    p.line(width/4, height - 6.6*cm, width*3/4, height - 6.6*cm)
 
-    if plantilla.sello:
-        sello_path = plantilla.sello.path
-        sello = ImageReader(sello_path)
-        p.drawImage(sello, x=width - 5 * cm, y=2 * cm, width=3*cm, height=3*cm, mask='auto')
+    # ----- Nombre del usuario destacado -----
+    full_name = f"{usuario.first_name} {usuario.last_name}".upper()
+    p.setFont("Helvetica-Bold", 28)
+    p.setFillColor(HexColor(plantilla.color_nombre))
+    p.drawCentredString(width / 2, height - 9*cm, full_name)
 
+    # Línea fina debajo del nombre
+    p.setStrokeColor(HexColor(plantilla.color_nombre))
+    p.setLineWidth(0.8)
+    p.line(width/4, height - 9.3*cm, width*3/4, height - 9.3*cm)
 
-    # Texto participación
-    p.setFont("Helvetica", 14)
-    p.setFillColor(colors.black)
+    # ----- Tipo de participación elegante -----
+    tipo_label = tipo.upper()
+    p.setFont("Helvetica-BoldOblique", 16)
+    p.setFillColor(HexColor(plantilla.color_titulo))
+    p.drawCentredString(width / 2, height - 11*cm, f"Participación: {tipo_label}")
+
+    # ----- Evento elegante -----
     evento_nombre = evento.eve_nombre.upper()
-    tipo_label = tipo.capitalize()
-    p.drawCentredString(width / 2, height - 10 * cm, f"Por su destacada participación como {tipo_label}")
-    p.drawCentredString(width / 2, height - 11.2 * cm, f"en el evento: {evento_nombre}")
+    p.setFont("Helvetica-BoldOblique", 16)
+    p.setFillColor(HexColor(plantilla.color_titulo))
+    p.drawCentredString(width / 2, height - 12*cm, f"Evento: {evento_nombre}")
 
-    # Fecha
-    if hasattr(evento, 'eve_fecha'):
-        fecha_str = evento.eve_fecha.strftime('%d de %B de %Y')
-        p.setFont("Helvetica-Oblique", 12)
-        p.drawCentredString(width / 2, height - 13.5 * cm, f"Fecha: {fecha_str}")
+    # ----- Logo a la izquierda -----
+    if plantilla.logo:
+        try:
+            logo = ImageReader(plantilla.logo.path)
+            p.drawImage(logo, x=2*cm, y=height - 6*cm, width=4*cm, height=4*cm, mask="auto")
+        except:
+            pass
 
-    # Firma
-    mostrar_firma = getattr(plantilla, 'mostrar_firma', True)
-    texto_firma = getattr(plantilla, 'texto_firma', "Coordinador del Evento")
+    # ----- Sello a la derecha -----
+    if plantilla.sello:
+        try:
+            sello = ImageReader(plantilla.sello.path)
+            p.drawImage(sello, x=width - 6*cm, y=2*cm, width=4*cm, height=4*cm, mask="auto")
+        except:
+            pass
 
-    if mostrar_firma:
-        p.setFont("Helvetica", 12)
-        p.drawString(borde_margen + 1 * cm, borde_margen + 3 * cm, "_________________________")
-        p.drawString(borde_margen + 1 * cm, borde_margen + 2 * cm, texto_firma)
+    # ----- Firma elegante -----
+    p.setFont("Helvetica", 12)
+    p.setFillColor(black)
+    p.drawString(plantilla.borde_margen + 1*cm, 3*cm, "_________________________")
+    p.drawString(plantilla.borde_margen + 1*cm, 2*cm, plantilla.texto_firma)
 
     p.showPage()
     p.save()
@@ -826,58 +814,27 @@ def generar_certificado_pdf(usuario, evento, tipo, plantilla):
     return pdf
 
 
-def previsualizar_certificado(request, plantilla_id):
-    """Genera una vista previa del certificado usando la plantilla seleccionada."""
-    plantilla = get_object_or_404(PlantillaCertificado, pk=plantilla_id)
 
+
+def previsualizar_certificado(request, plantilla_id):
+    plantilla = get_object_or_404(PlantillaCertificado, pk=plantilla_id)
     usuario = request.user if request.user.is_authenticated else User.objects.first()
-    evento = Evento.objects.first()
-    tipo = "asistente"
+    evento = Evento.objects.first()  # Cambia por el evento que quieras
+    tipo = "asistente"  # Por ejemplo: 'asistente', 'evaluador', 'participante'
 
     pdf = generar_certificado_pdf(usuario, evento, tipo, plantilla)
-
-    response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = 'inline; filename="certificado_preview.pdf"'
-    return response
+    return HttpResponse(pdf, content_type="application/pdf")
 
 
 @login_required
 def editar_plantilla_certificado(request, plantilla_id):
     plantilla = get_object_or_404(PlantillaCertificado, id=plantilla_id)
-
-    if request.method == 'POST':
-        plantilla.nombre = request.POST.get('nombre', plantilla.nombre)
-        plantilla.titulo = request.POST.get('titulo', plantilla.titulo)
-        plantilla.subtitulo = request.POST.get('subtitulo', plantilla.subtitulo)
-        plantilla.color_titulo = request.POST.get('color_titulo', plantilla.color_titulo)
-        plantilla.color_nombre = request.POST.get('color_nombre', plantilla.color_nombre)
-        plantilla.mostrar_firma = request.POST.get('mostrar_firma') is not None
-        plantilla.texto_firma = request.POST.get('texto_firma', plantilla.texto_firma)
-        plantilla.logo = request.FILES.get('logo', plantilla.logo)
-        plantilla.sello = request.FILES.get('sello', plantilla.sello)
-        
-        if plantilla.logo:
-            plantilla.logo = plantilla.logo
-        if plantilla.sello:
-            plantilla.sello = plantilla.sello
-        plantilla.save()
-
-
-        try:
-            plantilla.pos_titulo_y = float(request.POST.get('pos_titulo_y', plantilla.pos_titulo_y))
-        except (TypeError, ValueError):
-            pass
-
-        try:
-            plantilla.pos_nombre_y = float(request.POST.get('pos_nombre_y', plantilla.pos_nombre_y))
-        except (TypeError, ValueError):
-            pass
-
-        plantilla.save()
-        messages.success(request, "Plantilla actualizada correctamente.")
-        return redirect('admin_evento:editar_plantilla', plantilla_id=plantilla.id)
-
-    return render(request, 'app_admin/editar_plantilla.html', {'plantilla': plantilla})
+    form = PlantillaCertificadoForm(request.POST or None, request.FILES or None, instance=plantilla)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "✏️ Plantilla actualizada correctamente.")
+        return redirect("admin_evento:listar_plantillas_certificado")
+    return render(request, "app_admin/editar_plantilla.html", {"form": form, "plantilla": plantilla})
 @login_required
 def eliminar_plantilla(request, plantilla_id):
     plantilla = get_object_or_404(PlantillaCertificado, id=plantilla_id)

@@ -10,11 +10,21 @@ from app_admin.models import  AdministradorEvento
 from datetime import datetime
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 
+
+@login_required
 def crear_evento(request):
+    print("➡️ Entrando a la vista crear_evento")  # log inicial
     categorias = Categoria.objects.all()
+    print(f"📊 Categorías cargadas: {categorias.count()}")
 
     if request.method == "POST":
+        print("✅ Request es POST")
+        print("📩 Datos POST:", request.POST)
+        print("📂 Archivos enviados:", request.FILES)
+
         nombre = request.POST.get("nombre")
         descripcion = request.POST.get("descripcion")
         ciudad = request.POST.get("ciudad")
@@ -28,117 +38,130 @@ def crear_evento(request):
         imagen = request.FILES.get("imagen")
         archivo_pdf = request.FILES.get("archivo_programacion")
 
-        # Administrador ficticio o por defecto
+        print(f"📝 Nombre: {nombre}")
+        print(f"📝 Descripción: {descripcion}")
+        print(f"📝 Ciudad: {ciudad}")
+        print(f"📝 Lugar: {lugar}")
+        print(f"📝 Fecha inicio: {fecha_inicio}")
+        print(f"📝 Fecha fin: {fecha_fin}")
+        print(f"📝 Cobro: {cobro}")
+        print(f"📝 Cupos: {cupos}")
+        print(f"📝 Categoría seleccionada: {categoria_id}")
+        print(f"🖼️ Imagen: {imagen}")
+        print(f"📑 Archivo PDF: {archivo_pdf}")
+
+        # Verificar administrador
         try:
             admin_asignado = AdministradorEvento.objects.get(usuario=request.user)
+            print(f"✅ Administrador encontrado: {admin_asignado}")
         except AdministradorEvento.DoesNotExist:
+            print("❌ Error: usuario no es administrador")
             messages.error(request, "Tu cuenta no está registrada como administrador.")
             return redirect("main:login")
 
-        # Guardar archivos
+        # Nombres de archivos
         imagen_nombre = imagen.name if imagen else ""
         archivo_pdf_nombre = archivo_pdf.name if archivo_pdf else ""
+        print(f"🖼️ Nombre de imagen: {imagen_nombre}")
+        print(f"📑 Nombre de PDF: {archivo_pdf_nombre}")
 
         # Crear evento
-        evento = Evento.objects.create(
-            eve_nombre=nombre,
-            eve_descripcion=descripcion,
-            eve_ciudad=ciudad,
-            eve_lugar=lugar,
-            eve_fecha_inicio=fecha_inicio,
-            eve_fecha_fin=fecha_fin,
-            eve_estado="CREADO",
-            adm_id=admin_asignado,
-            cobro=cobro,
-            cupos=cupos,
-            imagen=imagen_nombre,
-            archivo_programacion=archivo_pdf_nombre
-        )
+        try:
+            evento = Evento.objects.create(
+                eve_nombre=nombre,
+                eve_descripcion=descripcion,
+                eve_ciudad=ciudad,
+                eve_lugar=lugar,
+                eve_fecha_inicio=fecha_inicio,
+                eve_fecha_fin=fecha_fin,
+                eve_estado="CREADO",
+                adm_id=admin_asignado,
+                cobro=cobro,
+                cupos=cupos,
+                imagen=imagen_nombre,
+                archivo_programacion=archivo_pdf_nombre
+            )
+            print(f"✅ Evento creado con ID {evento.pk}")
+        except Exception as e:
+            print(f"❌ Error al crear evento: {e}")
+            messages.error(request, "Error al crear el evento.")
+            return redirect("admin_evento:ventana")
 
         # Relacionar con categoría
         if categoria_id:
-            EventoCategoria.objects.create(evento=evento, categoria_id=categoria_id)
+            try:
+                EventoCategoria.objects.create(evento=evento, categoria_id=categoria_id)
+                print(f"✅ Evento {evento.pk} asociado a categoría {categoria_id}")
+            except Exception as e:
+                print(f"❌ Error al asociar categoría: {e}")
 
-        # Guardar archivos en media
+        # Guardar archivos en disco
         if imagen:
-            with open(f"static/imagenes/{imagen_nombre}", 'wb+') as destination:
-                for chunk in imagen.chunks():
-                    destination.write(chunk)
+            try:
+                with open(f"static/imagenes/{imagen_nombre}", 'wb+') as destination:
+                    for chunk in imagen.chunks():
+                        destination.write(chunk)
+                print(f"✅ Imagen guardada en static/imagenes/{imagen_nombre}")
+            except Exception as e:
+                print(f"❌ Error guardando imagen: {e}")
 
         if archivo_pdf:
-            with open(f"static/programacion/{archivo_pdf_nombre}", 'wb+') as destination:
-                for chunk in archivo_pdf.chunks():
-                    destination.write(chunk)
-                    
-                    
-        superadmins = User.objects.filter(is_superuser=True)
-        correos_superadmin = [user.email for user in superadmins if user.email]
+            try:
+                with open(f"static/programacion/{archivo_pdf_nombre}", 'wb+') as destination:
+                    for chunk in archivo_pdf.chunks():
+                        destination.write(chunk)
+                print(f"✅ PDF guardado en static/programacion/{archivo_pdf_nombre}")
+            except Exception as e:
+                print(f"❌ Error guardando PDF: {e}")        
 
-        # Enviar correo
-        if correos_superadmin:
-            asunto = "🔔 Nuevo evento creado"
-            mensaje = f"""
-        Hola,
-
-        El administrador {request.user.username} ha creado un nuevo evento:
-
-        📌 Nombre: {evento.eve_nombre}
-        📍 Lugar: {evento.eve_ciudad} - {evento.eve_lugar}
-        📅 Fechas: {evento.eve_fecha_inicio} al {evento.eve_fecha_fin}
-        🔗 Verifica desde el panel de administración.
-
-        Saludos,
-        Sistema de Eventos
-        """
-            send_mail(
-                asunto,
-                mensaje,
-                "tucorreo@gmail.com",  
-                correos_superadmin,    
-                fail_silently=False,
-            )
-
-
+        # ✅ Aquí ya se hace el redirect correcto
         messages.success(request, f"¡Se ha creado el evento {evento.eve_nombre}!")
-        return redirect("admin_evento:ventana")  # Ajusta según tu namespace
-    
-    
-        
+        print("✅ Evento creado y flujo finalizado con éxito")
+        from django.urls import reverse
 
-       
+        print("🔍 URL ventana:", reverse("admin_evento:ventana"))
+        print("🔍 URL crear_evento:", reverse("eventos:eventos_crear_evento"))
 
+        return redirect("admin_evento:ventana")   # <-- redirige a la ventana del admin
+
+    # Flujo GET (mostrar formulario)
+    print("ℹ️ Request no es POST (se muestra formulario)")
     return render(request, "app_eventos/crear_evento.html", {
         "categorias": categorias
     })
+
 ##################################################################
+
+
+@login_required
 def editar_evento(request, pk):
     evento = get_object_or_404(Evento, pk=pk)
+    categorias = Categoria.objects.all()
 
     if request.method == "POST":
-        evento.eve_nombre = request.POST.get("nombre")
-        evento.eve_descripcion = request.POST.get("descripcion")
-        evento.eve_ciudad = request.POST.get("ciudad")
-        evento.eve_lugar = request.POST.get("lugar")
+        # ----- Campos básicos -----
+        evento.eve_nombre = request.POST.get("nombre", evento.eve_nombre)
+        evento.eve_descripcion = request.POST.get("descripcion", evento.eve_descripcion)
+        evento.eve_ciudad = request.POST.get("ciudad", evento.eve_ciudad)
+        evento.eve_lugar = request.POST.get("lugar", evento.eve_lugar)
+        evento.eve_cobro = request.POST.get("cobro", evento.eve_cobro)
 
-        # Manejo de fechas
+        # ----- Fechas -----
         fecha_inicio_str = request.POST.get("fecha_inicio")
         fecha_fin_str = request.POST.get("fecha_fin")
-
         try:
             evento.eve_fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d") if fecha_inicio_str else None
         except ValueError:
             messages.error(request, "Fecha de inicio inválida")
-            return render(request, "app_eventos/editar_evento.html", {"evento": evento})
+            return render(request, "app_eventos/editar_evento.html", {"evento": evento, "categorias": categorias})
 
         try:
             evento.eve_fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d") if fecha_fin_str else None
         except ValueError:
             messages.error(request, "Fecha fin inválida")
-            return render(request, "app_eventos/editar_evento.html", {"evento": evento})
+            return render(request, "app_eventos/editar_evento.html", {"evento": evento, "categorias": categorias})
 
-        evento.cobro = request.POST.get("cobro")
-
-        # Procesar imagen
+        # ----- Archivos opcionales -----
         imagen = request.FILES.get("imagen")
         if imagen:
             imagen_nombre = imagen.name
@@ -147,7 +170,6 @@ def editar_evento(request, pk):
                     destination.write(chunk)
             evento.imagen = f"{imagen_nombre}"
 
-        # Procesar archivo PDF
         archivo_pdf = request.FILES.get("archivo_programacion")
         if archivo_pdf:
             archivo_pdf_nombre = archivo_pdf.name
@@ -156,13 +178,17 @@ def editar_evento(request, pk):
                     destination.write(chunk)
             evento.archivo_programacion = f"{archivo_pdf_nombre}"
 
+        # ----- Categorías (evita duplicados) -----
+       
+
         evento.save()
         messages.success(request, "Evento editado con éxito.")
-        return redirect("main:lista_eventos")
+        return redirect("admin_evento:ventana")
 
-
-    # GET request
-    return render(request, "app_eventos/editar_evento.html", {"evento": evento})
+    # ----- GET request -----
+    return render(request, "app_eventos/editar_evento.html", {
+        "evento": evento,
+    })
 
 #################################################################
 

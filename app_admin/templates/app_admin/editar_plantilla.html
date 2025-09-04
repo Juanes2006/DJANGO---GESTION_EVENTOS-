@@ -1,79 +1,87 @@
 {% extends 'app_main/base.html' %} {% block nav_links %}
-
-
 <a href="{% url 'admin_evento:crear_plantilla_certificado' %}" class="btn btn-success d-flex align-items-center justify-content-center gap-2">
     <i class="fas fa-plus"></i><span>Crear Plantilla</span>
 </a>
-
-
-{% endblock %}{% block content %}
+{% endblock %} {% block content %}
 <div class="container mt-5">
-
-
     <h2 class="mb-4">✏️ Editar Plantilla de Certificado</h2>
 
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data" class="card shadow p-4">
         {% csrf_token %}
 
+        <!-- Sección Datos Básicos -->
+        <h5 class="mb-3">📌 Información Básica</h5>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Nombre de la Plantilla</label>
+                <input type="text" name="nombre" class="form-control" value="{{ plantilla.nombre }}" required>
+            </div>
+
+        </div>
+
+
+        <hr>
+
+        <!-- Sección Estilo -->
+        <h5 class="mb-3">🎨 Estilo y Colores</h5>
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Color del Título</label>
+                <input type="color" name="color_titulo" class="form-control form-control-color" value="{{ plantilla.color_titulo }}">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Color del Nombre</label>
+                <input type="color" name="color_nombre" class="form-control form-control-color" value="{{ plantilla.color_nombre }}">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Fuente</label>
+                <select name="fuente" class="form-select">
+                    <option value="Times-Roman" {% if plantilla.fuente == "Times-Roman" %}selected{% endif %}>Times</option>
+                    <option value="Helvetica" {% if plantilla.fuente == "Helvetica" %}selected{% endif %}>Helvetica</option>
+                    <option value="Courier" {% if plantilla.fuente == "Courier" %}selected{% endif %}>Courier</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Tamaño de Letra</label>
+                <input type="number" name="tamano_fuente" class="form-control" value="{{ plantilla.tamano_fuente|default:20 }}">
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Sección Imágenes -->
+        <h5 class="mb-3">🖼️ Imágenes</h5>
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Sello</label>
+                <input type="file" name="sello" class="form-control"> {% if plantilla.sello %}
+                <div class="mt-2">
+                    <img src="{{ plantilla.sello.url }}" alt="Sello actual" class="img-thumbnail" style="max-height: 80px;">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Sección Firma -->
+        <h5 class="mb-3">✍️ Firma</h5>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="mostrar_firma" id="firmaCheck" {% if plantilla.mostrar_firma %}checked{% endif %}>
+            <label class="form-check-label" for="firmaCheck">Mostrar firma</label>
+        </div>
         <div class="mb-3">
-            <label for="nombre" class="form-label">Nombre de la plantilla:</label>
-            <input type="text" id="nombre" name="nombre" class="form-control" value="{{ plantilla.nombre }}" required>
+            <label class="form-label">Texto de Firma</label>
+            <input type="text" name="texto_firma" class="form-control" value="{{ plantilla.texto_firma }}">
         </div>
 
-        <div class="mb-3">
-            <label for="titulo" class="form-label">Título:</label>
-            <input type="text" id="titulo" name="titulo" class="form-control" value="{{ plantilla.titulo }}">
-        </div>
-
-        <div class="mb-3">
-            <label for="subtitulo" class="form-label">Subtítulo:</label>
-            <input type="text" id="subtitulo" name="subtitulo" class="form-control" value="{{ plantilla.subtitulo }}">
-        </div>
-
-        <div class="mb-3">
-            <label for="color_titulo" class="form-label">Color del título:</label>
-            <input type="color" id="color_titulo" name="color_titulo" class="form-control form-control-color" value="{{ plantilla.color_titulo }}">
-        </div>
-
-        <div class="mb-3">
-            <label for="color_nombre" class="form-label">Color del nombre del participante:</label>
-            <input type="color" id="color_nombre" name="color_nombre" class="form-control form-control-color" value="{{ plantilla.color_nombre }}">
-        </div>
-
-        <div class="mb-3 form-check">
-            <input type="checkbox" id="mostrar_firma" name="mostrar_firma" class="form-check-input" {% if plantilla.mostrar_firma %}checked{% endif %}>
-            <label class="form-check-label" for="mostrar_firma">Mostrar firma</label>
-        </div>
-
-        <div class="mb-3">
-            <label for="texto_firma" class="form-label">Texto de la firma:</label>
-            <input type="text" id="texto_firma" name="texto_firma" class="form-control" value="{{ plantilla.texto_firma }}">
-        </div>
-
-        <div class="mb-3">
-            <label for="logo" class="form-label">Logo:</label>
-            <input type="file" id="logo" name="logo" class="form-control">
-        </div>
-
-        <div class="mb-3">
-            <label for="sello" class="form-label">Sello:</label>
-            <input type="file" id="sello" name="sello" class="form-control">
-        </div>
-
-        <div class="mb-3">
-            <label for="pos_titulo_y" class="form-label">Posición Y del título (en cm):</label>
-            <input type="number" id="pos_titulo_y" name="pos_titulo_y" step="0.1" class="form-control" value="{{ plantilla.pos_titulo_y }}">
-        </div>
-
-        <div class="mb-3">
-            <label for="pos_nombre_y" class="form-label">Posición Y del nombre del usuario (en cm):</label>
-            <input type="number" id="pos_nombre_y" name="pos_nombre_y" step="0.1" class="form-control" value="{{ plantilla.pos_nombre_y }}">
-        </div>
-
-        <div class="d-flex gap-3 mt-4">
-            <button type="submit" class="btn btn-success">💾 Guardar cambios</button>
-            <a href="{% url 'admin_evento:previsualizar_certificado' plantilla.id %}" target="_blank" class="btn btn-secondary">🔍 Previsualizar</a>
+        <div class="d-flex justify-content-between align-items-center mt-4">
             <a href="{% url 'admin_evento:listar_plantillas_certificado' %}" class="btn btn-outline-dark">⬅ Volver</a>
+            <div class="d-flex gap-2">
+                <a href="{% url 'admin_evento:previsualizar_certificado' plantilla.id %}" target="_blank" class="btn btn-secondary">🔍 Previsualizar</a>
+                <button type="submit" class="btn btn-success">💾 Guardar cambios</button>
+            </div>
         </div>
     </form>
 </div>

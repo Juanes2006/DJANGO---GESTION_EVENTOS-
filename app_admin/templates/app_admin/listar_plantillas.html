@@ -1,42 +1,47 @@
-{% extends 'app_main/base.html' %}{% block nav_links %}
-
-
+{% extends 'app_main/base.html' %} {% block nav_links %}
 <a href="{% url 'admin_evento:crear_plantilla_certificado' %}" class="btn btn-success d-flex align-items-center justify-content-center gap-2">
     <i class="fas fa-plus"></i><span>Crear Plantilla</span>
 </a>
-
-
 {% endblock %} {% block content %}
 <div class="container mt-5">
-    <h2>📄 Plantillas de Certificado</h2>
+    <h2 class="mb-4">📄 Plantillas de Certificado</h2>
 
     {% if plantillas %}
-    <table class="table table-bordered mt-4">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Título</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for plantilla in plantillas %}
-            <tr>
-                <td>{{ plantilla.id }}</td>
-                <td>{{ plantilla.nombre }}</td>
-                <td>{{ plantilla.titulo }}</td>
-                <td>
-                    <a href="{% url 'admin_evento:editar_plantilla' plantilla.id %}" class="btn btn-sm btn-warning">✏️ Editar</a>
-                    <a href="{% url 'admin_evento:previsualizar_certificado' plantilla.id %}" target="_blank" class="btn btn-sm btn-secondary">🔍 Previsualizar</a>
-                    <a href="{% url 'admin_evento:eliminar_plantilla' plantilla.id %}" class="btn btn-sm btn-danger">🗑 Eliminar</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="row g-4">
+        {% for plantilla in plantillas %}
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ plantilla.nombre }}</h5>
+                    <p class="card-text text-muted">{{ plantilla.titulo|default:"(Sin título)" }}</p>
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <a href="{% url 'admin_evento:editar_plantilla' plantilla.id %}" class="btn btn-sm btn-warning d-flex align-items-center gap-1">
+                                    ✏️ Editar
+                                </a>
+                        <a href="{% url 'admin_evento:previsualizar_certificado' plantilla.id %}" target="_blank" class="btn btn-sm btn-secondary d-flex align-items-center gap-1">
+                                    🔍 Ver
+                                </a>
+                        <a href="{% url 'admin_evento:eliminar_plantilla' plantilla.id %}" class="btn btn-sm btn-danger d-flex align-items-center gap-1" onclick="return confirm('¿Seguro que deseas eliminar esta plantilla?');">
+                                    🗑 Eliminar
+                                </a>
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    ID: {{ plantilla.id }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
     {% else %}
-    <p>No hay plantillas creadas aún.</p>
+    <div class="alert alert-info text-center p-5">
+        <h5 class="mb-3">😅 No hay plantillas creadas aún</h5>
+        <p class="mb-3">Comienza creando una para poder generar certificados personalizados.</p>
+        <a href="{% url 'admin_evento:crear_plantilla_certificado' %}" class="btn btn-success">
+                ➕ Crear mi primera plantilla
+            </a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}
