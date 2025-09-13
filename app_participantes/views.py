@@ -20,11 +20,20 @@ def panel_participante(request):
         messages.error(request, "No tienes permiso para acceder a esta página.")
         return redirect("main:index")
 
-    eventos_inscritos = ParticipantesEventos.objects.select_related('par_eve_evento_fk')\
+    eventos_inscritos = ParticipantesEventos.objects.select_related('par_eve_evento_fk', 'proyecto')\
         .filter(par_eve_participante_fk__usuario=usuario)
         
     eventos = eventos_inscritos.values_list('par_eve_evento_fk', flat=True)
     memorias = MemoriaEvento.objects.filter(evento__in=eventos)
+    
+    
+    for inscripcion in eventos_inscritos:
+        if inscripcion.proyecto:
+            inscripcion.proyecto_companeros = inscripcion.proyecto.participantes.exclude(pk=usuario.pk)
+            inscripcion.es_creador = (inscripcion.proyecto.creador == usuario)
+        else:
+            inscripcion.proyecto_companeros = []
+            inscripcion.es_creador = False
     
     return render(request, "app_participantes/panel_participante.html", {
         "eventos_inscritos": eventos_inscritos, "memorias": memorias

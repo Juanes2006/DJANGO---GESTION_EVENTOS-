@@ -249,7 +249,7 @@ def actualizar_estado(request):
     nombre = f"{usuario.first_name} {usuario.last_name}"
     correo = usuario.email
     asunto = f"Estado actualizado - Evento {evento.eve_nombre}"
-    mensaje = f"Hola {nombre},\n\nSu estado ha sido actualizado a: {nuevo_estado}."
+    mensaje = f"Hola {nombre},\n\nSu estado ha sido actualizado a: {nuevo_estado}\n."
     clave = "EVT" + str(evento.pk).zfill(5)
     
     
@@ -278,9 +278,9 @@ def actualizar_estado(request):
                 nueva_password = generar_contrasena()
                 usuario.set_password(nueva_password)
                 usuario.save()
-                qr_contenido = f"Participante: {nombre}\nClave: {clave}\nEvento ID: {evento.eve_id}"
+                qr_contenido = f"Participante: {nombre}\nClave: {clave}\nEvento ID: {evento.eve_id}\n"
                 qr_img = generar_qr_contenido(qr_contenido)
-                mensaje +=f"Hola {usuario.first_name},\n\nHas sido aceptado como Participante en el evento.\n\nTus credenciales:\nUsuario: {usuario.email}\nContraseña: {nueva_password}\n\nPor favor cambia tu contraseña después de iniciar sesión."
+                mensaje +=f"\nHas sido aceptado como Participante en el evento.\n\nTus credenciales:\nUsuario: {usuario.email}\nContraseña: {nueva_password}\n\nPor favor cambia tu contraseña después de iniciar sesión."
                 email = EmailMessage(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
                 email.attach('qr_participante.png', qr_img.read(), 'image/png')
                 email.send()

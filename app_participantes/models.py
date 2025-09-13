@@ -26,6 +26,15 @@ class ParticipantesEventos(models.Model):
     par_eve_or = models.CharField(max_length=255, null=True, blank=True)
     par_eve_clave = models.CharField(max_length=45)
     par_estado = models.CharField(max_length=10, choices=ESTADOS, default='PENDIENTE')
+    
+    # 🔥 Nuevo
+    proyecto = models.ForeignKey(
+        "app_eventos.Proyecto", 
+        null=True, 
+        blank=True, 
+        on_delete=models.SET_NULL,
+        related_name="participantes_evento"
+    )
 
     class Meta:
         unique_together = ('par_eve_participante_fk', 'par_eve_evento_fk')

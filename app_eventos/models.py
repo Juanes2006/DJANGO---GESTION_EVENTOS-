@@ -43,3 +43,24 @@ class MemoriaEvento(models.Model):
 
     def __str__(self):
         return f"{self.titulo} ({self.evento.eve_nombre})"
+    
+    
+    
+import uuid
+
+class Proyecto(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    nombre_proyecto = models.CharField(max_length=200)
+    descripcion_proyecto = models.TextField()
+    creador = models.ForeignKey("app_usuarios.Usuario", on_delete=models.CASCADE, related_name="proyectos_creados")
+    participantes = models.ManyToManyField("app_usuarios.Usuario", related_name="proyectos_participantes", blank=True)
+
+    evento = models.ForeignKey(
+        "app_eventos.Evento",
+        on_delete=models.CASCADE,
+        related_name="proyectos",
+        null=True,  
+        blank=True  
+    )
+    def __str__(self):
+        return f"{self.nombre_proyecto} ({self.id})"

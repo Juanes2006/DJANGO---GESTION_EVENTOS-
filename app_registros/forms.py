@@ -14,7 +14,17 @@ class RegistroEventoForm(forms.Form):
     correo = forms.EmailField(required=True)
     telefono = forms.CharField(max_length=20, required=True)
 
+    
     # Campos de archivos, opcionales según tipo_inscripcion
     soporte_pago = forms.FileField(required=False)
     documentos_participante = forms.FileField(required=False)
     documentos_evaluador = forms.FileField(required=False)
+
+
+from django import forms
+from app_eventos.models import Proyecto
+
+class ProyectoForm(forms.ModelForm):
+    class Meta:
+        model = Proyecto
+        fields = ["nombre_proyecto", "descripcion_proyecto"]

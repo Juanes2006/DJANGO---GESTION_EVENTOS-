@@ -81,6 +81,44 @@
                 <div id="form_participante" style="display:none;" class="mb-3">
                     <label for="documentos_participante" class="form-label">Adjuntar documentos</label>
                     <input type="file" name="documentos_participante" id="documentos_participante" class="form-control" accept=".pdf,.doc,.docx" />
+
+                    <!-- 🔹 PROYECTO PARA PARTICIPANTE -->
+                    <hr>
+                    <h5 class="mt-3">Proyecto</h5>
+                    <p>Elige si deseas unirte a un proyecto existente o crear uno nuevo:</p>
+
+                    <div class="mb-2">
+                        <input type="radio" id="opcion_existente" name="opcion_proyecto" value="existente" onclick="toggleProyecto(false)" />
+                        <label for="opcion_existente">Unirme a un proyecto existente</label>
+                    </div>
+
+                    <div class="mb-2">
+                        <input type="radio" id="opcion_nuevo" name="opcion_proyecto" value="nuevo" onclick="toggleProyecto(true)" />
+                        <label for="opcion_nuevo">Crear un proyecto nuevo</label>
+                    </div>
+
+                    <!-- Select de proyectos existentes -->
+                    <div id="proyecto-existente" style="display:none;" class="mt-3">
+                        <label for="proyecto_id" class="form-label">Selecciona un proyecto existente</label>
+                        <select name="proyecto_id" id="proyecto_id" class="form-select">
+                            <option value="">Selecciona un proyecto</option>
+                            {% for p in proyectos %}
+                                <option value="{{ p.id }}">{{ p.nombre_proyecto }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Campos para nuevo proyecto -->
+                    <div id="nuevo-proyecto" style="display:none;">
+                        <label for="nombre_proyecto">Nombre del Proyecto</label>
+                        <input type="text" name="nombre_proyecto" id="nombre_proyecto" class="form-control" required />
+
+                        <label for="descripcion_proyecto">Descripción</label>
+                        <textarea name="descripcion_proyecto" id="descripcion_proyecto" class="form-control" required></textarea>
+                    </div>
+
+
+
                 </div>
 
                 <div id="form_evaluador" style="display:none;" class="mb-3">
@@ -113,6 +151,11 @@
         if (formAsistente) formAsistente.style.display = (tipo === "Asistente") ? "block" : "none";
         if (formParticipante) formParticipante.style.display = (tipo === "Participante") ? "block" : "none";
         if (formEvaluador) formEvaluador.style.display = (tipo === "Evaluador") ? "block" : "none";
+    }
+
+    function toggleProyecto(nuevo) {
+        document.getElementById("nuevo-proyecto").style.display = nuevo ? "block" : "none";
+        document.getElementById("proyecto-existente").style.display = nuevo ? "none" : "block";
     }
 
     (function() {

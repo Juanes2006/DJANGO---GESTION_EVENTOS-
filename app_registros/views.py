@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
 import os
-from .forms import RegistroEventoForm
+from .forms import RegistroEventoForm, ProyectoForm
 from app_eventos.models import Evento, MemoriaEvento
 from app_registros.models import AsistentesEventos
 from app_participantes.models import ParticipantesEventos, Participantes
@@ -16,6 +16,8 @@ from django.contrib.auth.decorators import login_required
 
 from twilio.rest import Client
 from django.conf import settings
+from app_eventos.models import Proyecto
+
 
 
 #FUNCION PARA ENVIAR SMS
@@ -50,33 +52,30 @@ def enviar_correo(destinatario, asunto, mensaje):
 
 def registrarme_evento(request, evento_id):
     evento = get_object_or_404(Evento, pk=evento_id)
+    proyectos = Proyecto.objects.filter(evento=evento)
 
     if request.method == 'POST':
         form = RegistroEventoForm(request.POST, request.FILES)
         if form.is_valid():
-            tipo = form.cleaned_data['tipo_inscripcion'].lower()  # Normalizamos a minúsculas
+            tipo = form.cleaned_data['tipo_inscripcion'].lower()
             user_id = form.cleaned_data['user_id']
             username = form.cleaned_data['username']
             nombre = form.cleaned_data['nombre']
             correo = form.cleaned_data['correo']
             telefono = form.cleaned_data['telefono']
-            
-            # Validaciones de datos duplicados
+
+            # --- Validaciones duplicados ---
             if Usuario.objects.filter(username=username).exclude(pk=user_id).exists():
                 messages.error(request, "El nombre de usuario ya está en uso.")
                 return redirect(request.path)
-
             if Usuario.objects.filter(email=correo).exclude(pk=user_id).exists():
                 messages.error(request, "El correo electrónico ya está en uso.")
                 return redirect(request.path)
-            
             if Usuario.objects.filter(telefono=telefono).exclude(pk=user_id).exists():
-                messages.error(request, "Este telefono  ya está en uso.")
+                messages.error(request, "Este teléfono ya está en uso.")
                 return redirect(request.path)
-            
 
-
-            # Crear o actualizar usuario
+            # --- Crear o actualizar usuario ---
             usuario, created = Usuario.objects.get_or_create(
                 pk=user_id,
                 defaults={
@@ -91,21 +90,22 @@ def registrarme_evento(request, evento_id):
                 usuario.email = correo
 
             usuario.telefono = telefono
-            usuario.rol = tipo.upper()  # 'ASISTENTE', 'PARTICIPANTE', 'EVALUADOR'
+            usuario.rol = tipo.upper()
             usuario.save()
 
-            # Archivos
+            # --- Archivos ---
             soporte_pago_file = request.FILES.get('soporte_pago')
             documentos_part_file = request.FILES.get('documentos_participante')
             documentos_eval_file = request.FILES.get('documentos_evaluador')
 
+            # --- ASISTENTE ---
             if tipo == 'asistente':
                 asistente, _ = Asistentes.objects.get_or_create(usuario=usuario)
-
                 ya_registrado = AsistentesEventos.objects.filter(
                     asi_eve_asistente_fk=asistente,
                     asi_eve_evento_fk=evento
                 ).exists()
+
                 if not ya_registrado:
                     soporte_pago_filename = guardar_archivo(soporte_pago_file) if soporte_pago_file else None
                     clave_asis = str(usuario.pk)[::-1]
@@ -122,16 +122,42 @@ def registrarme_evento(request, evento_id):
                 else:
                     messages.info(request, "Ya estás registrado como asistente en este evento.")
 
+            # --- PARTICIPANTE ---
             elif tipo == 'participante':
                 participante, _ = Participantes.objects.get_or_create(usuario=usuario)
-
                 ya_registrado = ParticipantesEventos.objects.filter(
                     par_eve_participante_fk=participante,
                     par_eve_evento_fk=evento
                 ).exists()
+
                 if not ya_registrado:
+                    print("👉 Entrando a registro de participante")
                     documentos_filename = guardar_archivo(documentos_part_file) if documentos_part_file else None
                     clave_par = str(usuario.pk)[::-1]
+
+                    opcion_proyecto = request.POST.get("opcion_proyecto")
+                    print("Opción proyecto:", opcion_proyecto)
+                    proyecto = None
+
+                    if opcion_proyecto == "nuevo":
+                        proyecto_form = ProyectoForm(request.POST)
+                        if proyecto_form.is_valid():
+                            proyecto = proyecto_form.save(commit=False)
+                            proyecto.creador = usuario
+                            proyecto.evento = evento  # 👈 enlazamos al evento
+                            proyecto.save()
+                            proyecto.participantes.add(usuario)
+                            print("✅ Proyecto creado:", proyecto)
+                        else:
+                            print("❌ Errores en ProyectoForm:", proyecto_form.errors)
+                            messages.error(request, f"Errores en proyecto: {proyecto_form.errors}")
+
+                    elif opcion_proyecto == "existente":
+                        proyecto_id = request.POST.get("proyecto_id")
+                        if proyecto_id:
+                            proyecto = Proyecto.objects.get(id=proyecto_id, evento=evento)
+                            proyecto.participantes.add(usuario)
+                            print("✅ Se unió al proyecto:", proyecto)
 
                     ParticipantesEventos.objects.create(
                         par_eve_participante_fk=participante,
@@ -139,19 +165,21 @@ def registrarme_evento(request, evento_id):
                         par_eve_fecha_hora=datetime.utcnow(),
                         par_eve_documentos=documentos_filename,
                         par_eve_or=clave_par,
-                        par_eve_clave=clave_par
+                        par_eve_clave=clave_par,
+                        proyecto=proyecto
                     )
                     messages.success(request, "¡Te has preinscrito exitosamente como Participante!")
                 else:
                     messages.info(request, "Ya estás registrado como participante en este evento.")
 
+            # --- EVALUADOR ---
             elif tipo == 'evaluador':
                 evaluador, _ = Evaluador.objects.get_or_create(usuario=usuario)
-
                 ya_registrado = EvaluadorEventos.objects.filter(
                     eva_eve_evaluador_fk=evaluador,
                     eva_eve_evento_fk=evento
                 ).exists()
+
                 if not ya_registrado:
                     documentos_filename = guardar_archivo(documentos_eval_file) if documentos_eval_file else None
                     clave_eva = str(usuario.pk)[::-1]
@@ -168,10 +196,12 @@ def registrarme_evento(request, evento_id):
                     messages.success(request, "¡Te has preinscrito exitosamente como Evaluador!")
                 else:
                     messages.info(request, "Ya estás registrado como evaluador en este evento.")
+
             else:
                 messages.error(request, "Tipo de inscripción no válido.")
                 return redirect('main:lista_eventos')
-            
+
+            # --- Notificaciones (correo y sms) ---
             admin = evento.admin_id
             asunto_admin = f"Nuevo Registro en tu evento: {evento.eve_nombre}"
             mensaje_admin = (
@@ -183,30 +213,29 @@ def registrarme_evento(request, evento_id):
             )
             enviar_correo(admin.usuario.email, asunto_admin, mensaje_admin)
 
-            # Enviar correo
+                # Enviar correo
             asunto = f"Confirmación de registro en {evento.eve_nombre}"
             mensaje = (
-                f"Hola {usuario.first_name},\n\n"
-                f"Te has preinscrito exitosamente como {tipo.capitalize()} en el evento '{evento.eve_nombre}'.\n"
-                f"Tu usuario es: {user_id}\n"
-                "Por favor, espera la confirmación.\n"
-                "Gracias por participar."
-            )
+                    f"Hola {usuario.first_name},\n\n"
+                    f"Te has preinscrito exitosamente como {tipo.capitalize()} en el evento '{evento.eve_nombre}'.\n"
+                    f"Tu usuario es: {user_id}\n"
+                    "Por favor, espera la confirmación.\n"
+                    "Gracias por participar."
+                )
             enviar_correo(usuario.email, asunto, mensaje)
             mensaje_sms = (
-                f"Hola {usuario.first_name}, te preinscribiste como {tipo.capitalize()} "
-                f"en '{evento.eve_nombre}'. Tu usuario: {user_id}. "
-                "Espera confirmación. ¡Gracias por participar!"
-            )
+                    f"Hola {usuario.first_name}, te preinscribiste como {tipo.capitalize()} "
+                    f"en '{evento.eve_nombre}'. Tu usuario: {user_id}. "
+                    "Espera confirmación. ¡Gracias por participar!"
+                )
 
-            # Formatear número al formato internacional (+57...)
+                # Formatear número al formato internacional (+57...)
             telefono = usuario.telefono.strip()
             if not telefono.startswith('+'):
-                telefono = '+57' + telefono.lstrip('0')
+                    telefono = '+57' + telefono.lstrip('0')
 
-            # Enviar SMS con número correcto
+                # Enviar SMS con número correcto
             enviar_sms(telefono, mensaje_sms)
-
 
             return redirect('main:lista_eventos')
         else:
@@ -216,8 +245,11 @@ def registrarme_evento(request, evento_id):
     else:
         form = RegistroEventoForm()
 
-    return render(request, 'app_registros/formulario_registro.html', {'form': form, 'evento': evento})
-
+    return render(
+        request,
+        'app_registros/formulario_registro.html',
+        {'form': form, 'evento': evento, 'proyectos': proyectos}
+    )
 
 def guardar_archivo(fichero):
     filename = fichero.name

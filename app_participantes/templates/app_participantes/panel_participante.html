@@ -12,8 +12,9 @@
             <li><strong>Rol:</strong> {{ request.user.rol }}</li>
             <hr>
             <li><a class="dropdown-item text-primary" href="{% url 'participantes:mi_info' %}">📋 Mis Eventos</a></li>
-            <li><a class="dropdown-item text-danger" href="{% url 'evaluadores:logout_evaluador' %}">🔴 Cerrar Sesión</a></li>
             <li> <a class="dropdown-item text-info" href="{% url 'qr:consulta_qr' %} ">🔎 Consultar Boletas</a>
+                <li><a class="dropdown-item text-danger" href="{% url 'evaluadores:logout_evaluador' %}">🔴 Cerrar Sesión</a></li>
+
             </li>
         </ul>
     </div>
@@ -24,7 +25,7 @@
 <div class="container mt-4 ">
     <div class="container mt-4 ">
         <div class="text-start mb-2 ">
-            <p>👋 Bienvenido, <strong>{{ request.user.username }}</strong></p>
+            <p>👋 Bienvenid@, <strong>{{ request.user.username }}</strong></p>
         </div>
 
 
@@ -76,6 +77,45 @@
                         {{ evento.eve_estado }}
                     </div>
 
+
+                    <!-- Proyecto -->
+                    {% if inscripcion.proyecto %}
+                    <div class="mt-3 p-3 border rounded bg-light">
+                        <h6 class="fw-bold text-primary">📌 Proyecto: {{ inscripcion.proyecto.nombre_proyecto }}</h6>
+                        <p class="small text-muted">{{ inscripcion.proyecto.descripcion_proyecto|default:"Sin descripción" }}</p>
+
+                        <!-- Compañeros -->
+                        <p><strong>👥 Compañeros:</strong></p>
+                        {% if inscripcion.proyecto_companeros %}
+                        <ul class="list-unstyled small">
+                            {% for compa in inscripcion.proyecto_companeros %}
+                            <li>▫️ {{ compa.first_name }} ({{ compa.username }})</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="small text-muted">No hay más compañeros registrados aún.</p>
+                        {% endif %}
+
+                        <!-- Si es creador -->
+                        {% if inscripcion.es_creador %}
+                        <div class="alert alert-info small mt-2">
+                            ✨ <strong>Eres el creador del proyecto.</strong> <br>
+                            <strong>📌 Nombre Proyecto:</strong>
+                            <span id="nombre-proyecto-{{ inscripcion.proyecto.id }}">
+        {{ inscripcion.proyecto.nombre_proyecto }}
+    </span>
+
+                            <!-- Botón copiar -->
+                            <button class="btn btn-sm btn-outline-primary ms-2" onclick="copiarTexto('{{ inscripcion.proyecto.id }}')">
+        📋
+    </button>
+
+                            <br> Comparte este nombre para que otros se unan.
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
                 </div>
             </div>
             {% endwith %} {% endfor %} {% else %}
@@ -85,6 +125,19 @@
             {% endif %}
         </div>
     </div>
+
+    <script>
+        function copiarTexto(proyectoId) {
+            const span = document.getElementById("nombre-proyecto-" + proyectoId);
+            const texto = span.innerText;
+
+            navigator.clipboard.writeText(texto).then(() => {
+                alert("✅ Nombre del proyecto copiado: " + texto);
+            }).catch(err => {
+                console.error("❌ Error al copiar: ", err);
+            });
+        }
+    </script>
     <style>
         .event-card {
             transition: transform 0.35s ease, box-shadow 0.35s ease;
