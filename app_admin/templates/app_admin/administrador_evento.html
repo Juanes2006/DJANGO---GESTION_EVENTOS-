@@ -1,43 +1,60 @@
 {% extends 'app_main/base.html' %} {% block eventos_url %} {% url 'admin_ventana' %} {% endblock %} {% block eventos_text %}
-<i class="fas fa-user-cog"></i> Administración {% endblock %} {% block nav_links %}
+<i class="fas fa-user-cog"></i> Administración {% endblock %}{% block nav_links %}
+
 <div class="dropdown ms-auto position-relative me-3">
-    <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+    <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" 
+            type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="bi bi-person-circle fs-5"></i>
         👤 Perfil
     </button>
-    <ul class="dropdown-menu dropdown-menu-end shadow-lg animate__animated animate__fadeIn" aria-labelledby="userDropdown" style="min-width: 260px;">
-        <li class="px-3 py-2">
-            <p class="mb-1 fw-semibold text-primary">{{ request.user.first_name }} {{ request.user.last_name }}</p>
-            <p class="mb-0 small text-muted">{{ request.user.email }}</p>
-            <p class="mb-0 small text-muted">Teléfono: <span class="text-uppercase">{{ request.user.telefono }}</span></p>
-            <p class="mb-0 small text-muted">Documento: <span class="text-uppercase">{{ request.user.id }}</span></p>
-        </li>
-        <li>
-            <hr class="dropdown-divider">
-        </li>
-        <li class="px-3 py-1 small text-muted">
-            <i class="bi bi-person-badge me-1"></i> Rol: <span class="text-uppercase">{{ request.user.rol }}</span>
-        </li>
-        <li>
-            <hr class="dropdown-divider">
-        </li>
-        <li class="px-3 pb-3 d-flex flex-column gap-2">
-            <button type="button" class="btn btn-success d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#crearEventoModal">
-    <i class="fas fa-plus"></i><span>Crear Evento</span>
-</button>
 
-            <!-- Botón para abrir modal -->
-            <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#estadisticasModal">
-    <i class="fas fa-chart-bar"></i><span>Estadísticas</span>
-</button>
+<ul class="dropdown-menu dropdown-menu-end shadow-lg animate__animated animate__fadeIn" 
+    aria-labelledby="userDropdown" style="min-width: 260px;">
+    
+    <!-- Información del usuario -->
+    <li class="px-3 py-2">
+        <p class="mb-1 fw-semibold text-primary">{{ request.user.first_name }} {{ request.user.last_name }}</p>
+        <p class="mb-0 small text-muted">{{ request.user.email }}</p>
+        <p class="mb-0 small text-muted">Teléfono: <span class="text-uppercase">{{ request.user.telefono }}</span></p>
+        <p class="mb-0 small text-muted">Documento: <span class="text-uppercase">{{ request.user.id }}</span></p>
+    </li>
 
-            <a class="btn btn-danger d-flex align-items-center justify-content-center gap-2" href="{% url 'evaluadores:logout_evaluador' %}">
-                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-            </a>
-        </li>
-    </ul>
+    <li><hr class="dropdown-divider"></li>
+    <li class="px-3 py-1 small text-muted">
+        <i class="bi bi-person-badge me-1"></i> Rol: <span class="text-uppercase">{{ request.user.rol }}</span>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+
+    <!-- Botones de acción -->
+    <li class="px-3 py-2 d-flex flex-column gap-2">
+
+        <!-- Botón Crear Evento -->
+        <button type="button" class="btn fw-semibold shadow-sm text-white" 
+                style="background-color: #198754;"
+                data-bs-toggle="modal" data-bs-target="#modalCrearEvento">
+            <i class="bi bi-plus-circle me-2"></i> Crear Evento
+        </button>
+
+        <!-- Botón Estadísticas -->
+        <button type="button" class="btn fw-semibold shadow-sm text-white" 
+                style="background-color: #0b5ed7;" 
+                data-bs-toggle="modal" data-bs-target="#estadisticasModal">
+            <i class="bi bi-bar-chart me-2"></i> Estadísticas
+        </button>
+
+        <!-- Botón Cerrar Sesión -->
+        <a class="btn btn-danger fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2" 
+           href="{% url 'evaluadores:logout_evaluador' %}">
+            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+        </a>
+    </li>
+</ul>
+
+
 </div>
-{% endblock %} {% block content %}
+{% endblock %}
+
+{% block content %}
 <div class="container mt-5">
     <h2 class="mb-4 text-center text-primary fw-bold">🎉 Tus Eventos Creados</h2>
 
@@ -61,10 +78,12 @@
                                         </button>
                                 <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="dropdownMenuButton{{ evento.eve_id }}">
                                     <li>
+                                            <a class="dropdown-item d-flex align-items-center gap-2 text-dark fw-bold" 
+                                                    href="{% url 'eventos:editar_evento' evento.eve_id %}">
+                                                    <i class="fas fa-edit text-warning fs-5"></i> Editar
+                                            </a>
 
-                                        <a class="dropdown-item d-flex align-items-center gap-2 text-dark fw-bold" href="#" data-bs-toggle="modal" data-bs-target="#editarEventoModal{{ evento.eve_id }}">
-                                            <i class="fas fa-edit text-warning fs-5"></i> Editar
-                                        </a>
+                                        
 
                                     </li>
                                     {% if evento.eve_estado == "ACTIVO" %}
@@ -126,10 +145,11 @@
                         </td>
                     </tr>
                     <tr>
-                        <td colspan="2" class="text-center pb-4">
-                            <a href="{% url 'eventos:eventos_crear_evento' %}" class="btn btn-success d-inline-flex align-items-center gap-2">
-                                <i class="fas fa-plus"></i><span>Crear Evento</span>
-                            </a>
+                        <td colspan="2" class="text-center pb-2">
+                            <button type="button" class="btn btn-success btn-lg shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCrearEvento">
+             <i class="bi bi-plus-circle me-2"></i> Crear Evento
+        </button>
+
                         </td>
                     </tr>
                     {% endif %}
@@ -158,6 +178,100 @@
         color: #004085 !important;
     }
 </style>
+
+
+<!-- MODAL CREAR EVENTO -->
+<!-- MODAL CREAR EVENTO -->
+
+<div class="modal fade" id="modalCrearEvento" tabindex="-1" aria-labelledby="modalCrearEventoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+
+        <div class="modal-header" style="background-color: #0d6efd; color: white;">
+
+            <h5 class="modal-title fw-bold" id="modalCrearEventoLabel">
+                <i class="bi bi-calendar-plus me-2"></i> Crear Nuevo Evento
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+
+        <form method="POST" action="{% url 'eventos:eventos_crear_evento' %}" enctype="multipart/form-data" id="formCrearEvento">
+            {% csrf_token %}
+            <div class="modal-body bg-light" style="max-height:75vh; overflow-y:auto; padding-bottom:3rem;">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Nombre del evento</label>
+                        <input type="text" name="nombre" class="form-control" placeholder="Nombre del evento" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Categoría</label>
+                        <select name="categorias" class="form-select" required>
+                            <option value="">Seleccione una categoría</option>
+                            {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}">{{ categoria.cat_nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Descripción</label>
+                        <textarea name="descripcion" class="form-control" rows="2" placeholder="Breve descripción del evento" required></textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Ciudad</label>
+                        <input type="text" name="ciudad" class="form-control" placeholder="Ciudad" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Lugar</label>
+                        <input type="text" name="lugar" class="form-control" placeholder="Lugar del evento" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Fecha de inicio</label>
+                        <input type="date" name="fecha_inicio" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Fecha de fin</label>
+                        <input type="date" name="fecha_fin" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">¿Tiene cobro?</label>
+                        <select name="cobro" class="form-select">
+                            <option value="No">No</option>
+                            <option value="Sí">Sí</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Cupos</label>
+                        <input type="number" name="cupos" class="form-control" placeholder="Ej: 100">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Imagen del evento</label>
+                        <input type="file" name="imagen" class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Archivo PDF (programación)</label>
+                        <input type="file" name="archivo_programacion" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer"> <button type="button" class="btn btn-outline-secondary fw-semibold" data-bs-dismiss="modal"> Cancelar </button> <button type="submit" class="btn fw-semibold shadow-sm" style="background-color: #0d6efd; color: white;"> <i class="bi bi-check-circle me-2"></i> Crear Evento </button> </div>
+        </form>
+
+    </div>
+</div>
+
+</div>
+
 
 
 
@@ -209,111 +323,6 @@
     </div>
 </div>
 
-<!-- Modal Profesional -->
-<div class="modal fade" id="crearEventoModal" tabindex="-1" aria-labelledby="crearEventoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-
-            <!-- Header -->
-            <div class="modal-header bg-success text-white rounded-top-4">
-                <h5 class="modal-title" id="crearEventoModalLabel"><i class="fas fa-calendar-plus me-2"></i> Crear Evento</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-
-            <!-- Body con scroll interno -->
-            <div class="modal-body bg-light p-5">
-                <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
-
-                    {% csrf_token %}
-
-                    <!-- Sección: Datos Generales -->
-                    <h6 class="text-success fw-bold mb-3"><i class="fas fa-info-circle me-2"></i> Datos Generales</h6>
-                    <div class="mb-3 position-relative">
-                        <i class="fas fa-heading position-absolute top-50 translate-middle-y ms-3 text-success"></i>
-                        <input type="text" class="form-control form-control-lg ps-5 border-success shadow-sm" name="nombre" id="nombre" placeholder="Nombre del evento" required>
-                        <div class="invalid-feedback">Ingresa el nombre del evento.</div>
-                    </div>
-
-                    <div class="mb-4 position-relative">
-                        <i class="fas fa-align-left position-absolute top-50 translate-middle-y ms-3 text-success"></i>
-                        <textarea class="form-control form-control-lg ps-5 border-success shadow-sm" name="descripcion" id="descripcion" rows="3" placeholder="Descripción del evento"></textarea>
-                    </div>
-
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6 position-relative">
-                            <i class="fas fa-city position-absolute top-50 translate-middle-y ms-3 text-success"></i>
-                            <input type="text" class="form-control form-control-lg ps-5 border-success shadow-sm" name="ciudad" id="ciudad" placeholder="Ciudad">
-                        </div>
-                        <div class="col-md-6 position-relative">
-                            <i class="fas fa-map-marker-alt position-absolute top-50 translate-middle-y ms-3 text-success"></i>
-                            <input type="text" class="form-control form-control-lg ps-5 border-success shadow-sm" name="lugar" id="lugar" placeholder="Lugar">
-                        </div>
-                    </div>
-
-                    <!-- Sección: Fechas -->
-                    <h6 class="text-success fw-bold mb-3 mt-4"><i class="fas fa-calendar-alt me-2"></i> Fechas del Evento</h6>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6 position-relative">
-                            <i class="fas fa-calendar-day position-absolute top-50 translate-middle-y ms-3 text-success"></i>
-                            <input type="date" class="form-control form-control-lg ps-5 border-success shadow-sm" name="fecha_inicio" id="fecha_inicio" required>
-                            <div class="invalid-feedback">Selecciona la fecha de inicio.</div>
-                        </div>
-                        <div class="col-md-6 position-relative">
-                            <i class="fas fa-calendar-day position-absolute top-50 translate-middle-y ms-3 text-success"></i>
-                            <input type="date" class="form-control form-control-lg ps-5 border-success shadow-sm" name="fecha_fin" id="fecha_fin">
-                        </div>
-                    </div>
-
-                    <!-- Sección: Opciones -->
-                    <h6 class="text-success fw-bold mb-3 mt-4"><i class="fas fa-cogs me-2"></i> Opciones</h6>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <select class="form-select form-select-lg border-success shadow-sm" name="cobro" id="cobro" required>
-                  <option value="">¿Cobro?</option>
-                  <option value="si">Sí</option>
-                  <option value="no">No</option>
-              </select>
-                            <div class="invalid-feedback">Selecciona si el evento tiene cobro.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <input type="number" class="form-control form-control-lg border-success shadow-sm" name="cupos" id="cupos" placeholder="Cupos (opcional)" min="1">
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <select name="categorias" id="categorias" class="form-select form-select-lg border-success shadow-sm" required>
-                <option value="" disabled selected>Selecciona una categoría</option>
-                {% for categoria in categorias %}
-                    <option value="{{ categoria.cat_codigo }}">{{ categoria.cat_nombre }}</option>
-                {% endfor %}
-            </select>
-                        <div class="invalid-feedback">Selecciona una categoría.</div>
-                    </div>
-
-                    <!-- Sección: Archivos -->
-                    <h6 class="text-success fw-bold mb-3 mt-4"><i class="fas fa-file-upload me-2"></i> Archivos</h6>
-                    <div class="mb-3">
-                        <input type="file" class="form-control form-control-lg border-success shadow-sm" name="imagen" id="imagen" accept="image/*">
-                    </div>
-                    <div class="mb-3">
-                        <input type="file" class="form-control form-control-lg border-success shadow-sm" name="archivo_programacion" id="archivo_programacion" accept=".pdf">
-                    </div>
-
-                    <!-- Submit -->
-                    <div class="d-flex justify-content-center mt-4">
-                        <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">Crear</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Footer -->
-            <div class="modal-footer bg-white">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            </div>
-
-        </div>
-    </div>
-</div>
 
 
 

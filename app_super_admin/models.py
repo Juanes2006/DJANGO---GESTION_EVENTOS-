@@ -18,7 +18,7 @@ class Area(models.Model):
     are_descripcion = models.CharField(max_length=400)
 
     def __str__(self):
-        return self.are_nombre
+        return f"{ self.are_nombre}( {self.are_codigo})"
 
 class Categoria(models.Model):
     cat_codigo = models.AutoField(primary_key=True)
@@ -27,4 +27,4 @@ class Categoria(models.Model):
     cat_area_fk = models.ForeignKey(Area, on_delete=models.CASCADE, related_name='categorias')
 
     def __str__(self):
-        return self.cat_nombre
+        return f" {self.cat_nombre} ({self.cat_codigo})"

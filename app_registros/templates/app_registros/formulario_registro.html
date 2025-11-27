@@ -22,9 +22,10 @@
 
             <p class="lead">Bienvenido, por favor selecciona tu modalidad de inscripción y completa los datos requeridos.</p>
 
-            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate onsubmit="return validarFormulario();">
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                 {% csrf_token %}
 
+                <!-- Selección de tipo -->
                 <div class="mb-4">
                     <label for="tipo_inscripcion" class="form-label fw-semibold">Modalidad de inscripción</label>
                     <select name="tipo_inscripcion" id="tipo_inscripcion" class="form-select" required onchange="mostrarFormulario()">
@@ -42,6 +43,7 @@
                     <div class="invalid-feedback">Por favor, selecciona un tipo de inscripción.</div>
                 </div>
 
+                <!-- Datos personales -->
                 <fieldset class="border rounded p-4 mb-4 shadow-sm">
                     <legend class="float-none w-auto px-2 fw-bold text-primary">Datos Personales</legend>
                     <div class="row g-3">
@@ -73,16 +75,17 @@
                     </div>
                 </fieldset>
 
+                <!-- Asistente -->
                 <div id="form_asistente" style="display:none;" class="mb-3">
                     <label for="soporte_pago" class="form-label">Adjuntar soporte de pago</label>
                     <input type="file" name="soporte_pago" id="soporte_pago" class="form-control" accept="image/*,application/pdf" />
                 </div>
 
+                <!-- Participante -->
                 <div id="form_participante" style="display:none;" class="mb-3">
                     <label for="documentos_participante" class="form-label">Adjuntar documentos</label>
                     <input type="file" name="documentos_participante" id="documentos_participante" class="form-control" accept=".pdf,.doc,.docx" />
 
-                    <!-- 🔹 PROYECTO PARA PARTICIPANTE -->
                     <hr>
                     <h5 class="mt-3">Proyecto</h5>
                     <p>Elige si deseas unirte a un proyecto existente o crear uno nuevo:</p>
@@ -111,16 +114,14 @@
                     <!-- Campos para nuevo proyecto -->
                     <div id="nuevo-proyecto" style="display:none;">
                         <label for="nombre_proyecto">Nombre del Proyecto</label>
-                        <input type="text" name="nombre_proyecto" id="nombre_proyecto" class="form-control" required />
+                        <input type="text" name="nombre_proyecto" id="nombre_proyecto" class="form-control" />
 
                         <label for="descripcion_proyecto">Descripción</label>
-                        <textarea name="descripcion_proyecto" id="descripcion_proyecto" class="form-control" required></textarea>
+                        <textarea name="descripcion_proyecto" id="descripcion_proyecto" class="form-control"></textarea>
                     </div>
-
-
-
                 </div>
 
+                <!-- Evaluador -->
                 <div id="form_evaluador" style="display:none;" class="mb-3">
                     <label for="documentos_evaluador" class="form-label">Adjuntar documentos</label>
                     <input type="file" name="documentos_evaluador" id="documentos_evaluador" class="form-control" accept=".pdf,.doc,.docx" />
@@ -143,21 +144,24 @@
 <script>
     function mostrarFormulario() {
         const tipo = document.getElementById("tipo_inscripcion").value;
-
-        const formEvaluador = document.getElementById("form_evaluador");
-        const formParticipante = document.getElementById("form_participante");
-        const formAsistente = document.getElementById("form_asistente");
-
-        if (formAsistente) formAsistente.style.display = (tipo === "Asistente") ? "block" : "none";
-        if (formParticipante) formParticipante.style.display = (tipo === "Participante") ? "block" : "none";
-        if (formEvaluador) formEvaluador.style.display = (tipo === "Evaluador") ? "block" : "none";
+        document.getElementById("form_asistente").style.display = (tipo === "Asistente") ? "block" : "none";
+        document.getElementById("form_participante").style.display = (tipo === "Participante") ? "block" : "none";
+        document.getElementById("form_evaluador").style.display = (tipo === "Evaluador") ? "block" : "none";
     }
 
     function toggleProyecto(nuevo) {
-        document.getElementById("nuevo-proyecto").style.display = nuevo ? "block" : "none";
-        document.getElementById("proyecto-existente").style.display = nuevo ? "none" : "block";
+        const nuevoDiv = document.getElementById("nuevo-proyecto");
+        const existenteDiv = document.getElementById("proyecto-existente");
+
+        nuevoDiv.style.display = nuevo ? "block" : "none";
+        existenteDiv.style.display = nuevo ? "none" : "block";
+
+        // manejar required dinámico
+        document.getElementById("nombre_proyecto").required = nuevo;
+        document.getElementById("descripcion_proyecto").required = nuevo;
     }
 
+    // validación Bootstrap
     (function() {
         'use strict'
         const forms = document.querySelectorAll('.needs-validation')

@@ -6,6 +6,9 @@ from django.contrib.auth.decorators import login_required
 app_name = 'evaluadores'
 
 urlpatterns = [
+    
+    path('perfil/', login_required(views.perfil_evaluador, login_url='main:login'), name='perfil_evaluador'),
+
     path("mis_eventos/", login_required(views.seleccionar_evento_evaluador, login_url='main:login'), name="seleccionar_evento"),
 
     path('evaluador/<int:eva_id>/evento/<int:evento_id>/panel/', login_required(views.panel_evaluador, login_url='main:login'), name='panel_evaluador'),

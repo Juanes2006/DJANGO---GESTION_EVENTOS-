@@ -1,0 +1,26 @@
+[run]
+source =
+    app_admin
+    app_asistentes
+    app_evaluadores
+    app_eventos
+    app_main
+    app_participantes
+    app_qr
+    app_registros
+    app_super_admin
+    app_usuarios
+
+omit =
+    */migrations/*
+    */tests/*
+    */forms.py
+    */admin.py
+    */apps.py
+    */utils.py
+    */__init__.py
+    manage.py
+    pr_gestion_eventos/*
+
+[report]
+skip_empty = True

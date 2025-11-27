@@ -100,3 +100,22 @@ hasattr() es una función incorporada de Python que verifica si un objeto tiene 
 
 
 getattr() es otra función incorporada en Python, y sirve para obtener dinámicamente el valor de un atributo de un objeto.
+
+
+
+
+
+//////////////////////////
+
+## como ejecutar pruebas
+
+pytest app_super_admin/test_views.py -v
+
+
+
+/////////////////////////////////////
+COBERTURA DE PRUEBAS DE SOFTWARE
+
+python Coverage - Cobertura de las pruebas
+
+

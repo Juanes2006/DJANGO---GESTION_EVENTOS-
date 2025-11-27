@@ -113,3 +113,33 @@
         })
     })()
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.querySelector("form");  
+    const fechaInicio = document.querySelector("#id_fecha_inicio");
+    const fechaFin = document.querySelector("#id_fecha_fin");
+
+    form.addEventListener("submit", function(e) {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0); // Ignorar la hora
+
+        const inicio = new Date(fechaInicio.value);
+        const fin = new Date(fechaFin.value);
+
+        // ✅ Validar que no sean fechas pasadas
+        if (inicio < hoy || fin < hoy) {
+            e.preventDefault();
+            alert("❌ No puedes seleccionar fechas anteriores a hoy.");
+            return;
+        }
+
+        // ✅ Validar que la fecha de inicio no sea posterior a la de fin
+        if (inicio > fin) {
+            e.preventDefault();
+            alert("⚠️ La fecha de inicio no puede ser posterior a la fecha de finalización.");
+            return;
+        }
+    });
+});
+</script>
