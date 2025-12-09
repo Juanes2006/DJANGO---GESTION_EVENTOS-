@@ -298,9 +298,8 @@ AUTHENTICATION_BACKENDS = [
  
  # settings.py
 LOGIN_URL = 'main:login'
+      
 
-
-MIDDLEWARE += ['app_main.views.Error500Middleware']
 
 
 import logging
