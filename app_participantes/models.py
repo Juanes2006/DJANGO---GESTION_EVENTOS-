@@ -6,7 +6,7 @@ class Participantes(models.Model):
     
     
     #### NUEVO CAMPO PARA RELACIONAR CON USUARIO ####
-    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)
+    usuario = models.OneToOneField(Usuario,null=True, on_delete=models.CASCADE)
 
     def _str_(self):
         return f"Participante: {self.usuario.username}"
@@ -19,8 +19,8 @@ class ParticipantesEventos(models.Model):
         ('RECHAZADO', 'Rechazado'),
     )
 
-    par_eve_participante_fk = models.ForeignKey(Participantes, on_delete=models.CASCADE)
-    par_eve_evento_fk = models.ForeignKey(Evento, on_delete=models.CASCADE)
+    par_eve_participante_fk = models.ForeignKey(Participantes,null=True, on_delete=models.CASCADE)
+    par_eve_evento_fk = models.ForeignKey(Evento, null=True, on_delete=models.CASCADE)
     par_eve_fecha_hora = models.DateTimeField()
     par_eve_documentos = models.CharField(max_length=255, null=True, blank=True)
     par_eve_or = models.CharField(max_length=255, null=True, blank=True)

@@ -5,7 +5,7 @@ from app_eventos.models import Evento
 class Asistentes(models.Model):
     
     ########### NUEVO CAMPO PARA RELACIONAR CON USUARIO ###########
-    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)
+    usuario = models.OneToOneField(Usuario,null=True, on_delete=models.CASCADE)
 
     def _str_(self):
         return f"Asistente: {self.usuario.username}"
@@ -14,8 +14,8 @@ class Asistentes(models.Model):
    
 
 class AsistentesEventos(models.Model):
-    asi_eve_asistente_fk = models.ForeignKey(Asistentes, on_delete=models.CASCADE)
-    asi_eve_evento_fk = models.ForeignKey(Evento, on_delete=models.CASCADE)
+    asi_eve_asistente_fk = models.ForeignKey(Asistentes, null=True, on_delete=models.CASCADE)
+    asi_eve_evento_fk = models.ForeignKey(Evento, null=True, on_delete=models.CASCADE)
     asi_eve_fecha_hora = models.DateTimeField()
     asi_eve_soporte = models.CharField(max_length=255, null=True, blank=True)
     asi_eve_estado = models.CharField(max_length=45)
