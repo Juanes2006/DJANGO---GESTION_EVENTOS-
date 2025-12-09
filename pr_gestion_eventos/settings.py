@@ -298,7 +298,6 @@ AUTHENTICATION_BACKENDS = [
  
  # settings.py
 LOGIN_URL = 'main:login'
-LOGIN_REDIRECT_URL = 'main:visitante'  # Asegúrate de que 'home' sea la vista a la que quieres redirigir después del login
 
 
 MIDDLEWARE += ['app_main.views.Error500Middleware']
