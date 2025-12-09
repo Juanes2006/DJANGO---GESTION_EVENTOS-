@@ -1,0 +1,9 @@
+LOAD DATABASE
+     FROM mysql://root:root@host.docker.internal:3306/eventos
+     INTO postgresql://gestion_eventos_db_user:vHYj4pVZN2f8jZQ6XdaFqErDtacdzIJl@dpg-d4ob0u3e5dus73c4dv5g-a.oregon-postgres.render.com:5432/gestion_eventos_db?sslmode=require
+
+ WITH no ssl cert verification,
+      create tables,
+      create indexes,
+      reset sequences;
+

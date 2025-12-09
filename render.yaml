@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: django-gestion-eventos
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn pr_gestion_eventos.wsgi:application"
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: true

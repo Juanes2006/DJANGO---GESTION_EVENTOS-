@@ -6,7 +6,7 @@ from app_usuarios.models import Usuario
 from app_admin.models import AdministradorEvento, PlantillaCertificado
 from app_eventos.models import Evento
 from app_evaluadores.models import Criterio
-from app_participantes.models import Participante, ParticipantesEventos
+from app_participantes.models import Participantes, ParticipantesEventos
 
 
 from django.contrib.auth import get_user_model
@@ -120,7 +120,7 @@ def test_gestionar_inscripciones_renderiza_correctamente(client):
         first_name="Test",
         last_name="User"
     )
-    participante = Participante.objects.create(usuario=participante_user)
+    participante = Participantes.objects.create(usuario=participante_user)
 
     # Crear relación Participante ↔ Evento
     pe = ParticipantesEventos.objects.create(
