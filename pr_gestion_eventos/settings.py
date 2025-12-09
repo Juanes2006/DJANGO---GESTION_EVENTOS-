@@ -103,23 +103,23 @@ WSGI_APPLICATION = 'pr_gestion_eventos.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-#DATABASES = {
- #  'default': dj_database_url.config(conn_max_age=600, ssl_require=not DEBUG)
-#}
+DATABASES = {
+   'default': dj_database_url.config(conn_max_age=600, ssl_require=not DEBUG)
+}
 
 
 # crear base de datos con mysql workbench
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'eventos',
-        'USER': 'root',
-        'PASSWORD': 'root',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    }
-}
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+#        'NAME': 'eventos',
+#        'USER': 'root',
+#        'PASSWORD': 'root',
+#        'HOST': 'localhost',
+#        'PORT': '3306',
+#    }
+#}
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
