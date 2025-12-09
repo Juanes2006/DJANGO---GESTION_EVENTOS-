@@ -1,11 +1,17 @@
-# !/usr/bin/env bash
+#!/usr/bin/env bash
 set -o errexit
 
 pip install -r requirements.txt
 
-python manage.py collectstatic --no-input
+# --- DESACTIVAR MIGRACIONES PROBLEMÁTICAS ---
+python manage.py migrate contenttypes zero --fake
+python manage.py migrate contenttypes 0001 --fake
 
-python manage.py migrate contenttypes --fake-initial
-python manage.py migrate auth --fake-initial
-python manage.py migrate --fake-initial
+python manage.py migrate auth zero --fake
+python manage.py migrate auth 0001 --fake
+
+# --- Marcar todo como aplicado ---
+python manage.py migrate --fake
+
+# --- Static files ---
 python manage.py collectstatic --noinput
