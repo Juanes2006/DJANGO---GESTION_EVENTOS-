@@ -97,6 +97,7 @@ TEMPLATES = [
     },
 ]
 
+
 WSGI_APPLICATION = 'pr_gestion_eventos.wsgi.application'
 
 # Database
@@ -184,12 +185,12 @@ UPLOAD_SETTINGS = {
 # ========================================
 # CONFIGURACIÓN DE EMAIL (OPCIONAL)
 # ========================================
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'tu_email@gmail.com'  # Cambiar por tu email
-EMAIL_HOST_PASSWORD = 'tu_password_app'   # Cambiar por tu contraseña de app
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#EMAIL_HOST = 'smtp.gmail.com'
+#EMAIL_PORT = 587
+#EMAIL_USE_TLS = True
+#EMAIL_HOST_USER = 'tu_email@gmail.com'  # Cambiar por tu email
+#EMAIL_HOST_PASSWORD = 'tu_password_app'   # Cambiar por tu contraseña de app
 
 # ========================================
 # CONFIGURACIÓN DE SEGURIDAD
@@ -281,11 +282,7 @@ EMAIL_HOST_PASSWORD = 'tnxy tzxx zgxf etqc'    # Pon aquí la contraseña de apl
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Usar el mismo correo como remitente por defecto
 
 
-# twilio
 
-TWILIO_ACCOUNT_SID = 'AC34d526efb1d04b4741e5a66a1a52db84'
-TWILIO_AUTH_TOKEN = '1d33d378933caf65c026253e40969d84'
-TWILIO_PHONE_NUMBER = '+19382017428'
 
 """ LOGIN_URL = 'main:login_view'  # Asegúrate de que 'login' sea el nombre de tu vista de login
 LOGIN_REDIRECT_URL = 'main:login_view'  # A dónde redirigir después del login
