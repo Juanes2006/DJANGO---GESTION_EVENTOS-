@@ -329,7 +329,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 #breo
-from decouple import config
 
 USE_BREVO = config("USE_BREVO", default=False, cast=bool)
 
