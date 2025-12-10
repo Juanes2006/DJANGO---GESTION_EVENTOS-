@@ -95,5 +95,72 @@
 {% endblock %}
 
 
-<style> .event-card { transition: transform 0.35s ease, box-shadow 0.35s ease; cursor: pointer; background: #fff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1); position: relative; } .event-card:hover { transform: translateY(-10px) scale(1.03); box-shadow: 0 12px 25px rgba(0, 123, 255, 0.25), 0 6px 12px rgba(0, 0, 0, 0.1); z-index: 10; } .event-card img.card-img-top { border-top-left-radius: 1.25rem; border-top-right-radius: 1.25rem; transition: transform 0.4s ease; } .event-card:hover img.card-img-top { transform: scale(1.08); filter: brightness(0.9); } .text-truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .no-image-placeholder i { font-size: 3rem; opacity: 0.2; } .btn.transition-shadow:hover { box-shadow: 0 8px 20px rgba(13, 110, 253, 0.6); transition: box-shadow 0.3s ease; } /* Ribbon estilos */ .ribbon { position: absolute; top: 12px; right: -30px; width: 140px; text-align: center; line-height: 28px; color: white; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.05em; transform: rotate(45deg); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); user-select: none; pointer-events: none; z-index: 15; } .ribbon-green { background: #198754; } .ribbon-yellow { background: #ffc107; color: #212529; } .ribbon-gray { background: #6c757d; } </style>
-
+<style>
+    .event-card {
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+        cursor: pointer;
+        background: #fff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+    
+    .event-card:hover {
+        transform: translateY(-10px) scale(1.03);
+        box-shadow: 0 12px 25px rgba(0, 123, 255, 0.25), 0 6px 12px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+    }
+    
+    .event-card img.card-img-top {
+        border-top-left-radius: 1.25rem;
+        border-top-right-radius: 1.25rem;
+        transition: transform 0.4s ease;
+    }
+    
+    .event-card:hover img.card-img-top {
+        transform: scale(1.08);
+        filter: brightness(0.9);
+    }
+    
+    .text-truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .no-image-placeholder i {
+        font-size: 3rem;
+        opacity: 0.2;
+    }
+    
+    .btn.transition-shadow:hover {
+        box-shadow: 0 8px 20px rgba(13, 110, 253, 0.6);
+        transition: box-shadow 0.3s ease;
+    }
+    /* Ribbon estilos */
+    
+    .ribbon {
+        position: absolute;
+        top: 12px;
+        right: -30px;
+        width: 140px;
+        text-align: center;
+        line-height: 28px;
+        color: white;
+        font-weight: 700;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        transform: rotate(45deg);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        user-select: none;
+        pointer-events: none;
+        z-index: 15;
+    }
+    
+    .ribbon-green {
+        background: #198754;
+    }
+    
+    .ribbon-red {
+        background: #dc3545;
+    }
+</style>

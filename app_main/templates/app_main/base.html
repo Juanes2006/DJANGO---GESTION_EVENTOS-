@@ -19,28 +19,28 @@
 <body class="d-flex flex-column min-vh-100">
     <!-- Header / Barra de navegación -->
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-            <div class="container-fluid">
-                <a class="navbar-brand d-flex align-items-center" href="{% url 'main:lista_eventos' %}">
-                    <div class="navbar-brand d-flex align-items-center">
-                            <img src="{% static 'imagenes/image.png' %}" alt="Logo" class="logo me-2">
-                        </a>
-                        {% block eventos_text %}
-                        <span class="fw-bold text-white">Eventos</span> {% endblock %}
-                    </div>
-
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Alternar navegación">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                        {% block nav_links %}{% endblock %}
-                    </ul>
-                </div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'main:lista_eventos' %}">
+                <img src="https://res.cloudinary.com/dax2mwju4/imagen/cargar/v1765406257/imagen_jfv1i3.png" 
+                     alt="Logo" 
+                     class="logo me-2">
+                {% block eventos_text %}
+                <span class="fw-bold text-white">Eventos</span> 
+                {% endblock %}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Alternar navegación">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    {% block nav_links %}{% endblock %}
+                </ul>
             </div>
-        </nav>
-    </header>
+        </div>
+    </nav>
+</header>
+
 
     <!-- Contenido principal -->
     <main class="container flex-grow-1 my-4">
