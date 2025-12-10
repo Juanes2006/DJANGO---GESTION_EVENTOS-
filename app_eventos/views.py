@@ -96,7 +96,7 @@ def crear_evento(request):
             }, status=500)
 
     # GET o no AJAX: renderiza formulario
-    return render(request, "app_eventos/crear_evento.html", {"categorias": categorias})
+    return render(request, "admin:ventana", {"categorias": categorias})
 
 
 @login_required
