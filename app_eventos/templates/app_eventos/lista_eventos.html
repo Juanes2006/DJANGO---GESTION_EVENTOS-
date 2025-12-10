@@ -16,17 +16,18 @@
     <div class="row g-4">
         {% if eventos %} {% for evento in eventos %}
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm rounded-5 event-card position-relative overflow-hidden">
-                {% if evento.imagen %}
-<img src="{{ evento.imagen.url }}"
-     alt="Imagen del evento"
-     class="card-img-top rounded-top"
-     style="height: 220px; object-fit: cover; transition: transform 0.4s ease;">
-{% else %}
-<div class="no-image-placeholder rounded-top d-flex align-items-center justify-content-center text-secondary fs-4"
-     style="height: 220px; background:#f8f9fa;">
-    <i class="fas fa-calendar-alt"></i>
+          {% load static %} {% if evento.imagen %}
+<div class="text-center mb-4">
+    <img src="{{ evento.imagen.url }}"
+         alt="Imagen del evento"
+         class="img-fluid rounded shadow-sm"
+         style="max-height: 400px; width: 100%; object-fit: contain;">
 </div>
+{% else %}
+<p class="text-muted fst-italic mb-4 text-center">
+    No hay imagen disponible para este evento.
+</p>
+{% endif %}
 {% endif %}
 
                 <div class="card-body d-flex flex-column p-4">
