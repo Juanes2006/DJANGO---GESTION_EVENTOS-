@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'anymail',
     
     'app_usuarios',
     'app_admin',
@@ -328,25 +329,23 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 #breo
+from decouple import config
 
 USE_BREVO = config("USE_BREVO", default=False, cast=bool)
 
 if USE_BREVO:
-    # Producción: Brevo por API HTTP (Anymail)
+    # Producción: Brevo API
     EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
-    DEFAULT_FROM_EMAIL = "correosdjango073@gmail.com"
-
+    DEFAULT_FROM_EMAIL = config("EMAIL_HOST_USER")
     ANYMAIL = {
         "BREVO_API_KEY": config("BREVO_API_KEY"),
     }
 else:
     # Desarrollo local: Gmail SMTP
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = config('EMAIL_HOST')
-    EMAIL_PORT = config('EMAIL_PORT', cast=int)
-    EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
-    EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+    EMAIL_HOST = config('EMAIL_HOST_LOCAL')
+    EMAIL_PORT = config('EMAIL_PORT_LOCAL', cast=int)
+    EMAIL_USE_TLS = config('EMAIL_USE_TLS_LOCAL', cast=bool)
+    EMAIL_HOST_USER = config('EMAIL_HOST_USER_LOCAL')
+    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD_LOCAL')
     DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-    
-
