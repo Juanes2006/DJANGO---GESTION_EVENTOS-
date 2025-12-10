@@ -10,21 +10,18 @@ from dotenv import load_dotenv
 # ==========================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ❌ NO USAR en producción (Render ya inyecta variables de entorno)
+# ⛔ SOLO DESARROLLO
+# En producción (Render) no hace falta cargar .env manualmente
 # load_dotenv(dotenv_path=BASE_DIR / '.env')
 
 # ==========================
 # SECURITY
 # ==========================
-
-# ⚠️ En producción el SECRET_KEY DEBE venir del entorno SIEMPRE
-# esta línea puede generar claves nuevas si falla el env
 SECRET_KEY = os.environ.get("SECRET_KEY") or get_random_secret_key()
 
-# ✅ Correcto para producción
+# ⛔ DEBUG debe ser FALSE en producción (Render define la variable)
 DEBUG = 'RENDER' not in os.environ
 
-# ⚠️ ALLOWED_HOSTS vacío puede causar errores si falla RENDER_EXTERNAL_HOSTNAME
 ALLOWED_HOSTS = []
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
@@ -65,10 +62,7 @@ AUTH_USER_MODEL = 'app_usuarios.Usuario'
 # ==========================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-
-    # ✅ Necesario en producción
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ✅ NECESARIO EN PRODUCCIÓN
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -80,123 +74,167 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'pr_gestion_eventos.urls'
 
 # ==========================
-# DATABASE
+# TEMPLATES ✅ OBLIGATORIO (ADMIN)
 # ==========================
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
 
-# ✅ PRODUCCIÓN (DATABASE_URL)
+        # ⛔ RUTAS EXTRA NO NECESARIAS EN PRODUCCIÓN
+        # Django ya carga templates desde las apps automáticamente
+        # 'DIRS': [
+        #     os.path.join(BASE_DIR, 'templates'),
+        #     'app_admin/templates',
+        #     'app_evaluadores/templates',
+        #     'app_eventos/templates',
+        #     'app_main/templates',
+        #     'app_participantes/templates',
+        #     'app_qr/templates',
+        #     'app_registros/templates',
+        #     'app_super_admin/templates',
+        #     'app_asistentes/templates',
+        # ],
+
+        'DIRS': [BASE_DIR / 'templates'],  # ✅ RECOMENDADO
+        'APP_DIRS': True,
+
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'pr_gestion_eventos.wsgi.application'
+
+# ==========================
+# DATABASE ✅ PRODUCCIÓN
+# ==========================
 DATABASES = {
-   'default': dj_database_url.config(conn_max_age=600, ssl_require=not DEBUG)
+    'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
 }
 
-# ❌ SOLO DESARROLLO LOCAL — causa errores si se activa en producción
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.mysql',
-#        'NAME': 'eventos',
-#        'USER': 'root',
-#        'PASSWORD': 'root',
-#        'HOST': 'localhost',
-#        'PORT': '3306',
-#    }
-#}
+# ⛔ SOLO DESARROLLO LOCAL (MYSQL WORKBENCH)
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'eventos',
+#         'USER': 'root',
+#         'PASSWORD': 'root',
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#     }
+# }
 
 # ==========================
-# STATIC FILES
+# AUTH PASSWORD VALIDATION ✅
 # ==========================
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
 
+# ==========================
+# INTERNATIONALIZATION ✅
+# ==========================
+LANGUAGE_CODE = 'es-es'
+TIME_ZONE = 'America/Bogota'
+USE_I18N = True
+USE_TZ = True
+
+# ==========================
+# STATIC FILES ✅
+# ==========================
 STATIC_URL = '/static/'
-
-# ❌ NO necesario en producción, puede romper collectstatic
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-
-# ✅ requerido en producción
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# ==========================
-# MEDIA FILES
-# ==========================
+# ⛔ LOCAL ONLY
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
-# ❌ NO SE USA en producción con Cloudinary
+# ==========================
+# MEDIA FILES ⛔ NO USADAS (CLOUDINARY)
+# ==========================
 # MEDIA_URL = '/media/'
 # MEDIA_ROOT = BASE_DIR / 'media'
 
 # ==========================
-# UPLOADS LOCALES
+# UPLOADS LOCALES ⛔ NO USAR EN PRODUCCIÓN
+# (Cloudinary ya gestiona todo)
 # ==========================
-
-# ❌ Cloudinary maneja media en producción
-# estas rutas locales pueden causar errores en Render
-
 # UPLOAD_FOLDER_IMAGENES = os.path.join(BASE_DIR, 'static', 'imagenes')
 # UPLOAD_FOLDER_PAGOS = os.path.join(BASE_DIR, 'static', 'uploads')
 # UPLOAD_FOLDER_PROGRAMACION = os.path.join(BASE_DIR, 'static', 'programacion')
 
-# ✅ Estas validaciones son lógicas (NO causan error)
-ALLOWED_EXTENSIONS_IMAGENES = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
-ALLOWED_EXTENSIONS_PAGOS = {'png', 'jpg', 'jpeg', 'pdf'}
-ALLOWED_EXTENSIONS_PROGRAMACION = {'pdf'}
+# ALLOWED_EXTENSIONS_IMAGENES = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+# ALLOWED_EXTENSIONS_PAGOS = {'png', 'jpg', 'jpeg', 'pdf'}
+# ALLOWED_EXTENSIONS_PROGRAMACION = {'pdf'}
 
-MAX_FILE_SIZE_IMAGENES = 5 * 1024 * 1024
-MAX_FILE_SIZE_PAGOS = 10 * 1024 * 1024
-MAX_FILE_SIZE_PROGRAMACION = 50 * 1024 * 1024
+# MAX_FILE_SIZE_IMAGENES = 5 * 1024 * 1024
+# MAX_FILE_SIZE_PAGOS = 10 * 1024 * 1024
+# MAX_FILE_SIZE_PROGRAMACION = 50 * 1024 * 1024
 
-# ❌ UPLOAD_SETTINGS con carpetas locales no sirve en producción
-# UPLOAD_SETTINGS = { ... }
-
-# ❌ NO crear carpetas en producción
+# ⛔ FUNCIONES DE SISTEMA DE ARCHIVOS LOCAL
 # def create_upload_folders():
-#     for folder in UPLOAD_SETTINGS['FOLDERS'].values():
-#         os.makedirs(folder, exist_ok=True)
+#     pass
 #
-# create_upload_folders()
+# def is_allowed_file(filename, file_type='imagenes'):
+#     pass
 
 # ==========================
-# LOGIN
+# LOGIN ✅
 # ==========================
 LOGIN_URL = 'main:login'
 
 # ==========================
-# EMAIL
+# EMAIL ✅ (BREVO PRODUCCIÓN)
 # ==========================
-
 USE_BREVO = config("USE_BREVO", default=False, cast=bool)
 
 if USE_BREVO:
     EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
     DEFAULT_FROM_EMAIL = config("EMAIL_HOST_USER")
-    ANYMAIL = {
-        "BREVO_API_KEY": config("BREVO_API_KEY")
-    }
+    ANYMAIL = {"BREVO_API_KEY": config("BREVO_API_KEY")}
 else:
-    # ⚠️ SOLO DESARROLLO LOCAL
+    # ⛔ SOLO DESARROLLO LOCAL
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = config('EMAIL_HOST_LOCAL', default='')
-    EMAIL_PORT = config('EMAIL_PORT_LOCAL', cast=int, default=587)
-    EMAIL_USE_TLS = config('EMAIL_USE_TLS_LOCAL', cast=bool, default=True)
-    EMAIL_HOST_USER = config('EMAIL_HOST_USER_LOCAL', default='')
-    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD_LOCAL', default='')
-    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
+    # EMAIL_HOST = config('EMAIL_HOST_LOCAL')
+    # EMAIL_PORT = config('EMAIL_PORT_LOCAL', cast=int)
+    # EMAIL_USE_TLS = config('EMAIL_USE_TLS_LOCAL', cast=bool)
+    # EMAIL_HOST_USER = config('EMAIL_HOST_USER_LOCAL')
+    # EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD_LOCAL')
 
 # ==========================
-# CLOUDINARY
+# CLOUDINARY ✅ PRODUCCIÓN
 # ==========================
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
-# ✅ CORRECTO para producción
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    secure=True
+)
+
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # ==========================
-# SEGURIDAD
+# SEGURIDAD ✅
 # ==========================
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
 # ==========================
-# LOGGING
+# LOGGING ⛔ DEBUG EXCESIVO EN PRODUCCIÓN
 # ==========================
-
-# ❌ DEBUG logging en producción genera ruido y posibles leaks
 # LOGGING = {
 #     'version': 1,
 #     'disable_existing_loggers': False,
@@ -207,7 +245,7 @@ X_FRAME_OPTIONS = 'DENY'
 # }
 
 # ==========================
-# SETTINGS DE APPS (SEGUROS)
+# QR SETTINGS ✅ (NO PROBLEMA)
 # ==========================
 QR_SETTINGS = {
     'DEFAULT_SIZE': 10,
@@ -217,6 +255,9 @@ QR_SETTINGS = {
     'BACK_COLOR': 'white',
 }
 
-EVENTOS_SETTINGS = {'MAX_PARTICIPANTES_DEFAULT': 100}
-REGISTROS_SETTINGS = {'GENERAR_OR_AUTOMATICO': True}
+# ==========================
+# OTROS SETTINGS ✅
+# ==========================
+EVENTOS_SETTINGS = {'MAX_PARTICIPANTES_DEFAULT': 100, 'DIAS_LIMITE_INSCRIPCION': 7, 'FORMATO_FECHA': '%d/%m/%Y'}
+REGISTROS_SETTINGS = {'GENERAR_OR_AUTOMATICO': True, 'PREFIJO_OR': 'OR-', 'LONGITUD_OR': 8}
 NOTIFICATIONS_SETTINGS = {'SEND_EMAIL_CONFIRMATION': True}
