@@ -1,4 +1,7 @@
-{% extends 'app_main/base.html' %} {% block content %}
+{% extends 'app_main/base.html' %}
+{% load static %}
+
+{% block content %}
 <div class="container my-5" style="max-width: 900px;">
     <div class="card shadow-lg rounded-4 border-primary border-3">
         <div class="card-header bg-primary text-white text-center rounded-top-4">
@@ -8,14 +11,21 @@
 
             <h3 class="text-primary fw-semibold mb-3">{{ evento.eve_nombre }}</h3>
 
-            {% load static %} {% if evento.imagen %}
-            <div class="text-center mb-4">
-                <img src="{% static 'imagenes/' %}{{ evento.imagen }}" alt="Imagen del evento" class="img-fluid rounded shadow-sm" style="max-height: 400px; width: auto; object-fit: contain;">
-            </div>
+            <!-- Imagen del evento -->
+            {% if evento.imagen %}
+                <div class="text-center mb-4">
+                    <img src="{{ evento.imagen.url }}"
+                         alt="Imagen del evento"
+                         class="img-fluid rounded shadow-sm"
+                         style="max-height: 400px; width: 100%; object-fit: contain;">
+                </div>
             {% else %}
-            <p class="text-muted fst-italic mb-4 text-center">No hay imagen disponible para este evento.</p>
+                <img src="{% static 'imagenes/sin-imagen.png' %}" 
+                     alt="Sin imagen" 
+                     class="img-fluid rounded shadow-sm mb-4"
+                     style="max-height: 400px; width: 100%; object-fit: contain;">
+                <p class="text-muted fst-italic text-center">No hay imagen disponible para este evento.</p>
             {% endif %}
-
 
             <p class="lead text-secondary fst-italic mb-5">{{ evento.eve_descripcion }}</p>
 
@@ -30,52 +40,55 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <p class="mb-1"><strong>📌 Estado:</strong>
-                        <span class="badge {% if evento.eve_estado == 'Activo' %}bg-danger{% else %}bg-success{% endif %} fs-6">
+                        <span class="badge {% if evento.eve_estado|lower == 'activo' %}bg-success{% else %}bg-secondary{% endif %} fs-6">
                             {{ evento.eve_estado }}
                         </span>
                     </p>
-
                     {% if evento.cobro %}
-                    <p class="mb-1"><strong>💲 Cobro de Boletería:</strong>
-                        <span class="badge bg-warning text-dark fs-6">{{ evento.cobro }}</span>
-                    </p>
-                    {% endif %} {% if evento.cupos %}
-                    <p class="mb-1"><strong>👥 Cupos Disponibles:</strong>
-                        <span class="badge bg-info text-dark fs-6">{{ evento.cupos }}</span>
-                    </p>
+                        <p class="mb-1"><strong>💲 Cobro de Boletería:</strong>
+                            <span class="badge bg-warning text-dark fs-6">{{ evento.cobro }}</span>
+                        </p>
+                    {% endif %}
+                    {% if evento.cupos %}
+                        <p class="mb-1"><strong>👥 Cupos Disponibles:</strong>
+                            <span class="badge bg-info text-dark fs-6">{{ evento.cupos }}</span>
+                        </p>
                     {% endif %}
                 </div>
             </div>
 
             {% if categorias %}
-            <hr class="my-4">
-            <h4 class="fw-semibold mb-3">📌 Área y Categoría(s) del Evento</h4>
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle text-start">
-                    <thead class="table-primary">
-                        <tr>
-                            <th>🏢 Área</th>
-                            <th>📂 Categoría</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for categoria in categorias %}
-                        <tr>
-                            <td>{{ categoria.area.are_nombre }}</td>
-                            <td>{{ categoria.cat_nombre }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %} {% if evento.archivo_programacion %}
-            <div class="my-4">
-                <a href="{% static 'programacion/' %}{{ evento.archivo_programacion }}" target="_blank" class="btn btn-outline-success btn-lg shadow-sm">
-                    📄 Ver Archivo de Programación
-                </a>
-            </div>
+                <hr class="my-4">
+                <h4 class="fw-semibold mb-3">📌 Área y Categoría(s) del Evento</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle text-start">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>🏢 Área</th>
+                                <th>📂 Categoría</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for categoria in categorias %}
+                                <tr>
+                                    <td>{{ categoria.area.are_nombre }}</td>
+                                    <td>{{ categoria.cat_nombre }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+
+            {% if evento.archivo_programacion %}
+                <div class="my-4">
+                    <a href="{{ evento.archivo_programacion.url }}" target="_blank"
+                       class="btn btn-outline-success btn-lg shadow-sm">
+                        📄 Ver Archivo de Programación
+                    </a>
+                </div>
             {% else %}
-            <p class="text-muted fst-italic">No hay archivo de programación disponible.</p>
+                <p class="text-muted fst-italic">No hay archivo de programación disponible.</p>
             {% endif %}
 
             <h4 class="fw-semibold mt-5 mb-3">⭐ Características del Evento</h4>
@@ -84,17 +97,15 @@
                     <thead class="table-primary">
                         <tr>
                             <th>🔹 Parámetro</th>
-                            {% if evento.cobro %}
                             <th>🔸 Valor</th>
-                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
                         {% for car in evento.caracteristicas.all %}
-                        <tr>
-                            <td>{{ car.car_parametro }}</td>
-                            <td>{{ car.car_valor }}</td>
-                        </tr>
+                            <tr>
+                                <td>{{ car.car_parametro }}</td>
+                                <td>{{ car.car_valor }}</td>
+                            </tr>
                         {% endfor %}
                     </tbody>
                 </table>
