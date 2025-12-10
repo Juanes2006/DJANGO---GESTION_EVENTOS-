@@ -18,11 +18,10 @@ from django.db import transaction
 
 @login_required
 def crear_evento(request):
-    print("➡️ Entrando a la vista crear_evento")
     categorias = Categoria.objects.all()
 
-    if request.method == "POST":
-        print("✅ Request es POST (AJAX)")
+    if request.method == "POST" and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        # Validar que es un POST AJAX
         try:
             nombre = request.POST.get("nombre")
             descripcion = request.POST.get("descripcion")
@@ -32,12 +31,10 @@ def crear_evento(request):
             fecha_fin = request.POST.get("fecha_fin")
             cobro = request.POST.get("cobro", "No")
             cupos = request.POST.get("cupos") or None
-            categoria_id = request.POST.get("categorias")
+            categoria_ids = request.POST.getlist("categorias")  # Lista de categorías
 
             imagen = request.FILES.get("imagen")
             archivo_pdf = request.FILES.get("archivo_programacion")
-
-            print("📩 Datos recibidos:", request.POST)
 
             # Verificar administrador
             try:
@@ -49,6 +46,22 @@ def crear_evento(request):
                 }, status=403)
 
             with transaction.atomic():
+                # Guardar archivos
+                imagen_path = ""
+                archivo_path = ""
+
+                if imagen:
+                    imagen_path = f"imagenes/{imagen.name}"
+                    with open(f"static/{imagen_path}", "wb+") as dest:
+                        for chunk in imagen.chunks():
+                            dest.write(chunk)
+
+                if archivo_pdf:
+                    archivo_path = f"programacion/{archivo_pdf.name}"
+                    with open(f"static/{archivo_path}", "wb+") as dest:
+                        for chunk in archivo_pdf.chunks():
+                            dest.write(chunk)
+
                 # Crear evento
                 evento = Evento.objects.create(
                     eve_nombre=nombre,
@@ -61,43 +74,29 @@ def crear_evento(request):
                     adm_id=admin_asignado,
                     cobro=cobro,
                     cupos=cupos,
-                    imagen=imagen.name if imagen else "",
-                    archivo_programacion=archivo_pdf.name if archivo_pdf else ""
+                    imagen=imagen_path,
+                    archivo_programacion=archivo_path
                 )
 
-                # Asociar categoría
-                if categoria_id:
-                    EventoCategoria.objects.create(evento=evento, categoria_id=categoria_id)
+                # Asociar categorías (solo las válidas)
+                for cat_id in categoria_ids:
+                    if cat_id.isdigit():
+                        EventoCategoria.objects.create(evento=evento, categoria_id=int(cat_id))
 
-                # Guardar archivos (si los hay)
-                if imagen:
-                    with open(f"static/imagenes/{imagen.name}", 'wb+') as destination:
-                        for chunk in imagen.chunks():
-                            destination.write(chunk)
-
-                if archivo_pdf:
-                    with open(f"static/programacion/{archivo_pdf.name}", 'wb+') as destination:
-                        for chunk in archivo_pdf.chunks():
-                            destination.write(chunk)
-
-            print(f"✅ Evento creado correctamente: {evento.eve_nombre}")
             return JsonResponse({
                 "status": "success",
-                "message": f"¡Se ha creado el evento {evento.eve_nombre}!",
-                "evento_id": evento.id,
+                "message": f"¡Evento '{evento.eve_nombre}' creado correctamente!",
+                "evento_id": evento.id
             })
 
         except Exception as e:
-            print(f"❌ Error creando evento: {e}")
             return JsonResponse({
                 "status": "error",
-                "message": "Ocurrió un error al crear el evento."
+                "message": f"Ocurrió un error al crear el evento: {str(e)}"
             }, status=500)
 
-    # Si es GET, renderiza el formulario normalmente
-    print("ℹ️ Request GET - Mostrando formulario")
+    # GET o no AJAX: renderiza formulario
     return render(request, "app_eventos/crear_evento.html", {"categorias": categorias})
-##################################################################
 
 
 @login_required
