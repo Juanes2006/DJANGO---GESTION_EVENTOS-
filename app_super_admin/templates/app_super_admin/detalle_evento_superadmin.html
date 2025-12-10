@@ -9,12 +9,18 @@
                 <!-- Columna imagen -->
                 <div class="col-md-6 p-0" style="min-height: 400px; overflow: hidden;">
                     {% load static %} {% if evento.imagen %}
-                    <div class="text-center mb-4">
-                        <img src="{% static 'imagenes/' %}{{ evento.imagen }}" alt="Imagen del evento" class="img-fluid rounded shadow-sm" style="max-height: 400px; width: auto; object-fit: contain;">
-                    </div>
-                    {% else %}
-                    <p class="text-muted fst-italic mb-4 text-center">No hay imagen disponible para este evento.</p>
-                    {% endif %}
+<div class="text-center mb-4">
+    <img src="{{ evento.imagen.url }}"
+         alt="Imagen del evento"
+         class="img-fluid rounded shadow-sm"
+         style="max-height: 400px; width: 100%; object-fit: contain;">
+</div>
+{% else %}
+<p class="text-muted fst-italic mb-4 text-center">
+    No hay imagen disponible para este evento.
+</p>
+{% endif %}
+
                 </div>
 
                 <!-- Columna contenido -->

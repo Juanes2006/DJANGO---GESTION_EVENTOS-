@@ -23,7 +23,11 @@ def crear_evento(request):
 
     if request.method == "POST":
         print("✅ Request es POST (AJAX)")
+
         try:
+            print("📩 Datos recibidos:", request.POST)
+
+            # Datos
             nombre = request.POST.get("nombre")
             descripcion = request.POST.get("descripcion")
             ciudad = request.POST.get("ciudad")
@@ -37,9 +41,7 @@ def crear_evento(request):
             imagen = request.FILES.get("imagen")
             archivo_pdf = request.FILES.get("archivo_programacion")
 
-            print("📩 Datos recibidos:", request.POST)
-
-            # Verificar administrador
+            # Administrador
             try:
                 admin_asignado = AdministradorEvento.objects.get(usuario=request.user)
             except AdministradorEvento.DoesNotExist:
@@ -49,7 +51,8 @@ def crear_evento(request):
                 }, status=403)
 
             with transaction.atomic():
-                # Crear evento
+
+                # ✅ Crear evento (FORMA CORRECTA)
                 evento = Evento.objects.create(
                     eve_nombre=nombre,
                     eve_descripcion=descripcion,
@@ -61,42 +64,35 @@ def crear_evento(request):
                     adm_id=admin_asignado,
                     cobro=cobro,
                     cupos=cupos,
-                    imagen=imagen.name if imagen else "",
-                    archivo_programacion=archivo_pdf.name if archivo_pdf else ""
+                    imagen=imagen,
+                    archivo_programacion=archivo_pdf
                 )
 
-                # Asociar categoría
+                # ✅ Asociar categoría
                 if categoria_id:
-                    EventoCategoria.objects.create(evento=evento, categoria_id=categoria_id)
-
-                # Guardar archivos (si los hay)
-                if imagen:
-                    with open(f"static/imagenes/{imagen.name}", 'wb+') as destination:
-                        for chunk in imagen.chunks():
-                            destination.write(chunk)
-
-                if archivo_pdf:
-                    with open(f"static/programacion/{archivo_pdf.name}", 'wb+') as destination:
-                        for chunk in archivo_pdf.chunks():
-                            destination.write(chunk)
+                    EventoCategoria.objects.create(
+                        evento=evento,
+                        categoria_id=categoria_id
+                    )
 
             print(f"✅ Evento creado correctamente: {evento.eve_nombre}")
+
             return JsonResponse({
                 "status": "success",
                 "message": f"¡Se ha creado el evento {evento.eve_nombre}!",
-                "evento_id": evento.id,
+                "evento_id": evento.eve_id
             })
 
         except Exception as e:
             print(f"❌ Error creando evento: {e}")
             return JsonResponse({
                 "status": "error",
-                "message": "Ocurrió un error al crear el evento."
+                "message": str(e)
             }, status=500)
 
-    # Si es GET, renderiza el formulario normalmente
     print("ℹ️ Request GET - Mostrando formulario")
-    return render(request, "admin:ventana", {"categorias": categorias})
+    return render(request, "admin/ventana.html", {"categorias": categorias})
+
 ##################################################################
 
 
