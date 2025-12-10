@@ -1,37 +1,34 @@
-
 from pathlib import Path
 import os
-from django.core.management.utils import get_random_secret_key 
+from django.core.management.utils import get_random_secret_key
 import dj_database_url
 from decouple import config
-
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Load environment variables from .env file
 from dotenv import load_dotenv
+
+# ==========================
+# BASE DIR Y ENV VARIABLES
+# ==========================
+BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(dotenv_path=BASE_DIR / '.env')
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
+# ==========================
+# SECURITY
+# ==========================
 SECRET_KEY = os.environ.get("SECRET_KEY") or get_random_secret_key()
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = 'RENDER' not in os.environ
 
-# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 ALLOWED_HOSTS = []
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append (RENDER_EXTERNAL_HOSTNAME)
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# Application definition
 SITE_ID = 1
-# Application definition
+
+# ==========================
+# APPLICATIONS
+# ==========================
 INSTALLED_APPS = [
+    # Django
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,7 +36,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'anymail',
-    
+    "imagekitio_storage",
+
+
+    # Terceros
+    # 'cloudinary', 'cloudinary_storage' eliminado porque usamos ImageKit
+
+    # Tus apps
     'app_usuarios',
     'app_admin',
     'app_evaluadores',
@@ -52,14 +55,14 @@ INSTALLED_APPS = [
     'app_super_admin',
 ]
 
-AUTH_USER_MODEL = 'app_usuarios.Usuario'  # Cambiado para usar el modelo personalizado
+AUTH_USER_MODEL = 'app_usuarios.Usuario'
 
-
-
+# ==========================
+# MIDDLEWARE
+# ==========================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -70,22 +73,23 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'pr_gestion_eventos.urls'
 
+# ==========================
+# TEMPLATES
+# ==========================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            'app_admin/templates', 
-            'app_evaluadores/templates', 
-            'app_eventos/templates', 
-            'app_main/templates',  
-            'app_participantes/templates',  
-            'app_qr/templates', 
-            'app_registros/templates', 
+            os.path.join(BASE_DIR, 'templates'),
+            'app_admin/templates',
+            'app_evaluadores/templates',
+            'app_eventos/templates',
+            'app_main/templates',
+            'app_participantes/templates',
+            'app_qr/templates',
+            'app_registros/templates',
             'app_super_admin/templates',
-            'app_asistentes/templates', 
-        
-            'app_main/templates',  # Carpeta global de templates
-            os.path.join(BASE_DIR, 'templates'),  # Carpeta global de templates
+            'app_asistentes/templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -99,84 +103,65 @@ TEMPLATES = [
     },
 ]
 
-
 WSGI_APPLICATION = 'pr_gestion_eventos.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# ==========================
+# DATABASE
+# ==========================
+# BASE DE DATOS MYSQL LOCAL CONFIGURACIÓN
+
+
 
 DATABASES = {
    'default': dj_database_url.config(conn_max_age=600, ssl_require=not DEBUG)
 }
 
-
-# crear base de datos con mysql workbench
-
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.mysql',
-#        'NAME': 'eventos',
-#        'USER': 'root',
-#        'PASSWORD': 'root',
-#        'HOST': 'localhost',
-#        'PORT': '3306',
-#    }
-#}
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+# ==========================
+# AUTH PASSWORD VALIDATION
+# ==========================
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-LANGUAGE_CODE = 'es-es'  # Cambiado a español
-TIME_ZONE = 'America/Bogota'  # Ajusta según tu zona horaria
+# ==========================
+# INTERNATIONALIZATION
+# ==========================
+LANGUAGE_CODE = 'es-es'
+TIME_ZONE = 'America/Bogota'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# ==========================
+# STATIC FILES
+# ==========================
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR / 'static'),
-]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# ==========================
+# MEDIA FILES
+# ==========================
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
-# Media files (archivos subidos por usuarios)
-
-# ========================================
-# CONFIGURACIÓN PERSONALIZADA PARA ARCHIVOS
-# ========================================
-
-# Carpetas de uploads específicas (compatibles con Flask)
+# ==========================
+# UPLOADS LOCALES
+# ==========================
 UPLOAD_FOLDER_IMAGENES = os.path.join(BASE_DIR, 'static', 'imagenes')
 UPLOAD_FOLDER_PAGOS = os.path.join(BASE_DIR, 'static', 'uploads')
 UPLOAD_FOLDER_PROGRAMACION = os.path.join(BASE_DIR, 'static', 'programacion')
 
-# Extensiones permitidas
 ALLOWED_EXTENSIONS_IMAGENES = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 ALLOWED_EXTENSIONS_PAGOS = {'png', 'jpg', 'jpeg', 'pdf'}
 ALLOWED_EXTENSIONS_PROGRAMACION = {'pdf'}
 
-# Tamaños máximos de archivo (en bytes)
-MAX_FILE_SIZE_IMAGENES = 5 * 1024 * 1024      # 5MB
-MAX_FILE_SIZE_PAGOS = 10 * 1024 * 1024        # 10MB
-MAX_FILE_SIZE_PROGRAMACION = 50 * 1024 * 1024  # 50MB
+MAX_FILE_SIZE_IMAGENES = 5 * 1024 * 1024
+MAX_FILE_SIZE_PAGOS = 10 * 1024 * 1024
+MAX_FILE_SIZE_PROGRAMACION = 50 * 1024 * 1024
 
-# Configuración agrupada para fácil acceso
 UPLOAD_SETTINGS = {
     'FOLDERS': {
         'imagenes': UPLOAD_FOLDER_IMAGENES,
@@ -195,152 +180,32 @@ UPLOAD_SETTINGS = {
     }
 }
 
-# ========================================
-# CONFIGURACIÓN DE EMAIL (OPCIONAL)
-# ========================================
-#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-#EMAIL_HOST = 'smtp.gmail.com'
-#EMAIL_PORT = 587
-#EMAIL_USE_TLS = True
-#EMAIL_HOST_USER = 'tu_email@gmail.com'  # Cambiar por tu email
-#EMAIL_HOST_PASSWORD = 'tu_password_app'   # Cambiar por tu contraseña de app
-
-# ========================================
-# CONFIGURACIÓN DE SEGURIDAD
-# ========================================
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
-
-# Para producción (descomenta cuando vayas a producción)
-# SECURE_SSL_REDIRECT = True
-# SECURE_HSTS_SECONDS = 31536000
-# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-# SECURE_HSTS_PRELOAD = True
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# ========================================
-# FUNCIONES AUXILIARES
-# ========================================
 def create_upload_folders():
-    """Crear carpetas de upload si no existen"""
-    folders = [
-        UPLOAD_FOLDER_IMAGENES,
-        os.path.join(BASE_DIR, 'static'),
-    ]
-    
-    for folder in folders:
+    for folder in UPLOAD_SETTINGS['FOLDERS'].values():
         os.makedirs(folder, exist_ok=True)
 
+create_upload_folders()
+
 def is_allowed_file(filename, file_type='imagenes'):
-    """Verificar si el archivo tiene una extensión permitida"""
     if '.' not in filename:
         return False
-    
     extension = filename.rsplit('.', 1)[1].lower()
     return extension in UPLOAD_SETTINGS['ALLOWED_EXTENSIONS'].get(file_type, set())
 
-# Crear carpetas al cargar configuración
-create_upload_folders()
-
-# ========================================
-# CONFIGURACIÓN ESPECÍFICA PARA QR
-# ========================================
-QR_SETTINGS = {
-    'DEFAULT_SIZE': 10,
-    'DEFAULT_BORDER': 4,
-    'FORMAT': 'PNG',
-    'FILL_COLOR': 'black',
-    'BACK_COLOR': 'white',
-}
-
-# ========================================
-# CONFIGURACIONES ADICIONALES PARA TUS APPS
-# ========================================
-
-# Configuración para app_eventos
-EVENTOS_SETTINGS = {
-    'MAX_PARTICIPANTES_DEFAULT': 100,
-    'DIAS_LIMITE_INSCRIPCION': 7,
-    'FORMATO_FECHA': '%d/%m/%Y',
-}
-
-# Configuración para app_registros
-REGISTROS_SETTINGS = {
-    'GENERAR_OR_AUTOMATICO': True,
-    'PREFIJO_OR': 'OR-',
-    'LONGITUD_OR': 8,
-}
-
-# Configuración para notificaciones
-NOTIFICATIONS_SETTINGS = {
-    'SEND_EMAIL_CONFIRMATION': True,
-    'ADMIN_EMAIL': 'admin@tueventos.com',
-    'FROM_EMAIL': 'noreply@tueventos.com',
-}
-
-#### CONFIGURACION DE MENSAJES POR GMAIL Y TWILIO ####
-# gmail
-
-
-""" LOGIN_URL = 'main:login_view'  # Asegúrate de que 'login' sea el nombre de tu vista de login
-LOGIN_REDIRECT_URL = 'main:login_view'  # A dónde redirigir después del login
-LOGOUT_REDIRECT_URL = 'login'  # A dónde ir luego del logout
-
-
-
-AUTHENTICATION_BACKENDS = [
-    'app_usuarios.backends.EmailBackend',  # Ruta al archivo que vamos a crear
-    'django.contrib.auth.backends.ModelBackend',  # Opción por defecto (por si usas username)
-]
- """
- 
- # settings.py
+# ==========================
+# LOGIN URL
+# ==========================
 LOGIN_URL = 'main:login'
-      
 
-
-
-import logging
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',
-    },
-}
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-
-
-#breo
-
+# ==========================
+# EMAIL (Brevo o Gmail)
+# ==========================
 USE_BREVO = config("USE_BREVO", default=False, cast=bool)
-
 if USE_BREVO:
-    # Producción: Brevo API
     EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
     DEFAULT_FROM_EMAIL = config("EMAIL_HOST_USER")
-    ANYMAIL = {
-        "BREVO_API_KEY": config("BREVO_API_KEY"),
-    }
+    ANYMAIL = {"BREVO_API_KEY": config("BREVO_API_KEY")}
 else:
-    # Desarrollo local: Gmail SMTP
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = config('EMAIL_HOST_LOCAL')
     EMAIL_PORT = config('EMAIL_PORT_LOCAL', cast=int)
@@ -349,4 +214,51 @@ else:
     EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD_LOCAL')
     DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+# ==========================
+# IMAGEKIT
+# ==========================
+IMAGEKIT_PUBLIC_KEY = config("IMAGEKIT_PUBLIC_KEY")
+IMAGEKIT_PRIVATE_KEY = config("IMAGEKIT_PRIVATE_KEY")
+IMAGEKIT_URL_ENDPOINT = config("IMAGEKIT_URL_ENDPOINT")
 
+DEFAULT_FILE_STORAGE = 'imagekitio.storage.ImageKitStorage'
+
+
+# ==========================
+# SEGURIDAD
+# ==========================
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# ==========================
+# LOGGING
+# ==========================
+import logging
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {'level': 'DEBUG', 'class': 'logging.StreamHandler'},
+    },
+    'root': {'handlers': ['console'], 'level': 'DEBUG'},
+}
+
+# ==========================
+# QR Settings
+# ==========================
+QR_SETTINGS = {
+    'DEFAULT_SIZE': 10,
+    'DEFAULT_BORDER': 4,
+    'FORMAT': 'PNG',
+    'FILL_COLOR': 'black',
+    'BACK_COLOR': 'white',
+}
+
+# ==========================
+# Otros Settings de apps
+# ==========================
+EVENTOS_SETTINGS = {'MAX_PARTICIPANTES_DEFAULT': 100, 'DIAS_LIMITE_INSCRIPCION': 7, 'FORMATO_FECHA': '%d/%m/%Y'}
+REGISTROS_SETTINGS = {'GENERAR_OR_AUTOMATICO': True, 'PREFIJO_OR': 'OR-', 'LONGITUD_OR': 8}
+NOTIFICATIONS_SETTINGS = {'SEND_EMAIL_CONFIRMATION': True, 'ADMIN_EMAIL': 'admin@tueventos.com', 'FROM_EMAIL': 'noreply@tueventos.com'}
