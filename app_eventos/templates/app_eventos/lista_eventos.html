@@ -1,79 +1,89 @@
-{% extends 'app_main/base.html' %} {% load static %} {% block eventos_url %} {% url 'main:visitante' %} {% endblock %} {% block eventos_text %} Visitante Web {% endblock %} {% block nav_links %}
-<li class="nav-item"><a class="nav-link" href="{% url 'main:buscar_eventos' %}">Buscar Eventos</a></li>
+{% extends 'app_main/base.html' %}
+{% load static %}
 
+{% block eventos_url %}{% url 'main:visitante' %}{% endblock %}
+{% block eventos_text %}Visitante Web{% endblock %}
 
+{% block nav_links %}
 <li class="nav-item">
-    <a class="nav-link btn btn-outline-primary rounded-pill px-4 py-2 fw-semibold shadow-sm me-2 transition" href="{% url 'main:login' %}">
-        🔐 Iniciar Sesión
-    </a>
+  <a class="nav-link" href="{% url 'main:buscar_eventos' %}">Buscar Eventos</a>
 </li>
+<li class="nav-item">
+  <a class="nav-link btn btn-outline-primary rounded-pill px-4 py-2 fw-semibold shadow-sm me-2"
+     href="{% url 'main:login' %}">
+    🔐 Iniciar Sesión
+  </a>
+</li>
+{% endblock %}
 
-
-
-{% endblock %} {% block content %}
+{% block content %}
 <div class="container mt-5">
-    <h2 class="text-center mb-5 fw-bold text-primary">{{ titulo|default:"Lista de Eventos" }}</h2>
-    <div class="row g-4">
-        {% if eventos %} {% for evento in eventos %}
+  <h2 class="text-center mb-5 fw-bold text-primary">
+    {{ titulo|default:"Lista de Eventos" }}
+  </h2>
+
+  <div class="row g-4">
+    {% if eventos %}
+      {% for evento in eventos %}
         <div class="col-md-4">
-          {% load static %} {% if evento.imagen %}
-<div class="text-center mb-4">
-    <img src="{{ evento.imagen.url }}"
-         alt="Imagen del evento"
-         class="img-fluid rounded shadow-sm"
-         style="max-height: 400px; width: 100%; object-fit: contain;">
-</div>
-{% else %}
-<p class="text-muted fst-italic mb-4 text-center">
-    No hay imagen disponible para este evento.
-</p>
-{% endif %}
-{% endif %}
+          <div class="card h-100 shadow-sm rounded-5 event-card position-relative overflow-hidden">
 
-                <div class="card-body d-flex flex-column p-4">
-                    <h5 class="card-title fw-semibold text-truncate" title="{{ evento.eve_nombre }}">{{ evento.eve_nombre }}</h5>
-                    <p class="card-text flex-grow-1 text-muted small" style="line-height: 1.4;">
-                        {{ evento.eve_descripcion|truncatewords:25 }}<br>
-                        <strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}<br>
-                        <strong>📅 Inicio:</strong> {{ evento.eve_fecha_inicio }}<br>
-                        <strong>🏁 Fin:</strong> {{ evento.eve_fecha_fin }}<br>
-                        <strong>🔹 Estado:</strong>
-                        <span class="badge 
-                                {% if evento.eve_estado == 'ACTIVO' %} bg-success
-                                {% elif evento.eve_estado == 'CREADO' %} bg-warning text-dark
-                                {% else %} bg-secondary
-                                {% endif %} py-1 px-3 fw-semibold rounded-pill shadow-sm">
-                                {{ evento.eve_estado }}
-                            </span>
-                    </p>
-                    <div class="mt-auto d-flex justify-content-center gap-3">
-                        <a href="{% url 'main:evento_detalle' evento.eve_id %}" class="btn btn-outline-primary btn-sm px-4 fw-semibold shadow-sm rounded-pill transition-shadow">
-                            <i class="fas fa-eye me-1"></i> Ver Detalle
-                        </a>
-                        <a href="{% url 'registros:registrarme_evento' evento.eve_id %}" class="btn btn-primary btn-sm px-4 fw-semibold shadow-sm rounded-pill transition-shadow">
-                            <i class="fas fa-user-plus me-1"></i> Registrarme
-                        </a>
-                    </div>
-                </div>
+            {% if evento.imagen %}
+              <img src="{{ evento.imagen.url }}"
+                   alt="Imagen del evento"
+                   class="card-img-top"
+                   style="height:220px; object-fit:cover;">
+            {% else %}
+              <div class="d-flex align-items-center justify-content-center text-muted"
+                   style="height:220px; background:#f8f9fa;">
+                Sin imagen
+              </div>
+            {% endif %}
 
-                <!-- Ribbon Estado -->
-                <div class="ribbon
-                        {% if evento.eve_estado == 'ACTIVO' %} ribbon-green
-                        {% elif evento.eve_estado == 'CREADO' %} ribbon-yellow
-                        {% else %} ribbon-gray
-                        {% endif %}">
-                    {{ evento.eve_estado }}
-                </div>
+            <div class="card-body d-flex flex-column p-4">
+              <h5 class="card-title fw-semibold text-truncate">
+                {{ evento.eve_nombre }}
+              </h5>
+
+              <p class="card-text text-muted small flex-grow-1">
+                {{ evento.eve_descripcion|truncatewords:25 }}<br>
+                <strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}<br>
+                <strong>📅 Inicio:</strong> {{ evento.eve_fecha_inicio }}<br>
+                <strong>🏁 Fin:</strong> {{ evento.eve_fecha_fin }}
+              </p>
+
+              <div class="d-flex justify-content-center gap-2 mt-auto">
+                <a href="{% url 'main:evento_detalle' evento.eve_id %}"
+                   class="btn btn-outline-primary btn-sm">
+                  Ver detalle
+                </a>
+                <a href="{% url 'registros:registrarme_evento' evento.eve_id %}"
+                   class="btn btn-primary btn-sm">
+                  Registrarme
+                </a>
+              </div>
             </div>
+
+            <div class="ribbon
+              {% if evento.eve_estado == 'ACTIVO' %} ribbon-green
+              {% elif evento.eve_estado == 'CREADO' %} ribbon-yellow
+              {% else %} ribbon-gray
+              {% endif %}">
+              {{ evento.eve_estado }}
+            </div>
+
+          </div>
         </div>
-        {% endfor %} {% else %}
-        <div class="col-12 text-center py-5">
-            <i class="fas fa-info-circle fs-3 text-muted mb-3"></i>
-            <p class="fs-5 text-muted">No hay eventos disponibles en este momento.</p>
-        </div>
-        {% endif %}
-    </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-12 text-center text-muted py-5">
+        No hay eventos disponibles.
+      </div>
+    {% endif %}
+  </div>
 </div>
+{% endblock %}
+
 
 <style>
     .event-card {
