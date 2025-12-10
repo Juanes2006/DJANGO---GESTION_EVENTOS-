@@ -86,7 +86,7 @@ def login_view(request):
 
 
 def lista_eventos(request):
-    eventos = Evento.objects.filter(eve_estado="Activo")
+    eventos = Evento.objects.filter(eve_estado__iexact="activo")
     return render(request, 'app_eventos/lista_eventos.html', {
         'titulo': "Eventos Activos",
         'eventos': eventos
