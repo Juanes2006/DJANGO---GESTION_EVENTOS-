@@ -1,8 +1,9 @@
 
 from pathlib import Path
 import os
-from django.core.management.utils import get_random_secret_key
+from django.core.management.utils import get_random_secret_key 
 import dj_database_url
+from decouple import config
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -284,15 +285,6 @@ NOTIFICATIONS_SETTINGS = {
 
 #### CONFIGURACION DE MENSAJES POR GMAIL Y TWILIO ####
 # gmail
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'juanestebanmarulandalopez407@gmail.com'         # Reemplaza por tu correo real
-EMAIL_HOST_PASSWORD = 'tnxy tzxx zgxf etqc'    # Pon aquí la contraseña de aplicación que creaste
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Usar el mismo correo como remitente por defecto
-
-
 
 
 """ LOGIN_URL = 'main:login_view'  # Asegúrate de que 'login' sea el nombre de tu vista de login
@@ -335,4 +327,26 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 
+#breo
+
+USE_BREVO = config("USE_BREVO", default=False, cast=bool)
+
+if USE_BREVO:
+    # Producción: Brevo por API HTTP (Anymail)
+    EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
+    DEFAULT_FROM_EMAIL = "correosdjango073@gmail.com"
+
+    ANYMAIL = {
+        "BREVO_API_KEY": config("BREVO_API_KEY"),
+    }
+else:
+    # Desarrollo local: Gmail SMTP
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = config('EMAIL_HOST')
+    EMAIL_PORT = config('EMAIL_PORT', cast=int)
+    EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
+    EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    
 
