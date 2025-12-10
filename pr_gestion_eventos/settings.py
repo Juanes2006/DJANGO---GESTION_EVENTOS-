@@ -35,12 +35,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'anymail',
-    "imagekitio_storage",
-
+    'cloudinary',
+    'cloudinary_storage',
 
     # Terceros
-    # 'cloudinary', 'cloudinary_storage' eliminado porque usamos ImageKit
 
     # Tus apps
     'app_usuarios',
@@ -115,6 +113,20 @@ WSGI_APPLICATION = 'pr_gestion_eventos.wsgi.application'
 DATABASES = {
    'default': dj_database_url.config(conn_max_age=600, ssl_require=not DEBUG)
 }
+
+#Conexion base de datos local MYSQL workbech
+
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+##        'NAME': 'eventos',
+#        'USER': 'root',
+#        'PASSWORD': 'root',
+#        'HOST': 'localhost',
+#        'PORT': '3306',
+#    }
+#}
+
 
 # ==========================
 # AUTH PASSWORD VALIDATION
@@ -215,13 +227,22 @@ else:
     DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # ==========================
-# IMAGEKIT
+# claudinary settings
 # ==========================
-IMAGEKIT_PUBLIC_KEY = config("IMAGEKIT_PUBLIC_KEY")
-IMAGEKIT_PRIVATE_KEY = config("IMAGEKIT_PRIVATE_KEY")
-IMAGEKIT_URL_ENDPOINT = config("IMAGEKIT_URL_ENDPOINT")
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+import os
 
-DEFAULT_FILE_STORAGE = 'imagekitio.storage.ImageKitStorage'
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    secure=True
+)
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 
 
 # ==========================
