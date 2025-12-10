@@ -16,13 +16,18 @@ from django.http import JsonResponse
 from django.db import transaction
 
 
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.db import transaction
+from django.contrib.auth.decorators import login_required
+
 @login_required
 def crear_evento(request):
     print("➡️ Entrando a la vista crear_evento")
     categorias = Categoria.objects.all()
 
     if request.method == "POST":
-        print("✅ Request es POST (AJAX)")
+        print("✅ Request es POST (MODAL)")
 
         try:
             print("📩 Datos recibidos:", request.POST)
@@ -51,8 +56,6 @@ def crear_evento(request):
                 }, status=403)
 
             with transaction.atomic():
-
-                # ✅ Crear evento (FORMA CORRECTA)
                 evento = Evento.objects.create(
                     eve_nombre=nombre,
                     eve_descripcion=descripcion,
@@ -68,7 +71,6 @@ def crear_evento(request):
                     archivo_programacion=archivo_pdf
                 )
 
-                # ✅ Asociar categoría
                 if categoria_id:
                     EventoCategoria.objects.create(
                         evento=evento,
@@ -79,8 +81,7 @@ def crear_evento(request):
 
             return JsonResponse({
                 "status": "success",
-                "message": f"¡Se ha creado el evento {evento.eve_nombre}!",
-                "evento_id": evento.eve_id
+                "message": "Evento creado correctamente"
             })
 
         except Exception as e:
@@ -90,8 +91,10 @@ def crear_evento(request):
                 "message": str(e)
             }, status=500)
 
-    print("ℹ️ Request GET - Mostrando formulario")
-    return render(request, "admin/ventana.html", {"categorias": categorias})
+    # ✅ GET (carga la página que contiene el modal)
+    return render(request, "admin_evento/administrador_evento.html", {
+        "categorias": categorias
+    })
 
 ##################################################################
 
@@ -149,7 +152,7 @@ def editar_evento(request, pk):
         return redirect("admin_evento:ventana")
 
     # ----- GET request -----
-    return render(request, "app_eventos/editar_evento.html", {
+    return render(request, "admin_evento/administrador_evento.html", {
         "evento": evento,
     })
 
