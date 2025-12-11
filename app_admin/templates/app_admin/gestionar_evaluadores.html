@@ -15,6 +15,7 @@
                             <th>👤 Nombre</th>
                             <th>📧 Correo</th>
                             <th>📌 Estado</th>
+                            <th>📂 Documentos</th>
                             <th>⚙️ Acciones</th>
                         </tr>
                     </thead>
@@ -31,6 +32,17 @@
                                 <span class="badge bg-success">✅ Aceptado</span> {% elif estado == 'RECHAZADO' %}
                                 <span class="badge bg-danger">❌ Rechazado</span> {% else %}
                                 <span class="badge bg-secondary">🔍 Desconocido</span> {% endif %} {% endwith %}
+                            </td>
+                            <td>
+                                {% if evaluador.eva_eve_documentos %}
+    <a href="{{ evaluador.eva_eve_documentos.url }}" target="_blank">
+        📄 Ver Documento
+    </a>
+{% else %}
+    <span class="badge bg-secondary">Sin documentos</span>
+{% endif %}
+
+
                             </td>
                             <td class="text-center">
                                 <form action="{% url 'admin_evento:actualizar_estado' %}" method="post">
@@ -50,6 +62,7 @@
                                 <button type="button" class="btn btn-info btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#modalPlantillaEvaluador{{ evaluador.id }}">
     📩 Enviar Certificado Evaluador
 </button>
+
                                 <div class="modal fade" id="modalPlantillaEvaluador{{ evaluador.id }}" tabindex="-1" aria-labelledby="modalLabel{{ evaluador.id }}" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content border-primary shadow-lg">

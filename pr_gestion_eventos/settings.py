@@ -119,16 +119,16 @@ DATABASES = {
 }
 
 # ⛔ SOLO DESARROLLO LOCAL (MYSQL WORKBENCH)
-# DATABASES = {
+#DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'eventos',
+##         'ENGINE': 'django.db.backends.mysql',
+#        'NAME': 'eventos',
 #         'USER': 'root',
 #         'PASSWORD': 'root',
 #         'HOST': 'localhost',
 #         'PORT': '3306',
 #     }
-# }
+#     }
 
 # ==========================
 # AUTH PASSWORD VALIDATION ✅
@@ -222,6 +222,15 @@ cloudinary.config(
     api_secret=os.getenv("CLOUDINARY_API_SECRET"),
     secure=True
 )
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv("CLOUDINARY_CLOUD_NAME"),
+    'API_KEY': os.getenv("CLOUDINARY_API_KEY"),
+    'API_SECRET': os.getenv("CLOUDINARY_API_SECRET"),
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 

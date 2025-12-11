@@ -32,12 +32,16 @@
                     </td>
 
                     <td>
-                        {% if asistente.asi_eve_soporte %}
-                        <a href="{% static asistente.asi_eve_soporte %}" target="_blank" class="text-decoration-none">
-                                        📄 Ver Soporte de Pago
-                                    </a> {% else %}
-                        <span class="badge bg-secondary">🚫 Sin Soporte de Pago</span> {% endif %}
-                    </td>
+    {% if asistente.asi_eve_soporte %}
+        <a href="{{ asistente.asi_eve_soporte.url }}" target="_blank" class="text-decoration-none">
+            📄 Ver Soporte de Pago
+        </a>
+    {% else %}
+        <span class="badge bg-secondary">🚫 Sin Soporte de Pago</span>
+    {% endif %}
+</td>
+
+
 
                     <td class="text-center">
                         <form action="{% url 'admin_evento:actualizar_estado' %}" method="post" class="d-inline">

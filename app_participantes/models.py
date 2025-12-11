@@ -1,6 +1,8 @@
 from django.db import models
 from app_eventos.models import Evento
 from app_usuarios.models import Usuario
+from cloudinary.models import CloudinaryField
+
 
 class Participantes(models.Model):
     
@@ -22,7 +24,12 @@ class ParticipantesEventos(models.Model):
     par_eve_participante_fk = models.ForeignKey(Participantes,null=True, on_delete=models.CASCADE)
     par_eve_evento_fk = models.ForeignKey(Evento, null=True, on_delete=models.CASCADE)
     par_eve_fecha_hora = models.DateTimeField()
-    par_eve_documentos = models.CharField(max_length=255, null=True, blank=True)
+    par_eve_documentos = CloudinaryField(
+    resource_type="auto",            # permite imágenes, pdf, doc, etc.
+    folder="documentos_participantes/",  # carpeta en Cloudinary
+    null=True,
+    blank=True
+)
     par_eve_or = models.CharField(max_length=255, null=True, blank=True)
     par_eve_clave = models.CharField(max_length=45)
     par_estado = models.CharField(max_length=10, choices=ESTADOS, default='PENDIENTE')

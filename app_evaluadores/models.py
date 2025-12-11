@@ -2,6 +2,8 @@ from django.db import models
 from app_eventos.models import Evento
 from app_participantes.models import Participantes
 from app_usuarios.models import Usuario
+from cloudinary.models import CloudinaryField
+
 
 class Evaluador(models.Model):
     eventos = models.ManyToManyField(Evento, through='EvaluadorEventos', related_name='evaluadores')
@@ -27,7 +29,12 @@ class EvaluadorEventos(models.Model):
     eva_eve_evaluador_fk = models.ForeignKey(Evaluador,null=True, on_delete=models.CASCADE)
     eva_eve_evento_fk = models.ForeignKey(Evento,null=True, on_delete=models.CASCADE)
     eva_eve_fecha_hora = models.DateTimeField()
-    eva_eve_documentos = models.CharField(max_length=255, null=True, blank=True)
+    eva_eve_documentos = CloudinaryField(
+    resource_type="auto",
+    folder="documentos_evaluadores/",
+    null=True,
+    blank=True
+)    
     eva_eve_or = models.CharField(max_length=255, null=True, blank=True)
     eva_eve_clave = models.CharField(max_length=45)
     eva_estado = models.CharField(max_length=10, choices=ESTADOS, default='PENDIENTE')
