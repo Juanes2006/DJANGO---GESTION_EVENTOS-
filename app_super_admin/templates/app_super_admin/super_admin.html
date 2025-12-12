@@ -1,5 +1,5 @@
 {% extends 'app_main/base.html' %} {% load static %}{% block nav_links %}
-<div class="dropdown ms-auto position-relative me-3">
+<div class="position-fixed top-0 end-0 m-3" style="z-index: 1050;">
     <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="bi bi-person-circle fs-5"></i>
         👤 {{ request.user.first_name }}

@@ -31,7 +31,7 @@
 
         <div class="text-center ">
             <h2 class="mb-4 fw-bold text-primary ">Mis Eventos</h2>
-            <p class="lead ">Estos son los eventos donde estás inscrito como participante.</p>
+            <p class="lead ">Estos son los eventos donde estás inscrito como <h3 class="mb-4 fw-bold text-primary ">Participante.</h3></p>
         </div>
 
         <div class="row g-4 ">
@@ -40,12 +40,18 @@
                 <div class="card h-100 shadow-sm rounded-5 event-card position-relative overflow-hidden ">
 
                     <!-- Imagen del evento -->
-                    {% if evento.imagen %}
-                    <img src="{% static 'imagenes/'|add:evento.imagen %} " class="card-img-top rounded-top " alt="Imagen del evento " style="height: 220px; width: 100%; object-fit: cover; "> {% else %}
-                    <div class="no-image-placeholder rounded-top d-flex align-items-center justify-content-center text-secondary fs-4 " style="height: 220px; background:#f8f9fa; ">
-                        <i class="fas fa-calendar-alt "></i>
-                    </div>
-                    {% endif %}
+                    {% load static %} {% if evento.imagen %}
+<div class="text-center mb-4">
+    <img src="{{ evento.imagen.url }}"
+         alt="Imagen del evento"
+         class="img-fluid rounded shadow-sm"
+         style="max-height: 400px; width: 100%; object-fit: contain;">
+</div>
+{% else %}
+<p class="text-muted fst-italic mb-4 text-center">
+    No hay imagen disponible para este evento.
+</p>
+{% endif %}
 
                     <!-- Contenido del evento -->
                     <div class="card-body d-flex flex-column p-4 ">
