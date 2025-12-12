@@ -12,40 +12,65 @@
     </ul>
 </div>
 {% endblock %} {% block content %}
-<div class="container mt-5 ">
-    <div class="row justify-content-center ">
-        <div class="col-md-6 ">
-            <div class="card shadow-lg border-0 rounded-4 ">
-                <div class="card-body p-5 ">
-                    <h2 class="text-center mb-4 text-primary fw-bold ">🔐 Iniciar Sesión</h2>
+<div class="co{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-4 p-md-5">
 
+                    <h2 class="text-center mb-4 text-primary fw-bold">
+                        🔐 Iniciar Sesión
+                    </h2>
 
                     <form method="POST" novalidate>
                         {% csrf_token %}
+
+                        <!-- Email -->
                         <div class="mb-4">
                             <label for="email" class="form-label fw-semibold">📧 Correo Electrónico</label>
-                            <input type="email" class="form-control form-control-lg" id="email" name="email" placeholder="ejemplo@correo.com" required>
+                            <input type="email" class="form-control form-control-lg" id="email" 
+                                   name="email" placeholder="ejemplo@correo.com" required>
                         </div>
 
+                        <!-- Password + toggle -->
                         <div class="mb-4">
                             <label for="password" class="form-label fw-semibold">🔒 Contraseña</label>
-                            <input type="password" class="form-control form-control-lg" id="password" name="password" placeholder="Tu contraseña" required>
+                            <div class="input-group">
+                                <input type="password" class="form-control form-control-lg" id="password"
+                                       name="password" placeholder="Tu contraseña" required>
+                                <button type="button" class="btn btn-outline-primary" id="togglePassword">
+                                    <i class="bi bi-eye-fill" id="icon-password"></i>
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg shadow-sm">
-            🚀 Iniciar Sesión
-        </button>
+                        <!-- Submit -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm fw-semibold">
+                                🚀 Iniciar Sesión
+                            </button>
                         </div>
                     </form>
 
-
-                    <p class="text-muted text-center mt-4 fst-italic " style="font-size: 0.9rem; ">
-                        Acceso solo permitido a usuarios registrados con rol asignado.
+                    <p class="text-muted text-center mt-4 fst-italic" style="font-size: 0.9rem;">
+                        Acceso permitido solo a usuarios registrados con rol asignado.
                     </p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Mostrar/Ocultar contraseña -->
+<script>
+document.getElementById("togglePassword").addEventListener("click", function () {
+    const passwordField = document.getElementById("password");
+    const icon = document.getElementById("icon-password");
+
+    const isHidden = passwordField.type === "password";
+    passwordField.type = isHidden ? "text" : "password";
+    icon.className = isHidden ? "bi bi-eye-slash-fill" : "bi bi-eye-fill";
+});
+</script>
 {% endblock %}

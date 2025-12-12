@@ -52,9 +52,8 @@
         <div class="mb-3">
             <label class="form-label">Documento actual del evento {{ evento_nombre }}</label>
             <p>
-                <a href="{% static 'uploads/' %}{{ evento_participante.par_eve_documentos }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                            📄 Ver documento actual
-                        </a>
+                    <a href="{{ evento.par_eve_documentos.url }}" target="_blank">📄 Ver Documento Actual</a>
+
             </p>
         </div>
         {% endif %} {% endfor %} {% endif %}

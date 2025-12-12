@@ -39,10 +39,12 @@
                 <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% else %}
                 <span class="badge bg-danger">❌ Rechazado</span> {% endif %}
                 <br> {% if evento.par_eve_documentos %}
-                <strong>📂 Documento:</strong>
-                <a href="{% static 'uploads/' %}{{ evento.par_eve_documentos }}" target="_blank">📄 Ver Documento</a> {% else %}
-                <p class="text-muted">No se han cargado documentos.</p>
-                {% endif %}
+    <strong>📂 Documento:</strong>
+    <a href="{{ evento.par_eve_documentos.url }}" target="_blank">📄 Ver Documento</a>
+{% else %}
+    <p class="text-muted">No se han cargado documentos.</p>
+{% endif %}
+
 
                 <br>
                 <strong>🏆 Puntaje Promedio:</strong> {{ evento.promedio|default:"No disponible" }}<br>

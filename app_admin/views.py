@@ -301,7 +301,7 @@ def actualizar_estado(request):
                 usuario.save()
                 qr_contenido = f"Evaluador: {nombre}\nClave: {clave}\nEvento ID: {evento.eve_id}"
                 qr_img = generar_qr_contenido(qr_contenido)
-                mensaje +=f"Hola {usuario.first_name},\n\nHas sido aceptado como Evaluador en el evento.\n\nTus credenciales:\nUsuario: {usuario.email}\nContraseña: {nueva_password}\n\nPor favor cambia tu contraseña después de iniciar sesión."
+                mensaje +=f"\nHas sido aceptado como Evaluador en el evento.\n\nTus credenciales:\nUsuario: {usuario.email}\nContraseña: {nueva_password}\n\nPor favor cambia tu contraseña después de iniciar sesión."
                 email = EmailMessage(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
                 email.attach('qr_evaluador.png', qr_img.read(), 'image/png')
                 email.send()
@@ -331,7 +331,7 @@ def actualizar_estado(request):
                 usuario.save()
                 qr_contenido = f"Asistente: {nombre}\nEvento ID: {evento.eve_id}\nEstado: {nuevo_estado}"
                 qr_img = generar_qr_contenido(qr_contenido)
-                mensaje +=f"Hola {usuario.first_name},\n\nHas sido aceptado como Asistente en el evento.\n\nTus credenciales:\nUsuario: {usuario.email}\nContraseña: {nueva_password}\n\nPor favor cambia tu contraseña después de iniciar sesión."
+                mensaje +=f"\nHas sido aceptado como Asistente en el evento.\n\nTus credenciales:\nUsuario: {usuario.email}\nContraseña: {nueva_password}\n\nPor favor cambia tu contraseña después de iniciar sesión."
                 email = EmailMessage(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
                 email.attach('qr_asistente.png', qr_img.read(), 'image/png')
                 email.send()

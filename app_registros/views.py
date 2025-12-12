@@ -102,21 +102,25 @@ def registrarme_evento(request, evento_id):
 
             if tipo == 'asistente':
                 asistente, _ = Asistentes.objects.get_or_create(usuario=usuario)
+
                 if not AsistentesEventos.objects.filter(
-                        asi_eve_asistente_fk=asistente,
-                        asi_eve_evento_fk=evento).exists():
-                    soporte_pago_filename = guardar_archivo(soporte_pago_file) if soporte_pago_file else None
+                    asi_eve_asistente_fk=asistente,
+                    asi_eve_evento_fk=evento
+                    ).exists():
+
                     AsistentesEventos.objects.create(
                         asi_eve_asistente_fk=asistente,
                         asi_eve_evento_fk=evento,
                         asi_eve_fecha_hora=timezone.now(),
-                        asi_eve_soporte=soporte_pago_filename,
+                        asi_eve_soporte=soporte_pago_file,   
                         asi_eve_estado='Registrado',
                         asi_eve_clave=clave_segura
                     )
+
                     messages.success(request, "¡Te has preinscrito exitosamente como Asistente!")
                 else:
                     messages.info(request, "Ya estás registrado como asistente en este evento.")
+                messages.info(request, "Ya estás registrado como asistente en este evento.")
 
             elif tipo == 'participante':
                 participante, _ = Participantes.objects.get_or_create(usuario=usuario)
