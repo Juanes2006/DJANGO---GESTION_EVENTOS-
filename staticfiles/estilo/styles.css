@@ -1,0 +1,29 @@
+body {
+    background: #f9f9f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand img.logo {
+    height: 40px;
+    transition: transform 0.3s ease;
+}
+
+.navbar-brand img.logo:hover {
+    transform: scale(1.1);
+}
+
+footer {
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.no-click a {
+    pointer-events: none;
+    cursor: default;
+    text-decoration: none;
+    color: inherit;
+}
+
+.logo {
+    width: 45px;
+    height: auto;
+}
