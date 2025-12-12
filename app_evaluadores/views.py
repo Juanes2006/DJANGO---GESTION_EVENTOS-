@@ -347,7 +347,7 @@ def logout_evaluador(request):
     request.session.pop('otro_dato_custom', None)
 
     messages.success(request, "🔒 Has cerrado sesión correctamente.")
-    return redirect('main:login_view')
+    return redirect('main:login')
 
 @login_required
 # --- Ver calificaciones evento ---

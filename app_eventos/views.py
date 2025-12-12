@@ -79,11 +79,9 @@ def crear_evento(request):
 
             print(f"✅ Evento creado correctamente: {evento.eve_nombre}")
 
-            return JsonResponse({
-                "status": "success",
-                "message": "Evento creado correctamente"
-            })
-
+            messages.success(request, "Evento creado correctamente.")
+            return redirect('admin_evento:ventana')
+        
         except Exception as e:
             print(f"❌ Error creando evento: {e}")
             return JsonResponse({
