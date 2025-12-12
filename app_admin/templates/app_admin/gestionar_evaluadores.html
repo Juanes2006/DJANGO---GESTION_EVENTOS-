@@ -34,37 +34,44 @@
                                 <span class="badge bg-secondary">🔍 Desconocido</span> {% endif %} {% endwith %}
                             </td>
                             <td>
-    {% if evaluador.eva_eve_documentos %}
-        {% if evaluador.eva_eve_documentos.url|lower endswith ".jpg" or evaluador.eva_eve_documentos.url|lower endswith ".jpeg" or evaluador.eva_eve_documentos.url|lower endswith ".png" %}
-            <!-- Miniatura para imágenes -->
-            <img src="{{ evaluador.eva_eve_documentos.url }}" 
-                 alt="Documento" 
-                 class="img-thumbnail"
-                 style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
-                 data-bs-toggle="modal"
-                 data-bs-target="#modalImagen{{ evaluador.id }}">
+                                {% if evaluador.eva_eve_documentos %}
+    <a href="{{ evaluador.eva_eve_documentos.url }}" target="_blank">
+        📄 Ver Documento
+    </a>
+{% else %}
+    <span class="badge bg-secondary">Sin documentos</span>
+{% endif %}
 
-            <!-- Modal -->
-            <div class="modal fade" id="modalImagen{{ evaluador.id }}" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-body p-0 text-center">
-                            <img src="{{ evaluador.eva_eve_documentos.url }}" class="img-fluid rounded">
-                        </div>
+
+                            </td>
+                             <td>
+    {% if evaluador.eva_eve_documentos  %}
+
+        <!-- Miniatura -->
+        <img src="{{  evaluador.eva_eve_documentos.url}}" 
+             alt="Documento" 
+             class="img-thumbnail"
+             style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
+             data-bs-toggle="modal"
+             data-bs-target="#modalImagen{{ evaluador.id }}">
+
+        <!-- Modal -->
+        <div class="modal fade" id="modalImagen{{ evaluador.id }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-body p-0 text-center">
+                        <img src="{{ evaluador.eva_eve_documentos.url }}" 
+                             class="img-fluid rounded">
                     </div>
                 </div>
             </div>
-        {% else %}
-            <!-- Link para documentos que no son imágenes -->
-            <a href="{{ evaluador.eva_eve_documentos.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
-                📄 Ver Documento
-            </a>
-        {% endif %}
+        </div>
+
     {% else %}
         <span class="badge bg-secondary">Sin documentos</span>
     {% endif %}
 </td>
-                  <td class="text-center">
+                            <td class="text-center">
                                 <form action="{% url 'admin_evento:actualizar_estado' %}" method="post">
                                     {% csrf_token %}
                                     <input type="hidden" name="usuario_id" value="{{ evaluador.id }}">

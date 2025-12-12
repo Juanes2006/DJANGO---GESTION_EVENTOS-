@@ -38,40 +38,14 @@
 
 
 
-                           <td>
-    {% if participante.par_eve_documentos %}
-        {% if participante.par_eve_documentos.url|lower endswith ".jpg" or participante.par_eve_documentos.url|lower endswith ".jpeg" or participante.par_eve_documentos.url|lower endswith ".png" %}
-            <!-- Miniatura para imágenes -->
-            <img src="{{ participante.par_eve_documentos.url }}" 
-                 alt="Documento" 
-                 class="img-thumbnail"
-                 style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
-                 data-bs-toggle="modal"
-                 data-bs-target="#modalImagen{{ participante.id }}">
+                            <td>
+                                {% if participante.par_eve_documentos %}
+    <a href="{{ participante.par_eve_documentos.url }}" target="_blank">📄 Ver Documento</a>
+{% else %}
+    <span class="badge bg-secondary">Sin documentos</span>
+{% endif %}
 
-            <!-- Modal -->
-            <div class="modal fade" id="modalImagen{{ participante.id }}" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-body p-0 text-center">
-                            <img src="{{ participante.par_eve_documentos.url }}" 
-                                 class="img-fluid rounded">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% else %}
-            <!-- Link para documentos que no son imágenes -->
-            <a href="{{ participante.par_eve_documentos.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
-                📄 Ver Documento
-            </a>
-        {% endif %}
-    {% else %}
-        <span class="badge bg-secondary">Sin documentos</span>
-    {% endif %}
-</td>
-
-
+                            </td>
                             <td class="text-center">
                                 <form action="{% url 'admin_evento:actualizar_estado' %}" method="post" class="d-inline">
                                     {% csrf_token %}

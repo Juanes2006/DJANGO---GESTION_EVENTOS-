@@ -1,24 +1,24 @@
-{% extends "app_main/base.html" %} {% block title %}Carga Instrumento de Evaluación{% endblock %}{% block content %}
+{% extends "app_main/base.html" %} {% block content %}
 <div class="container mt-5">
     <div class="card shadow p-4 rounded-4">
         <h2 class="text-center mb-4">📋 Cargar Instrumento de Evaluación</h2>
 
         <form method="POST">
             {% csrf_token %}
-
             <div class="mb-3">
                 <label for="tipo" class="form-label">Tipo de Instrumento:</label>
-                <select name="tipo" id="tipo" class="form-control">
-                    <option value="">Seleccione un tipo</option>
-                    <option value="rubrica">Rúbrica</option>
-                    <option value="lista">Lista de Chequeo</option>
-                    <option value="plantilla">Plantilla</option>
+                <select name="tipo" id="tipo" class="form-select" required>
+                    <option value="Rúbrica" {% if instrumento and instrumento.inst_tipo == "Rúbrica" %}selected{% endif %}>Rúbrica</option>
+                    <option value="Lista de Chequeo" {% if instrumento and instrumento.inst_tipo == "Lista de Chequeo" %}selected{% endif %}>Lista de Chequeo</option>
+                    <option value="Plantilla" {% if instrumento and instrumento.inst_tipo == "Plantilla" %}selected{% endif %}>Plantilla</option>
                 </select>
             </div>
 
             <div class="mb-3">
                 <label for="descripcion" class="form-label">Descripción:</label>
-                <textarea name="descripcion" id="descripcion" class="form-control" rows="4"></textarea>
+                <textarea name="descripcion" id="descripcion" class="form-control" rows="4" required>
+{{ instrumento.inst_descripcion|default_if_none:'' }}
+                </textarea>
             </div>
 
             <div class="d-grid gap-2">
@@ -29,16 +29,4 @@
         </form>
     </div>
 </div>
-{% endblock %}
-
-
-{% block nav_links %}
-<li class="nav-item dropdown">
-   
-    <a class="nav-link" href="{% url 'admin_evento:ventana' %}">
-        <i class="fas fa-file-upload text-success fs-5"></i> Volver atrás
-    </a>
-
-    
-</li>
 {% endblock %}

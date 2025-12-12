@@ -18,7 +18,19 @@
                 <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% else %}
                 <span class="badge bg-danger">❌ Rechazado</span> {% endif %}
                 <br>
-                <strong>📂 Documento:</strong> {% if asignacion.eva_eve_documentos %}
+                <strong>📂 Documento:</strong> {% if evaluador.eva_eve_documentos %}
+        <div class="mb-3">
+            <label class="form-label">Documento actual:</label>
+            <p>
+            <a href="{{ evaludador.eva_eve_documentos.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                📄 Ver Documento
+            </a>
+            </p>
+        </div>
+        {% else %}
+        <p class="text-muted">No se ha cargado un documento aún.</p>
+        {% endif %}
+                <br>  {% if asignacion.eva_eve_documentos %}
         <div class="mb-3">
             <label class="form-label">Documento actual:</label>
             <p>
@@ -30,16 +42,6 @@
         {% else %}
         <p class="text-muted">No se ha cargado un documento aún.</p>
         {% endif %}
-                <br>  {% if evento.archivo_programacion %}
-                <div class="my-4">
-                    <a href="{{ evento.archivo_programacion.url }}" target="_blank"
-                       class="btn btn-outline-success btn-lg shadow-sm">
-                        📄 Ver Archivo de Programación
-                    </a>
-                </div>
-            {% else %}
-                <p class="text-muted fst-italic">No hay archivo de programación disponible.</p>
-            {% endif %}
 
 
                 <!-- Botones de acción -->

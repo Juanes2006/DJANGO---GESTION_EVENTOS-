@@ -610,22 +610,22 @@ def gestionar_inscripciones(request, eve_id):
         par_eve_evento_fk=eve_id
     ).select_related('par_eve_participante_fk__usuario')
 
+    
     participantes = []
     for pe in participantes_eventos:
-        participante = pe.par_eve_participante_fk
-        if not participante or not hasattr(participante, 'usuario'):
-            continue  # evita error 500 si falta relación
-
-        usuario = participante.usuario
+        asistente = pe.par_eve_participante_fk  # instancia de Asistentes
+        usuario = asistente.usuario
         participantes.append({
             'id': usuario.id,
+            
             'username': usuario.username,
             'email': usuario.email,
             'first_name': usuario.first_name,
             'last_name': usuario.last_name,
-            'par_estado': getattr(pe, 'par_estado', 'N/A'),  # seguro si no existe
-            'par_eve_documentos': pe.par_eve_documentos,      # CloudinaryField
+            'par_estado': pe.par_estado,
+            'par_eve_documentos': pe.par_eve_documentos,
         })
+    
 
     return render(request, "app_evaluadores/ver_participantes.html", {
         'evento': evento,
