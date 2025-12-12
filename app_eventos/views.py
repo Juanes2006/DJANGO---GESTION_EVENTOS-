@@ -150,7 +150,7 @@ def editar_evento(request, pk):
         return redirect("admin_evento:ventana")
 
     # ----- GET request -----
-    return render(request, "admin_evento/administrador_evento.html", {
+    return render(request, "app_eventos/editar_evento.html", {
         "evento": evento,
     })
 

@@ -184,3 +184,11 @@
     })();
 </script>
 {% endblock %}
+
+{% block nav_links %} <div class="text-center mt-5">
+                <a href="{% url 'main:lista_eventos' %}" class="btn btn-secondary btn-lg px-4 shadow-sm">
+                    ← Volver
+                </a>
+            </div>
+
+{% endblock %}
