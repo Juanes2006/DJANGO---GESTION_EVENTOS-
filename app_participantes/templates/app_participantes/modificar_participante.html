@@ -51,10 +51,10 @@
         {% if participante.participante_eventos %} {% for evento_participante in participante.participante_eventos %} {% if evento_participante.par_eve_documentos %}
         <div class="mb-3">
             <label class="form-label">Documento actual del evento {{ evento_nombre }}</label>
-            <p>
-                    <a href="{{ evento.par_eve_documentos.url }}" target="_blank">📄 Ver Documento Actual</a>
+            <a href="{{ evento_participante.par_eve_documentos.url }}" target="_blank">
+    📄 Ver Documento Actual
+</a>
 
-            </p>
         </div>
         {% endif %} {% endfor %} {% endif %}
 

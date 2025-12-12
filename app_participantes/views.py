@@ -65,43 +65,36 @@ def ver_memorias_evento(request, evento_id):
 
 
 @login_required
-
 def modificar_participante(request, user_id, evento_id):
     participante = get_object_or_404(Participantes, pk=user_id)
-    evento_participante = ParticipantesEventos.objects.filter(
-        par_eve_participante_fk=user_id,
+    evento_participante = get_object_or_404(
+        ParticipantesEventos,
+        par_eve_participante_fk=participante,
         par_eve_evento_fk=evento_id
-    ).first()
+    )
     evento = get_object_or_404(Evento, pk=evento_id)
 
-    if not evento_participante:
-        messages.error(request, "No se encontró la inscripción para este evento.")
-        return redirect('consulta_qr')  # Ajusta esta URL si es necesario
-
     if request.method == 'POST':
-        participante.par_nombre = request.POST.get('nombre')
-        participante.par_correo = request.POST.get('correo')
-        participante.par_telefono = request.POST.get('telefono')
+        usuario = participante.usuario
+        usuario.first_name = request.POST.get('nombre')
+        usuario.email = request.POST.get('correo')
+        usuario.telefono = request.POST.get('telefono')
+        usuario.save()
 
         file = request.FILES.get('documento')
         if file:
-            filename = save_file(file, settings.UPLOAD_FOLDER_PAGOS, settings.ALLOWED_EXTENSIONS_PAGOS)
-            if filename:
-                evento_participante.par_eve_documentos = filename
-            else:
-                messages.warning(request, "Extensión no permitida o error al guardar el archivo")
+            evento_participante.par_eve_documentos = file
 
-        participante.save()
         evento_participante.save()
+
         messages.success(request, "Información actualizada con éxito")
         return redirect('participantes:mi_info')
 
-    context = {
+    return render(request, 'app_participantes/modificar_participante.html', {
         'participante': participante,
         'evento_participante': evento_participante,
         'evento_nombre': evento.eve_nombre,
-    }
-    return render(request, 'app_participantes/modificar_participante.html', context)
+    })
 
 
 @login_required

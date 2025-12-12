@@ -50,3 +50,35 @@ def ver_memorias_evento_asis(request, evento_id):
         "memorias": memorias
     })
 
+@login_required
+def modificar_asistente(request, user_id, evento_id):
+    usuario = get_object_or_404(Usuario, pk=user_id)
+    evento = get_object_or_404(Evento, pk=evento_id)
+    asistente = get_object_or_404(Asistentes, usuario=usuario)
+
+    asi_eve = get_object_or_404(
+        AsistentesEventos,
+        asi_eve_asistente_fk=asistente,
+        asi_eve_evento_fk=evento
+    )
+
+    if request.method == "POST":
+        usuario.nombre = request.POST.get("nombre")
+        usuario.apellido = request.POST.get("apellido")
+        usuario.email = request.POST.get("email")
+        usuario.save()
+
+        # SOPORTE DE PAGO (Cloudinary)
+        soporte = request.FILES.get("soporte")
+        if soporte:
+            asi_eve.asi_eve_soporte = soporte
+            asi_eve.save()
+
+        messages.success(request, "Datos del asistente actualizados correctamente.")
+        return redirect('asistente:panel_asistente')
+
+    return render(request, "app_asistentes/modificar_asistente.html", {
+        "asistente": asistente,
+        "evento": evento,
+        "asi_eve": asi_eve
+    })
