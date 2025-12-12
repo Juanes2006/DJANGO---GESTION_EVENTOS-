@@ -46,6 +46,47 @@
 {% endif %}
 
                             </td>
+                            <td>
+{% if participante.par_eve_documentos %}
+
+    {% with participante.par_eve_documentos.url as doc_url %}
+        {% if doc_url|lower|slice:"-4:" == ".jpg" or
+              doc_url|lower|slice:"-4:" == ".png" or
+              doc_url|lower|slice:"-5:" == ".jpeg" or
+              doc_url|lower|slice:"-4:" == ".webp" %}
+
+            <!-- Miniatura del documento (imagen) -->
+            <img src="{{ doc_url }}"
+                 alt="Documento participante"
+                 class="img-thumbnail"
+                 style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
+                 data-bs-toggle="modal"
+                 data-bs-target="#modalDocParticipante{{ participante.id }}">
+
+            <!-- Modal imagen grande -->
+            <div class="modal fade" id="modalDocParticipante{{ participante.id }}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-body p-0 text-center">
+                            <img src="{{ doc_url }}" class="img-fluid rounded">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <!-- Si no es imagen (PDF, DOC, etc.) -->
+            <a href="{{ doc_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                📄 Ver Documento
+            </a>
+        {% endif %}
+    {% endwith %}
+
+{% else %}
+    <span class="badge bg-secondary">Sin documentos</span>
+{% endif %}
+</td>
+
                             <td class="text-center">
                                 <form action="{% url 'admin_evento:actualizar_estado' %}" method="post" class="d-inline">
                                     {% csrf_token %}
@@ -241,6 +282,6 @@
         <i class="fas fa-file-upload text-success fs-5"></i> Volver atrás
     </a>
 
-    
+  
 </li>
 {% endblock %}

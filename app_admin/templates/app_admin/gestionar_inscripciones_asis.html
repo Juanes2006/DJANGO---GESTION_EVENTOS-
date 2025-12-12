@@ -41,34 +41,34 @@
     {% endif %}
 </td>
 
-   <td>
-    {% if asistente.asi_eve_soporte %}
+<!-- Columna para mostrar el soporte de pago -->
+<td>
+ {% if asistente.asi_eve_soporte %}
 
-        <!-- Miniatura -->
-        <img src="{{ asistente.asi_eve_soporte.url }}" 
+      <!-- Miniatura del soporte de pago -->
+      <img src="{{ asistente.asi_eve_soporte.url }}" 
              alt="Soporte de Pago" 
              class="img-thumbnail"
              style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
              data-bs-toggle="modal"
              data-bs-target="#modalImagen{{ asistente.id }}">
-        <!-- Modal -->
-        <div class="modal fade" id="modalImagen{{ asistente.id }}" tabindex="-1">
+      <!-- Modal para mostrar la imagen en tamaño completo -->
+      <div class="modal fade" id="modalImagen{{ asistente.id }}" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <div class="modal-body p-0 text-center">
-                        <img src="{{ asistente.asi_eve_soporte.url }}" 
-                             class="img-fluid rounded">
-                    </div>
-                </div>
+                 <div class="modal-content">
+                      <div class="modal-body p-0 text-center">
+                            <img src="{{ asistente.asi_eve_soporte.url }}" 
+                                  class="img-fluid rounded">
+                      </div>
+                 </div>
             </div>
-        </div>
+      </div>
 
-    {% else %}
-        <span class="badge bg-secondary">Sin documentos</span>
-    {% endif %}
+ {% else %}
+      <!-- Mensaje cuando no hay soporte de pago -->
+      <span class="badge bg-secondary">Sin documentos</span>
+ {% endif %}
 </td>
-
-
 
                     <td class="text-center">
                         <form action="{% url 'admin_evento:actualizar_estado' %}" method="post" class="d-inline">
