@@ -5,7 +5,8 @@
     <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" 
             type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="bi bi-person-circle fs-5"></i>
-        👤 Perfil
+                 👤 {{ request.user.first_name }}
+
     </button>
 
 <ul class="dropdown-menu dropdown-menu-end shadow-lg animate__animated animate__fadeIn" 
@@ -29,24 +30,28 @@
     <li class="px-3 py-2 d-flex flex-column gap-2">
 
         <!-- Botón Crear Evento -->
-        <button type="button" class="btn fw-semibold shadow-sm text-white" 
-                style="background-color: #198754;"
-                data-bs-toggle="modal" data-bs-target="#modalCrearEvento">
+        <button type="button" class="dropdown-item d-flex align-items-center gap-2 text-primary" data-bs-toggle="modal" data-bs-target="#modalCrearEvento">
+
             <i class="bi bi-plus-circle me-2"></i> Crear Evento
         </button>
 
         <!-- Botón Estadísticas -->
-        <button type="button" class="btn fw-semibold shadow-sm text-white" 
-                style="background-color: #0b5ed7;" 
-                data-bs-toggle="modal" data-bs-target="#estadisticasModal">
+        <button type="button" class="dropdown-item d-flex align-items-center gap-2 text-primary" data-bs-toggle="modal" data-bs-target="#estadisticasModal">
+
             <i class="bi bi-bar-chart me-2"></i> Estadísticas
         </button>
 
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+
         <!-- Botón Cerrar Sesión -->
-        <a class="btn btn-danger fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2" 
-           href="{% url 'evaluadores:logout_evaluador' %}">
-            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-        </a>
+         <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'evaluadores:logout_evaluador' %}" title="Cerrar sesión">
+                <i class="bi bi-box-arrow-right fs-5"></i>
+                <span>🔴 Cerrar Sesión</span>
+            </a>
+        </li>
     </li>
 </ul>
 
@@ -56,6 +61,10 @@
 
 {% block content %}
 <div class="container mt-5">
+    <div class="text-start mb-2">
+        <p>👋 Bienvenid@, <strong>{{ request.user.username }}</strong></p>
+    </div>
+
     <h2 class="mb-4 text-center text-primary fw-bold">🎉 Tus Eventos Creados</h2>
 
     <div class="card shadow-sm border-0">

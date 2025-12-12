@@ -210,21 +210,7 @@ def generar_contrasena(longitud=10):
 from twilio.rest import Client
 from django.conf import settings
 
-def enviar_sms(destinatario, mensaje):
-   
-    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-    
-    try:
-        message = client.messages.create(
-            body=mensaje,
-            from_=settings.TWILIO_PHONE_NUMBER,
-            to=destinatario
-        )
-        return message.sid  # Devuelve el SID como confirmación
-    except Exception as e:
-        # Puedes loguearlo o manejarlo como desees
-        print(f"Error al enviar SMS: {e}")
-        return None
+
 
 
 def actualizar_estado(request):
@@ -286,14 +272,7 @@ def actualizar_estado(request):
                 email.send()
                 
                 
-                telefono = usuario.telefono.strip()
-                if not telefono.startswith('+'):
-                    telefono = '+57' + telefono.lstrip('0')  # Colombia por defecto
-                mensaje_sms = (
-                    f"Hola {usuario.first_name}, fuiste aceptado como Participante en {evento.eve_nombre}.\n"
-                    f"Usuario: {usuario.email}\nContraseña: {nueva_password}"
-                )
-                enviar_sms(telefono, mensaje_sms)
+                
             else:
                 send_mail(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
 
@@ -327,13 +306,7 @@ def actualizar_estado(request):
                 email.attach('qr_evaluador.png', qr_img.read(), 'image/png')
                 email.send()
                 
-                telefono = usuario.telefono.strip()
-                if not telefono.startswith('+'):
-                    telefono = '+57' + telefono.lstrip('0') (
-                    f"Hola {usuario.first_name}, fuiste aceptado como Participante en {evento.eve_nombre}.\n"
-                    f"Usuario: {usuario.email}\nContraseña: {nueva_password}\nPor favor cambia tu contraseña después de iniciar sesión."
-                )
-                enviar_sms(telefono, mensaje_sms)
+                
                 
             else:
                 send_mail(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
@@ -363,14 +336,7 @@ def actualizar_estado(request):
                 email.attach('qr_asistente.png', qr_img.read(), 'image/png')
                 email.send()
                 
-                telefono = usuario.telefono.strip()
-                if not telefono.startswith('+'):
-                    telefono = '+57' + telefono.lstrip('0')  
-                mensaje_sms = (
-                    f"Hola {usuario.first_name}, fuiste aceptado como Participante en {evento.eve_nombre}.\n"
-                    f"Usuario: {usuario.email}\nContraseña: {nueva_password}"
-                )
-                enviar_sms(telefono, mensaje_sms)
+               
             else:
                 send_mail(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, [correo])
         else:
