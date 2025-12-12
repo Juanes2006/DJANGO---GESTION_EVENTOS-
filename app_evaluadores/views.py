@@ -437,16 +437,15 @@ def modificar_evaluador(request, user_id, evento_id):
             usuario.telefono = telefono
 
         # Procesar el archivo si se envió
-        filename = None
         file = request.FILES.get('documento')
         if file:
-            filename = save_file(
-                file,
-                upload_folder=settings.UPLOAD_FOLDER_PAGOS,
-                allowed_extensions=settings.ALLOWED_EXTENSIONS_PAGOS
-            )
-            if filename:
-                asignacion.eva_eve_documentos = filename
+            asignacion.eva_eve_documentos = file
+            asignacion.save()
+            
+            if asignacion.eva_eve_documentos:
+                messages.success(request, "Documento actualizado correctamente.")
+            
+           
             else:
                 messages.warning(request, "Archivo inválido o error al guardar.")
 
@@ -568,15 +567,12 @@ def cancelar_inscripcion(request, evento_id, user_id):
 
     return redirect('qr:consulta_qr')
 
-
 @login_required
 def gestionar_inscripciones(request, eve_id):
     """Gestionar inscripciones de participantes por parte de un evaluador"""
 
     # Verifica que el usuario autenticado tenga el rol adecuado
     rol = request.session.get('rol')
-    print("ROL EN SESIÓN:", request.session.get('rol'))
-
     if rol != 'EVALUADOR':
         messages.warning(request, "Acceso restringido solo a evaluadores.")
         return redirect('inicio')
@@ -609,25 +605,33 @@ def gestionar_inscripciones(request, eve_id):
 
     evento = get_object_or_404(Evento, pk=eve_id)
 
+    # Traer inscripciones de participantes, incluyendo usuario relacionado
     participantes_eventos = ParticipantesEventos.objects.filter(
         par_eve_evento_fk=eve_id
-    ).select_related('par_eve_participante_fk')
+    ).select_related('par_eve_participante_fk__usuario')
 
-    participantes = [
-        {
-            'par_id': pe.par_eve_participante_fk.par_id,
-            'par_nombre': pe.par_eve_participante_fk.par_nombre,
-            'par_correo': pe.par_eve_participante_fk.par_correo,
-            'par_estado': pe.par_estado,
-            'par_eve_documentos': pe.par_eve_documentos
-        }
-        for pe in participantes_eventos
-    ]
+    participantes = []
+    for pe in participantes_eventos:
+        participante = pe.par_eve_participante_fk
+        if not participante or not hasattr(participante, 'usuario'):
+            continue  # evita error 500 si falta relación
+
+        usuario = participante.usuario
+        participantes.append({
+            'id': usuario.id,
+            'username': usuario.username,
+            'email': usuario.email,
+            'first_name': usuario.first_name,
+            'last_name': usuario.last_name,
+            'par_estado': getattr(pe, 'par_estado', 'N/A'),  # seguro si no existe
+            'par_eve_documentos': pe.par_eve_documentos,      # CloudinaryField
+        })
 
     return render(request, "app_evaluadores/ver_participantes.html", {
         'evento': evento,
         'participantes': participantes
     })
+    
 from app_eventos.models import MemoriaEvento
 @login_required
 def consultar_memorias_eva(request, evento_id):

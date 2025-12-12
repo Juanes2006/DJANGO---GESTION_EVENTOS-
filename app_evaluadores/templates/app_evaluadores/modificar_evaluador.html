@@ -32,9 +32,9 @@
         <div class="mb-3">
             <label class="form-label">Documento actual:</label>
             <p>
-                <a href="{% static 'uploads/' %}{{ asignacion.eva_eve_documentos }}" target="_blank" class="btn btn-outline-primary btn-sm">
-                    📄 Ver Documento
-                </a>
+            <a href="{{ asignacion.eva_eve_documentos.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                📄 Ver Documento
+            </a>
             </p>
         </div>
         {% else %}

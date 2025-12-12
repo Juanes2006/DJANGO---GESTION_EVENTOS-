@@ -32,29 +32,34 @@
                     </td>
 
                     
-
-   <td>
+<td>
     {% if asistente.asi_eve_soporte %}
-
-        <!-- Miniatura -->
-        <img src="{{ asistente.asi_eve_soporte.url }}" 
-             alt="Soporte de Pago" 
-             class="img-thumbnail"
-             style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
-             data-bs-toggle="modal"
-             data-bs-target="#modalImagen{{ asistente.id }}">
-        <!-- Modal -->
-        <div class="modal fade" id="modalImagen{{ asistente.id }}" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <div class="modal-body p-0 text-center">
-                        <img src="{{ asistente.asi_eve_soporte.url }}" 
-                             class="img-fluid rounded">
+        {% if asistente.asi_eve_soporte.url|lower endswith ".jpg" or 
+              asistente.asi_eve_soporte.url|lower endswith ".jpeg" or 
+              asistente.asi_eve_soporte.url|lower endswith ".png" %}
+            <!-- Miniatura para imágenes -->
+            <img src="{{ asistente.asi_eve_soporte.url }}" 
+                 alt="Soporte de Pago" 
+                 class="img-thumbnail"
+                 style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
+                 data-bs-toggle="modal"
+                 data-bs-target="#modalImagen{{ asistente.id }}">
+            <!-- Modal -->
+            <div class="modal fade" id="modalImagen{{ asistente.id }}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-body p-0 text-center">
+                            <img src="{{ asistente.asi_eve_soporte.url }}" class="img-fluid rounded">
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
+        {% else %}
+            <!-- Link para documentos que no son imágenes -->
+            <a href="{{ asistente.asi_eve_soporte.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                📄 Ver Documento / Soporte
+            </a>
+        {% endif %}
     {% else %}
         <span class="badge bg-secondary">Sin documentos</span>
     {% endif %}

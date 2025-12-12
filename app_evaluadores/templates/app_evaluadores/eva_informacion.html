@@ -18,28 +18,29 @@
                 <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% else %}
                 <span class="badge bg-danger">❌ Rechazado</span> {% endif %}
                 <br>
-                <strong>📂 Documento:</strong> {% if evento.eva_eve_documentos %}
-                <div class="mb-3">
-                    <label class="form-label">Documento actual:</label>
-                    <p>
-                        <a href="{% static 'uploads/' %}{{ evento.eva_eve_documentos }}" target="_blank" class="btn btn-outline-primary btn-sm">
-            📄 Ver Documento
-          </a>
-                    </p>
-                </div>
-                {% else %}
-                <p class="text-muted">No se ha cargado un documento aún.</p>
-                {% endif %}
-
-                <br> {% if evento.archivo_programacion %}
+                <strong>📂 Documento:</strong> {% if asignacion.eva_eve_documentos %}
+        <div class="mb-3">
+            <label class="form-label">Documento actual:</label>
+            <p>
+            <a href="{{ asignacion.eva_eve_documentos.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                📄 Ver Documento
+            </a>
+            </p>
+        </div>
+        {% else %}
+        <p class="text-muted">No se ha cargado un documento aún.</p>
+        {% endif %}
+                <br>  {% if evento.archivo_programacion %}
                 <div class="my-4">
-                    <a href="{% static 'programacion/' %}{{ evento.archivo_programacion }}" target="_blank" class="btn btn-outline-success btn-lg shadow-sm">
-                    📄 Ver Archivo de Programación
-                </a>
+                    <a href="{{ evento.archivo_programacion.url }}" target="_blank"
+                       class="btn btn-outline-success btn-lg shadow-sm">
+                        📄 Ver Archivo de Programación
+                    </a>
                 </div>
-                {% else %}
+            {% else %}
                 <p class="text-muted fst-italic">No hay archivo de programación disponible.</p>
-                {% endif %}
+            {% endif %}
+
 
                 <!-- Botones de acción -->
                 <a href="{% url 'evaluadores:modificar_evaluador' user_id=evaluador.usuario.id evento_id=evento.evento.eve_id %}" class="btn btn-warning mt-2">✏️ Editar Información</a>
