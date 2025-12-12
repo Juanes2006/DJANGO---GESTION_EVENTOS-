@@ -232,3 +232,15 @@
     });
 </script>
 {% endif %} {% endblock %}
+
+
+{% block nav_links %}
+<li class="nav-item dropdown">
+   
+    <a class="nav-link" href="{% url 'admin_evento:ventana' %}">
+        <i class="fas fa-file-upload text-success fs-5"></i> Volver atrás
+    </a>
+
+    
+</li>
+{% endblock %}

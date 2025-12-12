@@ -2,7 +2,7 @@
 <i class="fas fa-user-cog"></i> Administración {% endblock %}{% block nav_links %}
 
 <div class="position-fixed top-0 end-0 m-3" style="z-index: 1050;">
-    <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" 
+    <button class="btn btn-primary dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" 
             type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="bi bi-person-circle fs-5"></i>
                  👤 {{ request.user.last_name }}
@@ -32,13 +32,13 @@
         <!-- Botón Crear Evento -->
         <button type="button" class="dropdown-item d-flex align-items-center gap-2 text-primary" data-bs-toggle="modal" data-bs-target="#modalCrearEvento">
 
-            <i class="bi bi-plus-circle me-2"></i> Crear Evento
+            <i class="bi bi-plus-circle me-2"></i>📅 Crear Evento
         </button>
 
         <!-- Botón Estadísticas -->
         <button type="button" class="dropdown-item d-flex align-items-center gap-2 text-primary" data-bs-toggle="modal" data-bs-target="#estadisticasModal">
 
-            <i class="bi bi-bar-chart me-2"></i> Estadísticas
+            <i class="bi bi-bar-chart me-2"></i>📊 Estadísticas
         </button>
 
         <li>

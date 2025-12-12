@@ -21,10 +21,11 @@
                     <td>{{ forloop.counter }}</td>
                     <td>{{ memoria.titulo }}</td>
                     <td>
-                        <a href="{{ memoria.archivo.url }}" target="_blank">
-                            {{ memoria.archivo.name|slice:"20:" }}
-                        </a>
-                    </td>
+    <a href="{{ memoria.archivo.url }}" target="_blank">
+        {{ memoria.archivo.name|truncatechars:100 }}
+    </a>
+</td>
+
                     <td>{{ memoria.fecha_subida|date:"d/m/Y H:i" }}</td>
                     <td class="text-center">
                         <a href="{{ memoria.archivo.url }}" target="_blank" class="btn btn-sm btn-link text-secondary" title="Ver archivo">

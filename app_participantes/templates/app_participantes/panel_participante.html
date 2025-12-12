@@ -1,24 +1,24 @@
 {% extends 'app_main/base.html' %}{% load static %}{% block nav_links %}
 
-<div class="position-fixed top-0 end-0 m-3" style="z-index: 1050;">
-    <div class="dropdown">
-        <button class="btn btn-primary dropdown-toggle" type="button" id="infoDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-      👤 {{ request.user.first_name }}
-    </button>
-        <ul class="dropdown-menu dropdown-menu-end p-3 shadow" aria-labelledby="infoDropdown" style="min-width: 250px;">
-            <li><strong>Nombre:</strong> {{ request.user.first_name }} {{ request.user.last_name }}</li>
-            <li><strong>Email:</strong> {{ request.user.email }}</li>
-            <li><strong>Teléfono:</strong> {{ request.user.telefono }}</li>
-            <li><strong>Rol:</strong> {{ request.user.rol }}</li>
-            <hr>
-            <li><a class="dropdown-item text-primary" href="{% url 'participantes:mi_info' %}">📋 Mis Eventos</a></li>
-            <li> <a class="dropdown-item text-info" href="{% url 'qr:consulta_qr' %} ">🔎 Consultar Boletas</a>
-                <li><a class="dropdown-item text-danger" href="{% url 'evaluadores:logout_evaluador' %}">🔴 Cerrar Sesión</a></li>
+    <div class="position-fixed top-0 end-0 m-3" style="z-index: 1050;">
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="infoDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        👤 {{ request.user.first_name }}
+        </button>
+            <ul class="dropdown-menu dropdown-menu-end p-3 shadow" aria-labelledby="infoDropdown" style="min-width: 250px;">
+                <li><strong>Nombre:</strong> {{ request.user.first_name }} {{ request.user.last_name }}</li>
+                <li><strong>Email:</strong> {{ request.user.email }}</li>
+                <li><strong>Teléfono:</strong> {{ request.user.telefono }}</li>
+                <li><strong>Rol:</strong> {{ request.user.rol }}</li>
+                <hr>
+                <li><a class="dropdown-item text-primary" href="{% url 'participantes:mi_info' %}">📋 Mis Eventos</a></li>
+                <li> <a class="dropdown-item text-info" href="{% url 'qr:consulta_qr' %} ">🔎 Consultar Boletas</a>
+                    <li><a class="dropdown-item text-danger" href="{% url 'evaluadores:logout_evaluador' %}">🔴 Cerrar Sesión</a></li>
 
-            </li>
-        </ul>
+                </li>
+            </ul>
+        </div>
     </div>
-</div>
 {% endblock %} {% block content %}
 
 
@@ -31,7 +31,7 @@
 
         <div class="text-center ">
             <h2 class="mb-4 fw-bold text-primary ">Mis Eventos</h2>
-            <p class="lead ">Estos son los eventos donde estás inscrito como <h3 class="mb-4 fw-bold text-primary ">Participante.</h3></p>
+            <p class="lead ">Estos son los eventos donde estás inscrito como Participante</p>
         </div>
 
         <div class="row g-4 ">
@@ -40,7 +40,7 @@
                 <div class="card h-100 shadow-sm rounded-5 event-card position-relative overflow-hidden ">
 
                     <!-- Imagen del evento -->
-                    {% load static %} {% if evento.imagen %}
+                   {% load static %} {% if evento.imagen %}
 <div class="text-center mb-4">
     <img src="{{ evento.imagen.url }}"
          alt="Imagen del evento"
