@@ -21,9 +21,9 @@
                     <tbody>
                         {% if participantes %} {% for participante in participantes %}
                         <tr>
-                            <td>{{ participante.par_id }}</td>
-                            <td>{{ participante.par_nombre }}</td>
-                            <td>{{ participante.par_correo }}</td>
+                            <td>{{ participante.id }}</td>
+                            <td>{{ participante.first_name }} {{ participante.last_name }}</td>
+                            <td>{{ participante.email }}</td>
 
 
 
@@ -40,22 +40,14 @@
                             </td>
                             <td>
                                 {% if participante.par_eve_documentos %}
-                                <a href="{% static 'uploads/' %}{{ participante.par_eve_documentos }}" target="_blank" rel="noopener noreferrer">
+                                <a href="{{ participante.par_eve_documentos.url }}" target="_blank" rel="noopener noreferrer">
         📄 Ver Documentos
     </a> {% else %}
                                 <p class="text-muted">No se han cargado documentos.</p>
                                 {% endif %}
 
                             </td>
-                            <td class="text-center">
-                                <form action="{% url 'admin_evento:actualizar_estado' %}" method="POST" class="d-inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="par_id" value="{{ participante.par_id }}">
-                                    <input type="hidden" name="evento_id" value="{{ evento.eve_id }}">
-
-
-                                </form>
-                            </td>
+                         
                         </tr>
                         {% endfor %} {% else %}
                         <tr>
