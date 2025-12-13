@@ -6,7 +6,6 @@
     <div class="card shadow-lg rounded-4 border-primary border-2">
         <div class="card-header bg-primary text-white text-center rounded-top-4">
             <h4 class="mb-0 fw-bold">Modificar Datos del Asistente</h4>
-            <small>Evento: {{ evento.eve_nombre }}</small>
         </div>
 
         <div class="card-body">
@@ -26,13 +25,13 @@
                 <div class="mb-3">
                     <label class="form-label">Nombre</label>
                     <input type="text" class="form-control" name="nombre"
-                           value="{{ asistente.usuario.nombre }}" required>
+                           value="{{ asistente.usuario.first_name }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Apellido</label>
                     <input type="text" class="form-control" name="apellido"
-                           value="{{ asistente.usuario.apellido }}" required>
+                           value="{{ asistente.usuario.last_name }}" required>
                 </div>
 
                 <div class="mb-3">
@@ -43,21 +42,20 @@
 
                 <!-- SOPORTE ACTUAL -->
                 <div class="mb-3">
-                    <label class="form-label">Soporte de pago actual</label><br>
+                    <label class="form-label">Soporte actual</label><br>
 
-                    {% if asi_eve.asi_eve_soporte %}
-                        <img src="{{ asi_eve.asi_eve_soporte.url }}"
+                    {% if asistente.asi_soporte %}
+                        <img src="{{ asistente.asi_soporte.url }}"
                              class="img-thumbnail"
                              style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
                              data-bs-toggle="modal"
                              data-bs-target="#modalSoporte">
 
-                        <!-- MODAL -->
                         <div class="modal fade" id="modalSoporte" tabindex="-1">
                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                 <div class="modal-content">
                                     <div class="modal-body text-center p-0">
-                                        <img src="{{ asi_eve.asi_eve_soporte.url }}"
+                                        <img src="{{ asistente.asi_soporte.url }}"
                                              class="img-fluid rounded">
                                     </div>
                                 </div>
@@ -71,7 +69,8 @@
                 <!-- SUBIR NUEVO SOPORTE -->
                 <div class="mb-4">
                     <label class="form-label">Subir nuevo soporte (opcional)</label>
-                    <input type="file" class="form-control" name="soporte" accept="image/*,application/pdf">
+                    <input type="file" class="form-control" name="soporte"
+                           accept="image/*,application/pdf">
                 </div>
 
                 <div class="d-flex justify-content-between">

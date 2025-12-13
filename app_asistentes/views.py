@@ -51,40 +51,25 @@ def ver_memorias_evento_asis(request, evento_id):
     })
 
 @login_required
-def modificar_asistente(request, user_id, evento_id):
-    # 1️⃣ Usuario autenticado
-    usuario = get_object_or_404(Usuario, pk=user_id)
-
-    # 2️⃣ Evento
-    evento = get_object_or_404(Evento, pk=evento_id)
-
-    # 3️⃣ Asistente asociado al usuario
-    asistente = get_object_or_404(Asistentes, usuario=usuario)
-
-    # 4️⃣ Relación Asistente–Evento
-    evento_asistente = get_object_or_404(
-        AsistentesEventos,
-        asi_eve_asistente_fk=asistente,
-        asi_eve_evento_fk=evento
-    )
+def modificar_asistente(request):
+    asistente = get_object_or_404(Asistentes, usuario=request.user)
 
     if request.method == 'POST':
+        usuario = asistente.usuario
         usuario.first_name = request.POST.get('nombre')
         usuario.email = request.POST.get('correo')
         usuario.telefono = request.POST.get('telefono')
         usuario.save()
 
-        # Cloudinary
         file = request.FILES.get('soporte')
         if file:
-            evento_asistente.asi_eve_soporte = file
-            evento_asistente.save()
+            asistente.asi_soporte = file  # CloudinaryField en Asistentes
+
+        asistente.save()
 
         messages.success(request, "Información actualizada con éxito")
-        return redirect('asistente:panel_asistente')
+        return redirect('asistentes:panel_asistente')
 
-    return render(request, "app_asistentes/modificar_asistente.html", {
-        "asistente": asistente,
-        "evento_asistente": evento_asistente,
-        "evento_nombre": evento.eve_nombre,
+    return render(request, 'app_asistentes/modificar_asistente.html', {
+        'asistente': asistente
     })
