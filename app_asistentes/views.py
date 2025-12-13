@@ -57,6 +57,7 @@ def modificar_asistente(request):
     if request.method == 'POST':
         usuario = asistente.usuario
         usuario.first_name = request.POST.get('nombre')
+        usuario.last_name = request.POST.get('apellido')
         usuario.email = request.POST.get('correo')
         usuario.telefono = request.POST.get('telefono')
         usuario.save()
