@@ -25,10 +25,12 @@
             <a class="dropdown-item d-flex alig-items-center gap-2 text-info" href="{% url 'qr:consulta_qr' %} ">
                 <i> 🔎 Consultar Boletas</i>
             </a>
-            <a class="dropdown-item d-flex align-items-center gap-2 text-info"
-   href="{% url 'asistentes:modificar_asistente' request.user.id evento.eve_id %}">
+            {% if request.session.evento_actual_id %}
+<a class="dropdown-item d-flex align-items-center gap-2 text-info"
+   href="{% url 'asistentes:modificar_asistente' request.user.id request.session.evento_actual_id %}">
     🛠️ Modificar Datos
 </a>
+{% endif %}
 
             <li>
                 <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'evaluadores:logout_evaluador' %}">

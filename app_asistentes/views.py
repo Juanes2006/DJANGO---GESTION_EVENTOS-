@@ -21,12 +21,18 @@ def panel_asistente(request):
         messages.error(request, "⛔ No tienes permiso para acceder a esta sección.")
         return redirect("main:visitante")
 
-    eventos_inscritos = AsistentesEventos.objects.select_related('asi_eve_evento_fk')\
-        .filter(asi_eve_asistente_fk__usuario=usuario)
+    eventos_inscritos = AsistentesEventos.objects.select_related(
+        'asi_eve_evento_fk'
+    ).filter(asi_eve_asistente_fk__usuario=usuario)
+
+    # 👇 Guardar un evento activo en sesión (el primero)
+    if eventos_inscritos.exists():
+        request.session['evento_actual_id'] = eventos_inscritos.first().asi_eve_evento_fk.eve_id
 
     return render(request, "app_asistentes/panel_asistente.html", {
         "eventos_inscritos": eventos_inscritos
     })
+
 
     
 from app_eventos.models import MemoriaEvento
