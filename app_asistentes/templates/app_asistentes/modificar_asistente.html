@@ -22,22 +22,32 @@
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
 
+                <!-- NOMBRE -->
                 <div class="mb-3">
                     <label class="form-label">Nombre</label>
                     <input type="text" class="form-control" name="nombre"
                            value="{{ asistente.usuario.first_name }}" required>
                 </div>
 
+                <!-- APELLIDO -->
                 <div class="mb-3">
                     <label class="form-label">Apellido</label>
                     <input type="text" class="form-control" name="apellido"
                            value="{{ asistente.usuario.last_name }}" required>
                 </div>
 
+                <!-- EMAIL -->
                 <div class="mb-3">
                     <label class="form-label">Correo electrónico</label>
                     <input type="email" class="form-control" name="email"
                            value="{{ asistente.usuario.email }}" required>
+                </div>
+
+                <!-- TELEFONO -->
+                <div class="mb-3">
+                    <label class="form-label">Teléfono</label>
+                    <input type="text" class="form-control" name="telefono"
+                           value="{{ asistente.usuario.telefono|default:'' }}">
                 </div>
 
                 <!-- SOPORTE ACTUAL -->
@@ -66,7 +76,7 @@
                     {% endif %}
                 </div>
 
-                <!-- SUBIR NUEVO SOPORTE -->
+                <!-- NUEVO SOPORTE -->
                 <div class="mb-4">
                     <label class="form-label">Subir nuevo soporte (opcional)</label>
                     <input type="file" class="form-control" name="soporte"

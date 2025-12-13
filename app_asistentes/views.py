@@ -53,18 +53,18 @@ def ver_memorias_evento_asis(request, evento_id):
 @login_required
 def modificar_asistente(request):
     asistente = get_object_or_404(Asistentes, usuario=request.user)
+    usuario = asistente.usuario
 
     if request.method == 'POST':
-        usuario = asistente.usuario
         usuario.first_name = request.POST.get('nombre')
         usuario.last_name = request.POST.get('apellido')
-        usuario.email = request.POST.get('correo')
+        usuario.email = request.POST.get('email')
         usuario.telefono = request.POST.get('telefono')
         usuario.save()
 
         file = request.FILES.get('soporte')
         if file:
-            asistente.asi_soporte = file  # CloudinaryField en Asistentes
+            asistente.asi_soporte = file  # CloudinaryField
 
         asistente.save()
 
