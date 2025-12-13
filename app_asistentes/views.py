@@ -21,18 +21,12 @@ def panel_asistente(request):
         messages.error(request, "⛔ No tienes permiso para acceder a esta sección.")
         return redirect("main:visitante")
 
-    eventos_inscritos = AsistentesEventos.objects.select_related(
-        'asi_eve_evento_fk'
-    ).filter(asi_eve_asistente_fk__usuario=usuario)
-
-    # 👇 Guardar un evento activo en sesión (el primero)
-    if eventos_inscritos.exists():
-        request.session['evento_actual_id'] = eventos_inscritos.first().asi_eve_evento_fk.eve_id
+    eventos_inscritos = AsistentesEventos.objects.select_related('asi_eve_evento_fk')\
+        .filter(asi_eve_asistente_fk__usuario=usuario)
 
     return render(request, "app_asistentes/panel_asistente.html", {
         "eventos_inscritos": eventos_inscritos
     })
-
 
     
 from app_eventos.models import MemoriaEvento
@@ -58,33 +52,37 @@ def ver_memorias_evento_asis(request, evento_id):
 
 @login_required
 def modificar_asistente(request, user_id, evento_id):
-    usuario = get_object_or_404(Usuario, pk=user_id)
-    evento = get_object_or_404(Evento, pk=evento_id)
-    asistente = get_object_or_404(Asistentes, usuario=usuario)
-
-    asi_eve = get_object_or_404(
+    asistente = get_object_or_404(Participantes, pk=user_id)
+    evento_asistente = get_object_or_404(
         AsistentesEventos,
         asi_eve_asistente_fk=asistente,
-        asi_eve_evento_fk=evento
+        asi_eve_evento_fk=evento_id
     )
+    evento = get_object_or_404(Evento, pk=evento_id)
 
-    if request.method == "POST":
-        usuario.nombre = request.POST.get("nombre")
-        usuario.apellido = request.POST.get("apellido")
-        usuario.email = request.POST.get("email")
-        usuario.save()
 
         # SOPORTE DE PAGO (Cloudinary)
-        soporte = request.FILES.get("soporte")
-        if soporte:
-            asi_eve.asi_eve_soporte = soporte
-            asi_eve.save()
+        
+    if request.method == 'POST':
+        usuario = asistente.usuario
+        usuario.first_name = request.POST.get('nombre')
+        usuario.email = request.POST.get('correo')
+        usuario.telefono = request.POST.get('telefono')
+        usuario.save()
 
-        messages.success(request, "Datos del asistente actualizados correctamente.")
+        file = request.FILES.get('soporte')
+        if file:
+            evento_asistente.asi_eve_soporte = file
+
+        evento_asistente.save()
+
+        messages.success(request, "Información actualizada con éxito")
         return redirect('asistente:panel_asistente')
 
     return render(request, "app_asistentes/modificar_asistente.html", {
         "asistente": asistente,
-        "evento": evento,
-        "asi_eve": asi_eve
+        "evento_asistente": evento_asistente,
+        'evento_nombre': evento.eve_nombre,
     })
+    
+
