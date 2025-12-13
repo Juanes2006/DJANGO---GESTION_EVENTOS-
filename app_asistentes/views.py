@@ -64,7 +64,7 @@ def modificar_asistente(request):
 
         file = request.FILES.get('soporte')
         if file:
-            asistente.asi_soporte = file  # CloudinaryField
+            asistente.asi_eve_soporte = file  # CloudinaryField
 
         asistente.save()
 
