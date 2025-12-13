@@ -68,7 +68,7 @@ def modificar_asistente(request):
         asistente.save()
 
         messages.success(request, "Información actualizada con éxito")
-        return redirect('asistentes:panel_asistente')
+        return redirect('asistente:panel_asistente')
 
     return render(request, 'app_asistentes/modificar_asistente.html', {
         'asistente': asistente
